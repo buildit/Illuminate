@@ -1,0 +1,14 @@
+{
+   "appenders": [
+      {
+      	"type": "dateFile",
+      	"filename": "illuminate.log",
+   	   	"pattern": "-MM-dd",
+      	"alwaysIncludePattern": true,
+      	"layout": {
+          	"type": "pattern",
+          	"pattern": "[%r] [%h] [%p] - %m"
+        	}
+    	}
+    ]
+}
