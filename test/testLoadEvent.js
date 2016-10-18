@@ -16,8 +16,8 @@ Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
 logger.setLevel(Config.get('log-level'));
 
-const UNITTESTPROJECT = 'EventUnitTestProject';
 const NOPROJECT = 'ShouldNotExistProject';
+const UNITTESTPROJECT = 'EventUnitTestProject';
 
 function buildResponse() {
   return HttpMocks.createResponse({eventEmitter: require('events').EventEmitter})
@@ -238,6 +238,7 @@ describe('Project Load Event - create', function() {
   it('create a load event', function(done) {
     var response = buildResponse();
     var request  = HttpMocks.createRequest({
+      path: TESTPATH,
       params: {'name': UNITTESTPROJECT},
       query: {'type': constants.LOADEVENT}
     });

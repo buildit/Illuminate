@@ -16,7 +16,7 @@ logger.setLevel(Config.get('log-level'));``
 
 exports.listEvents = function (req, res) {
   var projectName = decodeURIComponent(req.params.name);
-  logger.debug(`listEvents for ${projectName}`);
+  logger.info(`listEvents for ${projectName}`);
 
   dataStore.getAllData(utils.dbProjectPath(projectName), myConstants.EVENTCOLLECTION)
     .then ( function(eventData) {
@@ -41,7 +41,7 @@ exports.listEvents = function (req, res) {
 exports.listAnEvent = function (req, res) {
   var projectName = decodeURIComponent(req.params.name);
   var eventId = decodeURIComponent(req.params.id);
-  logger.debug(`list an event [${eventId}] for ${projectName}`);
+  logger.info(`list an event [${eventId}] for ${projectName}`);
 
   dataStore.getDocumentByID(utils.dbProjectPath(projectName), myConstants.EVENTCOLLECTION, eventId)
     .then ( function(eventData) {
@@ -63,7 +63,7 @@ exports.listAnEvent = function (req, res) {
 
 exports.createNewEvent = function (req, res) {
   var projectName = decodeURIComponent(req.params.name);
-  logger.debug(`createNewEvent for ${projectName}`);
+  logger.info(`createNewEvent for ${projectName}`);
 
   if (req.query.type === undefined || ((req.query.type.toUpperCase() != myConstants.LOADEVENT) && (req.query.type.toUpperCase() != myConstants.UPDATEEVENT))) {
     logger.debug(`Missing or invalid type query parameter`);
@@ -76,7 +76,7 @@ exports.createNewEvent = function (req, res) {
         getActiveEvent(projectName)
           .then (function(anEvent) {
             if (anEvent) {
-              var url = `${req.protocol}://${req.hostname}${req.originalUrl}/${anEvent._id}`;
+              var url = `${req.protocol}://${req.hostname}${req.baseUrl}${req.path}/${anEvent._id}`;
               logger.debug(`createNewEvent -> There is an existing active event ${url}`);
               logger.debug(anEvent);
               res.status(HttpStatus.CONFLICT);
@@ -89,8 +89,8 @@ exports.createNewEvent = function (req, res) {
                 .then ( function(result) {
                   if (result.insertedCount > 0) {
                     res.status(HttpStatus.CREATED);
-                    var tmpBody = {url: `${req.protocol}://${req.hostname}${req.originalUrl}${aLoadEvent._id}`};
-                    logger.debug("createNewEvent -> Created @ " + tmpBody);
+                    var tmpBody = {url: `${req.protocol}://${req.hostname}${req.baseUrl}${req.path}/${aLoadEvent._id}`};
+                    logger.debug("createNewEvent -> Created @ " + tmpBody.url);
                     module.exports.kickoffLoad(aProject, aLoadEvent);
                     res.send(tmpBody);
                   } else {
@@ -179,6 +179,6 @@ exports.kickoffLoad = function (aProject, anEvent) {
   //   jiraDefect.load(aProject);
   // }
   if (!(aProject.effort === null)) {
-    effortLoader.loadEffort(aProject.effort, anEvent, new utils.ProcessingInfo(utils.dbProjectPath(aProject.name, null, null, null)));
+    effortLoader.loadEffort(aProject.effort, anEvent, new utils.ProcessingInfo(utils.dbProjectPath(aProject.name)));
   }
 }

@@ -48,7 +48,7 @@ const DEFAULTSTARTDATE = MILLENIUM+'+00:00';
 
 exports.loadTimeEntries = function(effortInfo, sinceTime, processingInfo) {
   var startDate = (sinceTime) ? sinceTime : DEFAULTSTARTDATE;
-  logger.info(`loadTimeEntries for ${effortInfo.project} updated since [${startDate}]`);
+  logger.info(`HARVEST loadTimeEntries for ${effortInfo.project} updated since [${startDate}]`);
 
   return new Promise(function (resolve, reject) {
     module.exports.getTimeEntries(effortInfo, startDate)

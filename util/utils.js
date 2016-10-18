@@ -53,7 +53,6 @@ exports.dateFormatIWant = function (incomming) {
 exports.ProcessingInfo = function (dbUrl, raw, common, storeIt) {
   this.dbUrl = dbUrl;
   this.rawLocation = raw;
-  this.commonLocation = common;
   this.storageFunction = storeIt;
 }
 

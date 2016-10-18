@@ -40,27 +40,27 @@ exports.loadEffort = function(effortData, anEvent, processingInfo) {
       logger.debug(commonDataFormat);
       dataStore.wipeAndStoreData(processingInfo.dbUrl, constants.COMMONEFFORT,  commonDataFormat)
         .then (function(response1) {
-          logger.debug('loadEffort -> wipeAndStoreData 1');
+          logger.debug('loadEffort -> wipeAndStoreData Common Data');
           logger.debug(response1);
           dataStore.wipeAndStoreData(processingInfo.dbUrl, constants.SUMMARYEFFORT,  createSummaryData(commonDataFormat))
             .then (function (response2){
-              logger.debug('loadEffort -> wipeAndStoreData 2');
+              logger.debug('loadEffort -> wipeAndStoreData Summary Data');
               logger.debug(response2);
               logger.debug('loadEffort -> success');
               aSystemEvent = new utils.SystemEvent(constants.SUCCESSEVENT, `${commonDataFormat.length} records processed`);
               dataStore.processEventData(processingInfo.dbUrl, constants.EVENTCOLLECTION, anEvent, constants.EFFORTSECTION, aSystemEvent)
             }).catch(function(err) {
-              logger.debug('loadEffort -> ERROR 1');
+              logger.debug('loadEffort -> ERROR Summary Data');
               aSystemEvent = new utils.SystemEvent(constants.FAILEDEVENT, JSON.stringify(err));
               dataStore.processEventData(processingInfo.dbUrl, constants.EVENTCOLLECTION, anEvent, constants.EFFORTSECTION, aSystemEvent)
             });
         }).catch(function(err) {
-          logger.debug('loadEffort -> ERROR 2');
+          logger.debug('loadEffort -> ERROR Common Data');
           aSystemEvent = new utils.SystemEvent(constants.FAILEDEVENT, JSON.stringify(err));
           dataStore.processEventData(processingInfo.dbUrl, constants.EVENTCOLLECTION, anEvent, constants.EFFORTSECTION, aSystemEvent)
         });
     }).catch(function(err) {
-      logger.debug('loadEffort -> ERROR 3');
+      logger.debug('loadEffort -> ERROR Raw Data');
       aSystemEvent = new utils.SystemEvent(constants.FAILEDEVENT, JSON.stringify(err));
       dataStore.processEventData(processingInfo.dbUrl, constants.EVENTCOLLECTION, anEvent, constants.EFFORTSECTION, aSystemEvent)
     });
@@ -93,12 +93,12 @@ exports.loadRawData = function(effortData, processingInfo) {
 
 const createSummaryData = data => {
     const objectResult = data.reduce((result, point) => {
-        if (!result[point.projectDate]) result[point.projectDate] = { activity: {} }
-        if (result[point.projectDate].activity[point['role']]) {
-            result[point.projectDate].activity[point['role']] =
-                result[point.projectDate].activity[point['role']] + point['effort']
+        if (!result[point.day]) result[point.day] = { activity: {} }
+        if (result[point.day].activity[point['role']]) {
+            result[point.day].activity[point['role']] =
+                result[point.day].activity[point['role']] + point['effort']
         } else {
-            result[point.projectDate].activity[point['role']] = point['effort']
+            result[point.day].activity[point['role']] = point['effort']
         }
         return result
     }, {})
