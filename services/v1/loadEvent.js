@@ -61,9 +61,12 @@ exports.listAnEvent = function (req, res) {
     });
 };
 
+const isActive = (anEvent) => anEvent.endTime === null;
+
 exports.createNewEvent = function (req, res) {
   var projectName = decodeURIComponent(req.params.name);
   logger.info(`createNewEvent for ${projectName}`);
+  var aLoadEvent = {};
 
   if (req.query.type === undefined || ((req.query.type.toUpperCase() != myConstants.LOADEVENT) && (req.query.type.toUpperCase() != myConstants.UPDATEEVENT))) {
     logger.debug(`Missing or invalid type query parameter`);
@@ -73,9 +76,9 @@ exports.createNewEvent = function (req, res) {
   } else {
     getProjectData(projectName)
       .then (function(aProject) {
-        getActiveEvent(projectName)
+        module.exports.getMostRecentEvent(projectName)
           .then (function(anEvent) {
-            if (anEvent) {
+            if (anEvent != undefined && isActive(anEvent)) {
               var url = `${req.protocol}://${req.hostname}${req.baseUrl}${req.path}/${anEvent._id}`;
               logger.debug(`createNewEvent -> There is an existing active event ${url}`);
               logger.debug(anEvent);
@@ -83,7 +86,14 @@ exports.createNewEvent = function (req, res) {
               res.send(errorHelper.errorBody(HttpStatus.CONFLICT,
                 `There is currently an active event for this project, please wait for it to complete.  ${url}`));
             } else {
-              var aLoadEvent = new utils.DataEvent(utils.LOADEVENT);
+              aLoadEvent = new utils.DataEvent(req.query.type.toUpperCase());
+              logger.debug('createNewEvent -> NOT AN ACTIVE EVENT');
+              logger.debug(aLoadEvent);
+              if ((anEvent != undefined) && (req.query.type.toUpperCase() === myConstants.UPDATEEVENT)) {
+                logger.debug('createNewEvent -> An Udate Event');
+                aLoadEvent.since = fromLastCompletion(anEvent);
+                logger.debug(aLoadEvent);
+              }
               var loadEvents = [aLoadEvent];
               dataStore.insertData(utils.dbProjectPath(projectName), myConstants.EVENTCOLLECTION, loadEvents)
                 .then ( function(result) {
@@ -126,6 +136,11 @@ exports.createNewEvent = function (req, res) {
   }
 };
 
+function fromLastCompletion(anEvent) {
+  var endTime = anEvent.endTime.toJSON().toString();
+  return (endTime.slice(0, 10) + '+' + endTime.slice(11, 16));
+}
+
 function getProjectData(aProjectName) {
   logger.debug('loadEvent->getProjectData');
 
@@ -146,23 +161,26 @@ function getProjectData(aProjectName) {
   });
 }
 
-function getActiveEvent(aProjectName) {
-  logger.debug('loadEvent->getActiveEvent');
+var dateSort = function(a, b) { return (a.startTime.getTime() - b.startTime.getTime()); };
+
+exports.getMostRecentEvent = function (aProjectName) {
+  logger.debug(`loadEvent->getMostRecentEvent for ${aProjectName}`);
 
   return new Promise(function (resolve, reject) {
       dataStore.getAllData(utils.dbProjectPath(aProjectName), myConstants.EVENTCOLLECTION)
         .then ( function(allEvents) {
           if (allEvents.length < 1) {
-            logger.debug("loadEvent->getActiveEvent - Not Found");
+            logger.debug('loadEvent->getMostRecentEvent - Not Found');
             resolve(null);
           } else {
-            var anEvent = R.find(R.propEq('endTime', null))(allEvents);
-            logger.debug('getActiveEvent -> anEvent');
-            logger.debug(anEvent);
-            resolve(anEvent);
+            logger.debug(`loadEvent->getMostRecentEvent - ${allEvents.length} events found`);
+            var orderedEvents = R.sort(dateSort, allEvents);
+            logger.debug('orderedEvents');
+            logger.debug(orderedEvents);
+            resolve (R.last(orderedEvents));
           }
         }).catch(function(err) {
-          logger.debug("loadEvent->getActiveEvent - ERROR");
+          logger.debug("loadEvent->getMostRecentEvent - ERROR");
           logger.error(err);
           reject(err);
         });

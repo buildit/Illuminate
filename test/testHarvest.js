@@ -211,15 +211,19 @@ describe('Harvest Utility Function Tests', function() {
 });
 
 describe('Harvest Real Service Tests', function() {
-  it('Test That When I call Load Entries that I have mapped the task name instead of the task ID', function() {
-    this.timeout(5000);
+  var aSetOfInfo = {};
 
-    var aSetOfInfo = new utils.ProcessingInfo(utils.dbProjectPath(PROJECTNAME),
+  before (function(){
+    aSetOfInfo = new utils.ProcessingInfo(utils.dbProjectPath(PROJECTNAME),
       constants.RAWEFFORT,
       constants.COMMONEFFORT,
       MongoDB.upsertData);
+  });
 
-    return harvest.loadTimeEntries(EFFORTINFO, SINCETIME, aSetOfInfo)
+  it('Test That When I call Load Entries that I have mapped the task name instead of the task ID', function() {
+    this.timeout(5000);
+
+    return harvest.loadTimeEntries(EFFORTINFO, aSetOfInfo, SINCETIME)
       .then(function(response) {
         Should(response.length).be.above(0);
       });
@@ -228,7 +232,7 @@ describe('Harvest Real Service Tests', function() {
   it('Test That Load Entries returns empty when no data', function() {
     this.timeout(5000);
 
-    return harvest.loadTimeEntries(EFFORTINFO, FUTURETIME)
+    return harvest.loadTimeEntries(EFFORTINFO, aSetOfInfo, FUTURETIME)
       .then(function(response) {
         Should(response.length).equal(0);
       });

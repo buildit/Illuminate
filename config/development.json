@@ -8,5 +8,5 @@
       "url": "localhost",
       "port": 7565
    },
-   "log-level": "INFO"
+   "log-level": "DEBUG"
 }

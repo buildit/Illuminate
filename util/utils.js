@@ -1,7 +1,7 @@
 'use strict'
 
 const Config = require('config');
-const constants = require('constants');
+const constants = require('./constants');
 const UUID = require('uuid');
 
 exports.dbProjectPath = function (projectName) {
@@ -57,7 +57,7 @@ exports.ProcessingInfo = function (dbUrl, raw, common, storeIt) {
 }
 
 exports.SystemEvent = function (status, message) {
-  this.completion = new Date().toJSON().toString();
+  this.completion = new Date();
   this.status = status;
   this.message;
 }
@@ -65,8 +65,9 @@ exports.SystemEvent = function (status, message) {
 exports.DataEvent = function (type) {
   this._id = UUID.v4();
   this.type = type;
-  this.startTime = new Date().toJSON().toString();
+  this.startTime = new Date();
   this.endTime = null;
+  this.since = constants.DEFAULTSTARTDATE;
   this.status = constants.PENDINGEVENT;
   this.note = "";
   this.demand = null;

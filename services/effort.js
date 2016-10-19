@@ -34,7 +34,7 @@ exports.loadEffort = function(effortData, anEvent, processingInfo) {
   logger.debug(processingInfo);
 
   configureProcessingInfo(processingInfo);
-  module.exports.loadRawData(effortData, processingInfo)
+  module.exports.loadRawData(effortData, processingInfo, anEvent.since)
     .then (function(commonDataFormat) {
       logger.debug('loadEffort -> loadRawData');
       logger.debug(commonDataFormat);
@@ -71,11 +71,11 @@ function configureProcessingInfo(processingInfo) {
   processingInfo.storageFunction = dataStore.upsertData;
 }
 
-exports.loadRawData = function(effortData, processingInfo) {
+exports.loadRawData = function(effortData, processingInfo, sinceTime) {
   return new Promise(function (resolve, reject) {
     switch(effortData.source.toUpperCase()) {
         case "HARVEST":
-          harvest.loadTimeEntries(effortData, null, processingInfo)
+          harvest.loadTimeEntries(effortData, processingInfo, sinceTime)
             .then(function (commonDataStructure) {
               resolve (commonDataStructure);
             })

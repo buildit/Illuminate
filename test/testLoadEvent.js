@@ -4,9 +4,10 @@ const constants = require('../util/constants');
 const HttpMocks = require('node-mocks-http');
 const HttpStatus = require('http-status-codes');
 const loadEvent = require('../services/v1/loadEvent');
-const MongoDB = require('../services/datastore/mongodb');
+const mongoDB = require('../services/datastore/mongodb');
 const Should = require('should');
 const Sinon = require('sinon');
+require('sinon-as-promised');
 const utils = require('../util/utils');
 
 const Config = require('config');
@@ -18,6 +19,8 @@ logger.setLevel(Config.get('log-level'));
 
 const NOPROJECT = 'ShouldNotExistProject';
 const UNITTESTPROJECT = 'EventUnitTestProject';
+
+const ERRORRETURN = {error: {status: 'BAD', message: 'FAILED'}};
 
 function buildResponse() {
   return HttpMocks.createResponse({eventEmitter: require('events').EventEmitter})
@@ -31,11 +34,11 @@ describe('Test GET of Events', function() {
     anEvent = new utils.DataEvent(constants.LOADEVENT);
     anotherEvent = new utils.DataEvent(constants.UPDATEEVENT);
     var events = [anEvent, anotherEvent];
-    return MongoDB.insertData(utils.dbProjectPath(UNITTESTPROJECT), constants.EVENTCOLLECTION, events );
+    return mongoDB.insertData(utils.dbProjectPath(UNITTESTPROJECT), constants.EVENTCOLLECTION, events );
   });
 
   after('Delete Project Details', function() {
-    return MongoDB.clearData(utils.dbProjectPath(UNITTESTPROJECT), constants.EVENTCOLLECTION)
+    return mongoDB.clearData(utils.dbProjectPath(UNITTESTPROJECT), constants.EVENTCOLLECTION)
   });
 
   it('Test getting load events', function(done) {
@@ -79,11 +82,11 @@ describe('Test GET of AN Event', function() {
     anEvent = new utils.DataEvent(constants.LOADEVENT);
     anotherEvent = new utils.DataEvent(constants.UPDATEEVENT);
     var events = [anEvent, anotherEvent];
-    return MongoDB.insertData(utils.dbProjectPath(UNITTESTPROJECT), constants.EVENTCOLLECTION, events );
+    return mongoDB.insertData(utils.dbProjectPath(UNITTESTPROJECT), constants.EVENTCOLLECTION, events );
   });
 
   after('Delete Project Details', function() {
-    return MongoDB.clearData(utils.dbProjectPath(UNITTESTPROJECT), constants.EVENTCOLLECTION)
+    return mongoDB.clearData(utils.dbProjectPath(UNITTESTPROJECT), constants.EVENTCOLLECTION)
   });
 
   it('Test getting a single load event', function(done) {
@@ -137,16 +140,16 @@ describe('Project Load Event Error Path Tests', function() {
 
     var anEvent = new utils.DataEvent(constants.LOADEVENT);
     var events = [anEvent];
-    return MongoDB.insertData(utils.dbCorePath(), constants.PROJECTCOLLECTION, projectData )
+    return mongoDB.insertData(utils.dbCorePath(), constants.PROJECTCOLLECTION, projectData )
       .then( function() {
-        return MongoDB.insertData(utils.dbProjectPath(UNITTESTPROJECT), constants.EVENTCOLLECTION, events );
+        return mongoDB.insertData(utils.dbProjectPath(UNITTESTPROJECT), constants.EVENTCOLLECTION, events );
       });
   });
 
   after('Delete Project Details', function() {
-    return MongoDB.clearData(utils.dbCorePath(), constants.PROJECTCOLLECTION)
+    return mongoDB.clearData(utils.dbCorePath(), constants.PROJECTCOLLECTION)
       .then(function() {
-        return MongoDB.clearData(utils.dbProjectPath(UNITTESTPROJECT), constants.EVENTCOLLECTION)
+        return mongoDB.clearData(utils.dbProjectPath(UNITTESTPROJECT), constants.EVENTCOLLECTION)
       });
   });
 
@@ -202,7 +205,123 @@ describe('Project Load Event Error Path Tests', function() {
   });
 });
 
-describe('Project Load Event - create', function() {
+describe('Test getting the most recent event', function() {
+  var anEvent = {};
+  var anotherEvent = {};
+  var aThirdEvent = {};
+  var eventArray = [];
+
+  before('Create Test Events', function() {
+    anEvent = new utils.DataEvent(constants.LOADEVENT);
+    anEvent.startTime = new Date(2000, 1, 1, 12, 30, 30);
+    anotherEvent = new utils.DataEvent(constants.UPDATEEVENT);
+    anotherEvent.startTime = new Date(2000, 2, 2, 12, 30, 30);
+    aThirdEvent = new utils.DataEvent(constants.UPDATEEVENT);
+    aThirdEvent.startTime = new Date(2000, 3, 3, 12, 30, 30);
+    eventArray = [aThirdEvent, anEvent, anotherEvent];
+
+    this.getAllData = Sinon.stub(mongoDB, 'getAllData');
+    this.getAllData.onCall(0).resolves(eventArray);
+    this.getAllData.onCall(1).resolves([]);
+    this.getAllData.onCall(2).rejects(ERRORRETURN);
+  });
+
+  after('Delete Project Details', function() {
+    mongoDB.getAllData.restore();
+  });
+
+  it('Get Most recent Event of many', function() {
+    return loadEvent.getMostRecentEvent(UNITTESTPROJECT)
+    .then (function(anEvent) {
+      Should(anEvent).match(aThirdEvent);
+    }).catch ( function(error) {
+      logger.debug(error);
+      Should.ok(false);
+    });
+  });
+
+  it('get undefined if no events', function() {
+    return loadEvent.getMostRecentEvent(UNITTESTPROJECT)
+    .then (function(anEvent) {
+      Should(anEvent).equal(null);
+    }).catch ( function(error) {
+      logger.debug(error);
+      Should.ok(false);
+    });
+  });
+
+  it('test the error path', function() {
+    return loadEvent.getMostRecentEvent(UNITTESTPROJECT)
+    .then (function(anEvent) {
+      logger.debug(anEvent);
+      Should.ok(false);
+    }).catch ( function(error) {
+      logger.debug(error);
+      Should(error).match(ERRORRETURN);
+    });
+  });
+});
+
+describe('Testing load and update events SINCE time properties', function() {
+  var anEvent = {};
+  var eventArray = [];
+  const expectedSinceTime = '2015-03-26+12:00';
+
+  before('Create Test Events', function() {
+    anEvent = new utils.DataEvent(constants.LOADEVENT);
+    anEvent.startTime = new Date('2015-03-25T12:00:00');
+    anEvent.endTime = new Date('2015-03-26T12:00:00');
+    eventArray = [anEvent];
+
+    this.kickoffLoad = Sinon.stub(loadEvent, 'kickoffLoad');
+    this.getDocumentByName = Sinon.stub(mongoDB, 'getDocumentByName').resolves(UNITTESTPROJECT);
+    this.getAllData = Sinon.stub(mongoDB, 'getAllData').resolves(eventArray);
+  });
+
+  after('Delete Project Details', function() {
+    mongoDB.getDocumentByName.restore();
+    loadEvent.kickoffLoad.restore();
+    return mongoDB.clearData(utils.dbProjectPath(UNITTESTPROJECT), constants.EVENTCOLLECTION)
+  });
+
+  it('create an update event', function(done) {
+    var response = buildResponse();
+    var request  = HttpMocks.createRequest({
+      params: {'name': UNITTESTPROJECT},
+      query: {'type': constants.UPDATEEVENT}
+    });
+    loadEvent.kickoffLoad.returns({
+      on:Sinon.stub().yields(null)
+    });
+
+    response.on('end', function() {
+      Should(response.statusCode).equal(HttpStatus.CREATED);
+      var body = response._getData();
+      Should(body).have.property('url');
+      done();
+    });
+
+    loadEvent.createNewEvent(request, response);
+  });
+
+  // this is cheating - I made the getMostRecentEvent function public so I
+  // could test it - now I'm going to use it to test other things instead
+  // of having to re-write that logic.
+  it('make sure the update event has the right since time', function() {
+    mongoDB.getAllData.restore();
+
+    return loadEvent.getMostRecentEvent(UNITTESTPROJECT)
+    .then (function(anEvent) {
+      Should(anEvent.since).match(expectedSinceTime);
+    }).catch ( function(error) {
+      logger.debug(error);
+      Should.ok(false);
+    });
+  });
+
+});
+
+describe('Basic Project Load Event - create', function() {
 
   before('Create Test Project', function() {
     const projectData = [{
@@ -217,13 +336,13 @@ describe('Project Load Event - create', function() {
         effort: {},
         projection: {}}];
 
-    return MongoDB.insertData(utils.dbCorePath(), constants.PROJECTCOLLECTION, projectData );
+    return mongoDB.insertData(utils.dbCorePath(), constants.PROJECTCOLLECTION, projectData );
   });
 
   after('Delete Project Details', function() {
-    return MongoDB.clearData(utils.dbCorePath(), constants.PROJECTCOLLECTION)
+    return mongoDB.clearData(utils.dbCorePath(), constants.PROJECTCOLLECTION)
       .then(function() {
-        return MongoDB.clearData(utils.dbProjectPath(UNITTESTPROJECT), constants.EVENTCOLLECTION)
+        return mongoDB.clearData(utils.dbProjectPath(UNITTESTPROJECT), constants.EVENTCOLLECTION)
       });
   });
 
@@ -238,7 +357,6 @@ describe('Project Load Event - create', function() {
   it('create a load event', function(done) {
     var response = buildResponse();
     var request  = HttpMocks.createRequest({
-      path: TESTPATH,
       params: {'name': UNITTESTPROJECT},
       query: {'type': constants.LOADEVENT}
     });

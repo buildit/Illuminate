@@ -46,7 +46,7 @@ logger.setLevel(Config.get('log-level'));
 const MILLENIUM = '2000-01-01';
 const DEFAULTSTARTDATE = MILLENIUM+'+00:00';
 
-exports.loadTimeEntries = function(effortInfo, sinceTime, processingInfo) {
+exports.loadTimeEntries = function(effortInfo, processingInfo, sinceTime) {
   var startDate = (sinceTime) ? sinceTime : DEFAULTSTARTDATE;
   logger.info(`loadTimeEntries for ${effortInfo.project} updated since [${startDate}]`);
 

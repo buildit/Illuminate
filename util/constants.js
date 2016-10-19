@@ -18,6 +18,8 @@ exportConstant('RAWEFFORT', 'rawEffort');
 exportConstant('COMMONEFFORT', 'commonEffort');
 exportConstant('SUMMARYEFFORT', 'dailyEffortSummary');
 
+exportConstant('DEFAULTSTARTDATE', '2000-01-01+00:00');
+
 function exportConstant (name, value) {
     Object.defineProperty(exports, name, {
         value:      value,
