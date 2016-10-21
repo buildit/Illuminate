@@ -74,3 +74,15 @@ exports.DataEvent = function (type) {
   this.defect = null;
   this.effort = null;
 }
+
+exports.DemandHistoryEntry = function (date, status) {
+  this.changeDate = date;
+  this.toStatus = status;
+}
+
+exports.CommonDemandEntry = function (id, date, initialStatus) {
+  this._id = id;
+  this.createdDate = date;
+  this.initialStatus = initialStatus;
+  this.history = [];
+}

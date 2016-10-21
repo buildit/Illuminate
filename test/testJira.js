@@ -19,14 +19,6 @@ const PROJECTNAME = 'UNITESTEFFORT';
 const GOODPROJECT = 10284278;
 const BADPROJECT = 98765432;
 
-const DEMANDINFO = {
-  source: "JIRA",
-  url: "https://digitalrig.atlassian.net/rest/api/latest/",
-  project: "CIT",
-  authPolicy: "Basic",
-  userData: 'ZGlnaXRhbHJpZzpEMWchdGFsUmln',
-  flow: []};
-
 // NOTE:  I had to put an 'a' in front of the avart urls to get past compiler errors
 const RAWJIRASTORY = {
  expand: "operations,versionedRepresentations,editmeta,changelog,renderedFields",
@@ -242,19 +234,14 @@ const SINGLEJIRARESPOSE = {
   issues: [RAWJIRASTORY]
 };
 
-const FIRSTJIRARESPOSE = {
-  startAt: 0,
-  maxResults: 50,
-  total: 2,
-  issues: [RAWJIRASTORY]
-};
+const DEMANDINFO = {
+  source: 'JIRA',
+  url: "https://digitalrig.atlassian.net/rest/api/latest/",
+  project: 'CIT',
+  authPolicy: 'Basic',
+  userData: 'ZGlnaXRhbHJpZzpEMWchdGFsUmln',
+  flow: [{name: 'Backlog'}]};
 
-const SECONDJIRARESPOSE = {
-  startAt: 1,
-  maxResults: 50,
-  total: 2,
-  issues: [RAWJIRASTORY]
-};
 
 describe('Test Fixing of Jira History', function() {
 
@@ -307,6 +294,17 @@ describe('Single Pass through ', function() {
       .then(function(response) {
         Should(response.length).equal(1);
       });
+  });
+});
+
+
+describe('Test creating common demand format from issue ', function() {
+
+  it('Convert Jira Object', function(done) {
+    var commonDataFormat = jira.mapJiraDemand([RAWJIRASTORY], DEMANDINFO);
+
+    Should(commonDataFormat[0].history.length).equal(3);
+    done();
   });
 });
 

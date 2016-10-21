@@ -254,7 +254,7 @@ exports.loadStoryEntries = function(demandInfo, processingInfo, sinceTime) {
 
 function buildJQL(project, startPosition) {
   const expand = ['changelog', 'history', 'items'];
-  const fields = ['issuetype', 'created', 'updated', 'status', 'key', 'summary', 'priority', 'reporter'];
+  const fields = ['issuetype', 'created', 'updated', 'status', 'key', 'summary'];
   var jqlData = `search?jql=project=${project} AND issueType=${constants.JIRADEMANDTYPE}
     &startAt=${startPosition}&expand=${expand.toString()}&fields=${fields.toString()}`;
 
@@ -297,6 +297,7 @@ exports.fixHistoryData = function(stories) {
   logger.info(`fixHistoryData for ${stories.length} stories`);
 
   stories.forEach(function (aStory) {
+    aStory['_id'] = aStory.id;
     aStory.changelog.histories.forEach(function (history) {
       history.items = JSON.parse(JSON.stringify(history.items[0]));
     });
@@ -305,9 +306,20 @@ exports.fixHistoryData = function(stories) {
   return(stories);
 }
 
-
-exports.mapJiraDemand = function(timeData) {
+exports.mapJiraDemand = function(issueData, demandInfo) {
   logger.info('mapJiraDemand');
 
-  return timeData;
+  var commonDataFormat = [];
+
+  issueData.forEach(function (aStory) {
+    var commonDemandEntry = new utils.CommonDemandEntry(aStory.id, aStory.fields.created, demandInfo.flow[0].name);
+    aStory.changelog.histories.forEach(function (history) {
+      if (history.items.field === 'status') {
+        var historyEntry = new utils.DemandHistoryEntry(history.created, history.items.toString);
+        commonDemandEntry.history.push(historyEntry);
+      }
+    });
+    commonDataFormat.push(commonDemandEntry);
+  });
+  return commonDataFormat;
 }
