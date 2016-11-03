@@ -1,12 +1,9 @@
 'use strict'
 
-const constants = require('../util/constants');
-const MongoDB = require('../services/datastore/mongodb');
 const jira = require('../services/demandSystem/jira');
 const Rest = require('restler');
 const Should = require('should');
 const Sinon = require('sinon');
-const utils = require('../util/utils');
 
 const Config = require('config');
 const Log4js = require('log4js');
@@ -14,10 +11,6 @@ const Log4js = require('log4js');
 Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
 logger.setLevel(Config.get('log-level'));
-
-const PROJECTNAME = 'UNITESTEFFORT';
-const GOODPROJECT = 10284278;
-const BADPROJECT = 98765432;
 
 // NOTE:  I had to put an 'a' in front of the avart urls to get past compiler errors
 const RAWJIRASTORY = {
@@ -60,7 +53,7 @@ const RAWJIRASTORY = {
                      from: "amit.sarkar",
                      fromString: "Amit Sarkar",
                      to: "darpan.36",
-                     atoString: "Darpan"
+                     'toString': "Darpan"
                     }
                 ]
             },
@@ -92,7 +85,7 @@ const RAWJIRASTORY = {
                      from: "10000",
                      fromString: "Backlog",
                      to: "10700",
-                     atoString: "UX Review"
+                     'toString': "UX Review"
                     }
                 ]
             },
@@ -124,7 +117,7 @@ const RAWJIRASTORY = {
                      from: "10700",
                      fromString: "UX Review",
                      to: "10501",
-                     atoString: "In Progress"
+                     'toString': "In Progress"
                     }
                 ]
             },
@@ -156,7 +149,7 @@ const RAWJIRASTORY = {
                      from: "10501",
                      fromString: "In Progress",
                      to: "10700",
-                     atoString: "UX Review"
+                     'toString': "UX Review"
                     }
                 ]
             }
@@ -242,6 +235,16 @@ const DEMANDINFO = {
   userData: 'ZGlnaXRhbHJpZzpEMWchdGFsUmln',
   flow: [{name: 'Backlog'}]};
 
+const EXPECTEDCOMMON = [
+  { _id: '16204',
+      history:[
+        {statusValue: 'Backlog', startDate: '2016-03-22', changeDate: '2016-03-22'},
+        {statusValue: 'UX Review', startDate: '2016-03-22', changeDate: '2016-03-22'},
+        {statusValue: 'In Progress', startDate: '2016-03-22', changeDate: '2016-03-24'},
+        {statusValue: 'UX Review', startDate: '2016-03-24', changeDate: null} ]
+  }
+];
+
 
 describe('Test Fixing of Jira History', function() {
 
@@ -253,7 +256,7 @@ describe('Test Fixing of Jira History', function() {
     });
 });
 
-describe('Empty result test', function() {
+describe('Empty result from Jira test', function() {
 
   beforeEach(function() {
     this.get = Sinon.stub(Rest, 'get');
@@ -275,7 +278,7 @@ describe('Empty result test', function() {
   });
 });
 
-describe('Single Pass through ', function() {
+describe('Test getting all of the stories in a single request. ', function() {
 
   beforeEach(function() {
     this.get = Sinon.stub(Rest, 'get');
@@ -298,113 +301,12 @@ describe('Single Pass through ', function() {
 });
 
 
-describe('Test creating common demand format from issue ', function() {
+describe('Test creating common demand format from Jira issues ', function() {
 
   it('Convert Jira Object', function(done) {
-    var commonDataFormat = jira.mapJiraDemand([RAWJIRASTORY], DEMANDINFO);
+    var commonDataFormat = jira.mapJiraDemand([RAWJIRASTORY], DEMANDINFO.flow[0].name);
 
-    Should(commonDataFormat[0].history.length).equal(3);
+    Should(commonDataFormat).match(EXPECTEDCOMMON);
     done();
   });
 });
-
-  // it('Test Error Getting Time Entries for a non-existant project', function() {
-  //   Rest.get.returns({
-  //     on:Sinon.stub().yields(null, ERRORRESULT)
-  //   });
-  //
-  //   var badEffort = JSON.parse(JSON.stringify(EFFORTINFO));
-  //   badEffort.project = BADPROJECT;
-  //   return harvest.getTimeEntries(badEffort, SINCETIME)
-  //     .then(function(response) {
-  //       Should(response.length).be(0);
-  //     })
-  //     .catch(function (reason) {
-  //       Should(reason).not.be.null;
-  //       Should(reason.error.statusCode).equal(CODENOTFOUND);
-  //       Should(reason.error.message).equal(TIMEERRORMESSAGE);
-  //     });
-  // });
-  //
-  // it('Test Get Task Entries', function() {
-  //   Rest.get.returns({
-  //     on:Sinon.stub().yields(TASKREPONSE, null)
-  //   });
-  //
-  //   return harvest.getTaskEntries(EFFORTINFO)
-  //     .then(function(response) {
-  //       Should(response).deepEqual(EXPECTEDTASKLIST);
-  //     });
-  // });
-  //
-  // it('Test Getting a 404 response on Task Entries', function() {
-  //   Rest.get.returns({
-  //     on:Sinon.stub().yields(null, ERRORRESULT)
-  //   });
-  //
-  //   var badEffort = JSON.parse(JSON.stringify(EFFORTINFO));
-  //   badEffort.project = BADPROJECT;
-  //   return harvest.getTaskEntries(badEffort)
-  //     .then(function(response) {
-  //       Should(response.length).be(0);
-  //     })
-  //     .catch(function (reason) {
-  //       Should(reason).not.be.null;
-  //       Should(reason.error.statusCode).equal(CODENOTFOUND);
-  //       Should(reason.error.message).equal(TASKERRORMESSAGE);
-  //     });
-  // });
-  //});
-
-// describe('Harvest Utility Function Tests', function() {
-//
-//   it('Translate task_id into task_name', function(done) {
-//     var time = JSON.parse(JSON.stringify(TIMERESPONSE));
-//
-//     Should(time[0].day_entry).not.have.property('task_name');
-//     Should(time[0]).not.have.property('_id');
-//     harvest.replaceTaskIdwithName(time, EXPECTEDTASKLIST);
-//     Should(time[0]).have.property('_id');
-//     Should(time[0].day_entry).have.property('task_name');
-//
-//     done();
-//   });
-//
-//   it('Map Harvest to common format', function(done) {
-//     var time = JSON.parse(JSON.stringify(TIMERESPONSE));
-//
-//     harvest.replaceTaskIdwithName(time, EXPECTEDTASKLIST);
-//     var aDatedEffortArray = harvest.mapHarvestEffort(time);
-//     Should(aDatedEffortArray.length).equal(time.length);
-//     done();
-//   });
-// });
-//
-// describe('Harvest Real Service Tests', function() {
-//   var aSetOfInfo = {};
-//
-//   before (function(){
-//     aSetOfInfo = new utils.ProcessingInfo(utils.dbProjectPath(PROJECTNAME),
-//       constants.RAWEFFORT,
-//       constants.COMMONEFFORT,
-//       MongoDB.upsertData);
-//   });
-//
-//   it('Test That When I call Load Entries that I have mapped the task name instead of the task ID', function() {
-//     this.timeout(5000);
-//
-//     return harvest.loadTimeEntries(EFFORTINFO, aSetOfInfo, SINCETIME)
-//       .then(function(response) {
-//         Should(response.length).be.above(0);
-//       });
-//   });
-//
-//   it('Test That Load Entries returns empty when no data', function() {
-//     this.timeout(5000);
-//
-//     return harvest.loadTimeEntries(EFFORTINFO, aSetOfInfo, FUTURETIME)
-//       .then(function(response) {
-//         Should(response.length).equal(0);
-//       });
-//   });
-// });

@@ -214,10 +214,9 @@ describe('Harvest Real Service Tests', function() {
   var aSetOfInfo = {};
 
   before (function(){
-    aSetOfInfo = new utils.ProcessingInfo(utils.dbProjectPath(PROJECTNAME),
-      constants.RAWEFFORT,
-      constants.COMMONEFFORT,
-      MongoDB.upsertData);
+    aSetOfInfo = new utils.ProcessingInfo(utils.dbProjectPath(PROJECTNAME));
+    aSetOfInfo.rawLocation = constants.RAWEFFORT;
+    aSetOfInfo.storageFunction = MongoDB.upsertData;
   });
 
   it('Test That When I call Load Entries that I have mapped the task name instead of the task ID', function() {

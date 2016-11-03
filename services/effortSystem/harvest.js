@@ -1,6 +1,7 @@
 'use strict';
 
 const Config = require('config');
+const constants = require('../../util/constants');
 const errorHelper = require('../errors');
 const Log4js = require('log4js');
 const R = require('ramda');
@@ -47,10 +48,10 @@ logger.setLevel(Config.get('log-level'));
 //const DEFAULTSTARTDATE = MILLENIUM+'+00:00';
 
 exports.loadTimeEntries = function(effortInfo, processingInfo, sinceTime) {
-  logger.info(`loadTimeEntries for ${effortInfo.project} updated since [${startDate}]`);
+  logger.info(`loadTimeEntries for ${effortInfo.project} updated since [${sinceTime}]`);
 
   return new Promise(function (resolve, reject) {
-    module.exports.getTimeEntries(effortInfo, startDate)
+    module.exports.getTimeEntries(effortInfo, sinceTime)
       .then(function (timeData) {
         if (timeData.length < 1) {
           resolve([]);
@@ -78,7 +79,7 @@ exports.loadTimeEntries = function(effortInfo, processingInfo, sinceTime) {
 exports.getTimeEntries = function(effortInfo, startDate) {
   logger.info(`getTimeEntries since ${startDate}`);
 
-  var harvestURL = `${effortInfo.url}/projects/${effortInfo.project}/entries?from=${MILLENIUM}&to=${utils.dateFormatIWant(new Date())}&updated_since=${startDate}`;
+  var harvestURL = `${effortInfo.url}/projects/${effortInfo.project}/entries?from=${constants.DEFAULTSTARTDATE}&to=${utils.dateFormatIWant(new Date())}&updated_since=${startDate}`;
   logger.debug(`harvestURL ${harvestURL}`);
   return new Promise(function (resolve, reject) {
     Rest.get(encodeURI(harvestURL),

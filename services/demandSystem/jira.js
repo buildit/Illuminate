@@ -4,7 +4,7 @@ const constants = require('../../util/constants');
 const Config = require('config');
 const errorHelper = require('../errors');
 const Log4js = require('log4js');
-const R = require('ramda');
+//const R = require('ramda');
 const Rest = require('restler');
 const utils = require('../../util/utils');
 
@@ -226,10 +226,10 @@ logger.setLevel(Config.get('log-level'));
 // }
 
 exports.loadStoryEntries = function(demandInfo, processingInfo, sinceTime) {
-  logger.info(`loadStoryEntries for ${demandInfo.project} updated since [${startDate}]`);
+  logger.info(`loadStoryEntries for ${demandInfo.project} updated since [${sinceTime}]`);
 
   return new Promise(function (resolve, reject) {
-    loadJiraDemand(demandInfo)
+    module.exports.loadJiraDemand(demandInfo, [])
     .then( function (stories) {
       if (stories.length < 1) {
         resolve([]);
@@ -239,7 +239,7 @@ exports.loadStoryEntries = function(demandInfo, processingInfo, sinceTime) {
       var enhancedStories = module.exports.fixHistoryData(stories);
       processingInfo.storageFunction(processingInfo.dbUrl, processingInfo.rawLocation, enhancedStories)
       .then (function () {
-        resolve(module.exports.mapJiraDemand(enhancedStories));
+        resolve(module.exports.mapJiraDemand(enhancedStories, demandInfo.flow[0]));
       })
       .catch(function (reason) {
         reject(reason);
@@ -270,6 +270,7 @@ exports.loadJiraDemand = function(demandInfo, issuesSoFar) {
       {headers: utils.createBasicAuthHeader(demandInfo.userData)}
       ).on('complete', function (data, response) {
         logger.info(`Success reading demand from [${data.startAt}] count [${data.issues.length}] of [${data.total}]`);
+        logger.debug(response);
 
         var issues = issuesSoFar.concat(data.issues);
         if ((data.issues.length > 0) && (issues.length < data.total)) {
@@ -306,20 +307,27 @@ exports.fixHistoryData = function(stories) {
   return(stories);
 }
 
-exports.mapJiraDemand = function(issueData, demandInfo) {
-  logger.info('mapJiraDemand');
+exports.mapJiraDemand = function(issueData, initialStatus) {
+  logger.info('mapJiraDemand into a common format');
 
   var commonDataFormat = [];
 
   issueData.forEach(function (aStory) {
-    var commonDemandEntry = new utils.CommonDemandEntry(aStory.id, aStory.fields.created, demandInfo.flow[0].name);
+    var commonDemandEntry = new utils.CommonDemandEntry(aStory.id);
+    var historyEntry = new utils.DemandHistoryEntry(initialStatus, aStory.fields.created);
+
     aStory.changelog.histories.forEach(function (history) {
       if (history.items.field === 'status') {
-        var historyEntry = new utils.DemandHistoryEntry(history.created, history.items.toString);
+        historyEntry.changeDate = utils.dateFormatIWant(history.created);
         commonDemandEntry.history.push(historyEntry);
+        historyEntry = new utils.DemandHistoryEntry(history.items.toString, history.created);
       }
     });
+    commonDemandEntry.history.push(historyEntry);
     commonDataFormat.push(commonDemandEntry);
   });
+
+  logger.debug('commonDataFormat');
+  logger.debug(commonDataFormat);
   return commonDataFormat;
 }

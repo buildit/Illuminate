@@ -50,10 +50,24 @@ exports.dateFormatIWant = function (incomming) {
   return theDay;
 };
 
-exports.ProcessingInfo = function (dbUrl, raw, common, storeIt) {
+exports.createDayArray = function (start, end) {
+  var daysArray = [];
+  var startDate = new Date(start);
+  var endDate = new Date(end);
+  var daysDiff = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24));
+
+  for (var i = 0; i < daysDiff; i++) {
+    daysArray.push(this.dateFormatIWant(startDate));
+    startDate.setUTCDate(startDate.getUTCDate() + 1);
+  }
+
+  return daysArray;
+};
+
+exports.ProcessingInfo = function (dbUrl) {
   this.dbUrl = dbUrl;
-  this.rawLocation = raw;
-  this.storageFunction = storeIt;
+  this.rawLocation = null;
+  this.storageFunction = null;
 }
 
 exports.SystemEvent = function (status, message) {
@@ -75,14 +89,13 @@ exports.DataEvent = function (type) {
   this.effort = null;
 }
 
-exports.DemandHistoryEntry = function (date, status) {
-  this.changeDate = date;
-  this.toStatus = status;
+exports.DemandHistoryEntry = function (status, startDate) {
+  this.statusValue = status;
+  this.startDate = module.exports.dateFormatIWant(startDate);
+  this.changeDate = null;
 }
 
-exports.CommonDemandEntry = function (id, date, initialStatus) {
+exports.CommonDemandEntry = function (id) {
   this._id = id;
-  this.createdDate = date;
-  this.initialStatus = initialStatus;
   this.history = [];
 }
