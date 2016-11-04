@@ -1,11 +1,12 @@
 'use strict'
 
 const constants = require('../util/constants');
-const MongoDB = require('../services/datastore/mongodb');
+const myDatastore = require('../services/datastore/mongodb');
 const harvest = require('../services/effortSystem/harvest');
 const Rest = require('restler');
 const Should = require('should');
 const Sinon = require('sinon');
+require('sinon-as-promised');
 const utils = require('../util/utils');
 
 const Config = require('config');
@@ -31,6 +32,7 @@ const EFFORTINFO = {
   role: []};
 
 const EXPECTEDTASKLIST = {5715688 :'Delivery', 6375838 :'Discovery'};
+
 const TIMERESPONSE = [
   {
     day_entry:
@@ -70,41 +72,98 @@ const TIMERESPONSE = [
   }
 ];
 
+const TASKREPONSE = [
+  {
+    "task":
+    {
+      "id": 6375838,
+      "name": "Discovery",
+      "billable_by_default": false,
+      "created_at": "2016-08-02T09:16:49Z",
+      "updated_at": "2016-09-13T12:26:15Z",
+      "is_default": false,
+      "default_hourly_rate": 0,
+      "deactivated": false
+    }
+  },
+  {
+    "task":
+    {
+      "id": 5715688,
+      "name": "Delivery",
+      "billable_by_default": true,
+      "created_at": "2016-03-15T12:46:08Z",
+      "updated_at": "2016-03-15T13:12:49Z",
+      "is_default": true,
+      "default_hourly_rate": 0,
+      "deactivated": false
+    }
+  }
+];
+
+const MODIFIEDTIMERESPONSE = [
+  {
+    _id: 439722386,
+    day_entry:
+    {
+      task_name: "Delivery",
+      id: 439722386,
+      notes: "Sheffeld co-lo, planning",
+      spent_at: "2015-10-21",
+      hours: 8,
+      user_id: 1239662,
+      project_id: 10284278,
+      task_id: 5715688,
+      created_at: "2016-03-15T17:00:48Z",
+      updated_at: "2016-03-15T17:00:48Z",
+      adjustment_record: false,
+      timer_started_at: null,
+      is_closed: false,
+      is_billed: false
+    }
+  },
+  {
+    _id: 439722390,
+    day_entry:
+    {
+      task_name: "Delivery",
+      id: 439722390,
+      notes: "Sheffeld co-lo, planning",
+      spent_at: "2015-10-22",
+      hours: 8,
+      user_id: 1239646,
+      project_id: 10284278,
+      task_id: 5715688,
+      created_at: "2016-03-15T17:00:48Z",
+      updated_at: "2016-03-15T17:00:48Z",
+      adjustment_record: false,
+      timer_started_at: null,
+      is_closed: false,
+      is_billed: false
+    }
+  }
+];
+
+const EXPECTEDCOMMONDATA = [
+  {
+    day: '2015-10-21',
+    role: 'Delivery',
+    effort: 8
+  },
+  {
+    day: '2015-10-22',
+    role: 'Delivery',
+    effort: 8
+  }
+];
+
+const CODENOTFOUND = 404;
+const MESSAGENOTFOUND = 'There Be Dragons';
+const ERRORRESULT = {statusCode: CODENOTFOUND, statusMessage: MESSAGENOTFOUND};
+
 describe('Harvest Stubbed Tests', function() {
-  const CODENOTFOUND = 404;
-  const MESSAGENOTFOUND = 'There Be Dragons';
-  const ERRORRESULT = {statusCode: CODENOTFOUND, statusMessage: MESSAGENOTFOUND};
   const TIMEERRORMESSAGE = 'Error retrieving time entries from Harvest';
   const TASKERRORMESSAGE = 'Error retrieving task entries from Harvest';
-
-  const TASKREPONSE = [
-    {
-      "task":
-      {
-        "id": 6375838,
-        "name": "Discovery",
-        "billable_by_default": false,
-        "created_at": "2016-08-02T09:16:49Z",
-        "updated_at": "2016-09-13T12:26:15Z",
-        "is_default": false,
-        "default_hourly_rate": 0,
-        "deactivated": false
-      }
-    },
-    {
-      "task":
-      {
-        "id": 5715688,
-        "name": "Delivery",
-        "billable_by_default": true,
-        "created_at": "2016-03-15T12:46:08Z",
-        "updated_at": "2016-03-15T13:12:49Z",
-        "is_default": true,
-        "default_hourly_rate": 0,
-        "deactivated": false
-      }
-    }
-  ];
 
   beforeEach(function() {
     this.get = Sinon.stub(Rest, 'get');
@@ -186,7 +245,7 @@ describe('Harvest Stubbed Tests', function() {
   });
 });
 
-describe('Harvest Utility Function Tests', function() {
+describe('Harvest Utility Function Test', function() {
 
   it('Translate task_id into task_name', function(done) {
     var time = JSON.parse(JSON.stringify(TIMERESPONSE));
@@ -199,41 +258,91 @@ describe('Harvest Utility Function Tests', function() {
 
     done();
   });
+});
 
-  it('Map Harvest to common format', function(done) {
-    var time = JSON.parse(JSON.stringify(TIMERESPONSE));
+describe('Harvest Data Convertion Test', function() {
+  it('Convert', function(done) {
+    var commonDataFormat = harvest.transformRawToCommon(MODIFIEDTIMERESPONSE);
 
-    harvest.replaceTaskIdwithName(time, EXPECTEDTASKLIST);
-    var aDatedEffortArray = harvest.mapHarvestEffort(time);
-    Should(aDatedEffortArray.length).equal(time.length);
+    Should(commonDataFormat).deepEqual(EXPECTEDCOMMONDATA);
     done();
   });
 });
 
-describe('Harvest Real Service Tests', function() {
+
+describe('Harvest GetRawData - fail getting time', function() {
   var aSetOfInfo = {};
 
-  before (function(){
-    aSetOfInfo = new utils.ProcessingInfo(utils.dbProjectPath(PROJECTNAME));
-    aSetOfInfo.rawLocation = constants.RAWEFFORT;
-    aSetOfInfo.storageFunction = MongoDB.upsertData;
+  beforeEach(function() {
+    this.getTimeEntries = Sinon.stub(harvest, 'getTimeEntries').rejects(ERRORRESULT);
   });
 
-  it('Test That When I call Load Entries that I have mapped the task name instead of the task ID', function() {
-    this.timeout(5000);
+  afterEach(function() {
+    harvest.getTimeEntries.restore();
+  })
 
-    return harvest.loadTimeEntries(EFFORTINFO, aSetOfInfo, SINCETIME)
+  it('Make sure the error is returned', function() {
+
+    return harvest.loadRawData(EFFORTINFO, aSetOfInfo, SINCETIME)
       .then(function(response) {
-        Should(response.length).be.above(0);
+        Should.ok(false);
+      }).catch ( function(error) {
+        logger.debug(error);
+        Should(error).deepEqual(ERRORRESULT);
       });
   });
+});
 
-  it('Test That Load Entries returns empty when no data', function() {
-    this.timeout(5000);
+describe('Harvest GetRawData - fail getting task', function() {
+  var aSetOfInfo = {};
 
-    return harvest.loadTimeEntries(EFFORTINFO, aSetOfInfo, FUTURETIME)
+  beforeEach(function() {
+    this.getTimeEntries = Sinon.stub(harvest, 'getTimeEntries').resolves(TIMERESPONSE);
+    this.getTaskEntries = Sinon.stub(harvest, 'getTaskEntries').rejects(ERRORRESULT);
+  });
+
+  afterEach(function() {
+    harvest.getTimeEntries.restore();
+    harvest.getTaskEntries.restore();
+  })
+
+  it('Make sure the error is returned', function() {
+
+    return harvest.loadRawData(EFFORTINFO, aSetOfInfo, SINCETIME)
       .then(function(response) {
-        Should(response.length).equal(0);
+        Should.ok(false);
+      }).catch ( function(error) {
+        logger.debug(error);
+        Should(error).deepEqual(ERRORRESULT);
+      });
+  });
+});
+
+describe('Harvest GetRawData - make sure count is returned', function() {
+  var aSetOfInfo = {};
+
+  beforeEach(function() {
+    this.getTimeEntries = Sinon.stub(harvest, 'getTimeEntries').resolves(TIMERESPONSE);
+    this.getTaskEntries = Sinon.stub(harvest, 'getTaskEntries').resolves(TASKREPONSE);
+    this.upsertData = Sinon.stub(myDatastore, 'upsertData').resolves();
+
+    aSetOfInfo = new utils.ProcessingInfo('');
+    aSetOfInfo.storageFunction = this.upsertData;
+  });
+
+  afterEach(function() {
+    harvest.getTimeEntries.restore();
+    harvest.getTaskEntries.restore();
+    myDatastore.upsertData.restore();
+  });
+
+  it('Make sure the proper count', function() {
+
+    return harvest.loadRawData(EFFORTINFO, aSetOfInfo, SINCETIME)
+      .then(function(response) {
+        Should(response).equal(2);
+      }).catch ( function(error) {
+        Should.ok(false);
       });
   });
 });

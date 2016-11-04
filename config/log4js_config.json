@@ -9,6 +9,13 @@
           	"type": "pattern",
           	"pattern": "[%r] [%h] [%p] - %m"
         	}
+    	},
+      {
+    		"type": "console",
+    		"layout": {
+    			"type": "pattern",
+    			"pattern": "%d{ABSOLUTE} %[%-5p%] %c %m"
+    		}
     	}
     ]
 }

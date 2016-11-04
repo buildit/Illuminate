@@ -24,97 +24,32 @@ logger.setLevel(Config.get('log-level'));
 //       {name: "SD", groupWith: null}
 //     ]};
 
-
-exports.loadDemand = function(demandData, anEvent, processingInfo) {
-  var aSystemEvent = null;
-  logger.info(`loadDemand for project ${demandData.project} from ${demandData.source}`);
-  logger.debug('anEvent');
-  logger.debug(anEvent);
-  logger.debug('processingInfo');
-  logger.debug(processingInfo);
-
-  configureProcessingInfo(processingInfo);
-  module.exports.loadRawData(demandData, processingInfo, anEvent.since)
-    .then (function(commonDataFormat) {
-      logger.debug('loadDemand -> loadRawData');
-      logger.debug(commonDataFormat);
-      dataStore.wipeAndStoreData(processingInfo.dbUrl, constants.COMMONDEMAND,  commonDataFormat)
-        .then (function(response1) {
-          logger.debug('loadDemand -> wipeAndStoreData Common Data');
-          logger.debug(response1);
-          dataStore.wipeAndStoreData(processingInfo.dbUrl, constants.SUMMARYDEMAND,  this.createSummaryData(commonDataFormat))
-            .then (function (response2){
-              logger.debug('loadDemand -> wipeAndStoreData Summary Data');
-              logger.debug(response2);
-              logger.debug('loadDemand -> success');
-              aSystemEvent = new utils.SystemEvent(constants.SUCCESSEVENT, `${commonDataFormat.length} records processed`);
-              dataStore.processEventData(processingInfo.dbUrl, constants.DEMANDCOLLECTION, anEvent, constants.DEMANDSECTION, aSystemEvent)
-            }).catch(function(err) {
-              logger.debug('loadDemand -> ERROR Summary Data');
-              aSystemEvent = new utils.SystemEvent(constants.FAILEDEVENT, JSON.stringify(err));
-              dataStore.processEventData(processingInfo.dbUrl, constants.DEMANDCOLLECTION, anEvent, constants.DEMANDSECTION, aSystemEvent)
-            });
-        }).catch(function(err) {
-          logger.debug('loadDemand -> ERROR Common Data');
-          aSystemEvent = new utils.SystemEvent(constants.FAILEDEVENT, JSON.stringify(err));
-          dataStore.processEventData(processingInfo.dbUrl, constants.DEMANDCOLLECTION, anEvent, constants.DEMANDSECTION, aSystemEvent)
-        });
-    }).catch(function(err) {
-      logger.debug('loadEffort -> ERROR Raw Data');
-      aSystemEvent = new utils.SystemEvent(constants.FAILEDEVENT, JSON.stringify(err));
-      dataStore.processEventData(processingInfo.dbUrl, constants.DEMANDCOLLECTION, anEvent, constants.DEMANDSECTION, aSystemEvent)
-    });
-};
-
-function configureProcessingInfo(processingInfo) {
-  processingInfo.rawLocation = constants.RAWDEMAND;
-  processingInfo.storageFunction = dataStore.upsertData;
+exports.configureProcessingInstructionsn = function(processingInfo) {
+  var updatedInfo = JSON.parse(JSON.stringify(processingInfo)); // this does a deep copy on purpose
+  updatedInfo.rawLocation = constants.RAWDEMAND;
+  updatedInfo.commonLocation = constants.COMMONDEMAND;
+  updatedInfo.summaryLocation = constants.SUMMARYDEMAND;
+  updatedInfo.eventSection = constants.DEMANDSECTION;
+  return updatedInfo;
 }
 
-exports.loadRawData = function(demandData, processingInfo, sinceTime) {
-  return new Promise(function (resolve, reject) {
-    switch(demandData.source.toUpperCase()) {
-        case "JIRA":
-          jira.loadJiraDemand(demandData, processingInfo, sinceTime)
-            .then(function (commonDataStructure) {
-              resolve (commonDataStructure);
-            })
-            .catch(function (reason) {
-              logger.error(`Error getting time entries ${reason}`);
-              reject (reason);
-            });
-            break;
-        default:
-          logger.debug(`loadDemand - Unknown Project System - ${demandData.source}`);
-          reject (errorHelper.errorBody('Unknown', 'Unknown Project System ' + demandData.source));
-    }
-  });
+exports.rawDataProcessor = function(effortData) {
+  switch(effortData.source.toUpperCase()) {
+      case "JIRA":
+        return jira;
+          break;
+      default:
+        return null;
+  }
 }
 
-// const createSummaryData = data => {
-//     const objectResult = data.reduce((result, point) => {
-//         if (!result[point.day]) result[point.day] = { status: {} }
-//         if (result[point.day].activity[point['role']]) {
-//             result[point.day].activity[point['role']] =
-//                 result[point.day].activity[point['role']] + point['effort']
-//         } else {
-//             result[point.day].activity[point['role']] = point['effort']
-//         }
-//         return result
-//     }, {})
-//     return Object.keys(objectResult).map(date => ({
-//         projectDate: date,
-//         activity: objectResult[date].activity
-//     }))
-// };
-//
 
-exports.createSummaryData = function (commonFormat) {
-  logger.info(`createSummaryData for ${commonFormat.length} records`);
+exports.transformCommonToSummary = function(commonData) {
+  logger.info(`mapCommonDataToSummary for ${commonData.length} records`);
 
   var datedData = [];
 
-  commonFormat.forEach(function (storySummary) {
+  commonData.forEach(function (storySummary) {
     storySummary.history.forEach(function (aStatusChange) {
       var daysDifference = utils.createDayArray(aStatusChange.startDate, aStatusChange.changeDate);
       for (var i = 0; i < daysDifference.length; i++) {

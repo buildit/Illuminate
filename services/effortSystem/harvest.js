@@ -47,14 +47,14 @@ logger.setLevel(Config.get('log-level'));
 //const MILLENIUM = '2000-01-01';
 //const DEFAULTSTARTDATE = MILLENIUM+'+00:00';
 
-exports.loadTimeEntries = function(effortInfo, processingInfo, sinceTime) {
+exports.loadRawData = function(effortInfo, processingInfo, sinceTime) {
   logger.info(`loadTimeEntries for ${effortInfo.project} updated since [${sinceTime}]`);
 
   return new Promise(function (resolve, reject) {
     module.exports.getTimeEntries(effortInfo, sinceTime)
       .then(function (timeData) {
         if (timeData.length < 1) {
-          resolve([]);
+          resolve(timeData.length);
         }
         logger.debug(`total time entries - ${timeData.length}`);
         module.exports.getTaskEntries(effortInfo)
@@ -63,7 +63,7 @@ exports.loadTimeEntries = function(effortInfo, processingInfo, sinceTime) {
             module.exports.replaceTaskIdwithName(timeData, taskData);
             processingInfo.storageFunction(processingInfo.dbUrl, processingInfo.rawLocation, timeData)
             .then (function () {
-              resolve(module.exports.mapHarvestEffort(timeData));
+              resolve(timeData.length); // return the number of records
             });
           })
           .catch(function (reason) {
@@ -75,6 +75,18 @@ exports.loadTimeEntries = function(effortInfo, processingInfo, sinceTime) {
       });
   });
 };
+
+const makeCommon = ({day_entry}) => ({
+  day: day_entry.spent_at,
+  role: day_entry.task_name,
+  effort: day_entry.hours
+});
+
+exports.transformRawToCommon = function(timeData) {
+  logger.info('mapHarvestEffort');
+
+  return R.map(makeCommon, timeData);
+}
 
 exports.getTimeEntries = function(effortInfo, startDate) {
   logger.info(`getTimeEntries since ${startDate}`);
@@ -157,16 +169,4 @@ exports.replaceTaskIdwithName = function(timeData, taskData) {
     aTimeEntry['_id'] = aTimeEntry.day_entry.id;
     aTimeEntry.day_entry['task_name'] = taskData[aTimeEntry.day_entry.task_id];
   });
-}
-
-const makeCommon = ({day_entry}) => ({
-  day: day_entry.spent_at,
-  role: day_entry.task_name,
-  effort: day_entry.hours
-});
-
-exports.mapHarvestEffort = function(timeData) {
-  logger.info('mapHarvestEffort');
-
-  return R.map(makeCommon, timeData);
 }

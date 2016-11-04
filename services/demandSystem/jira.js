@@ -225,21 +225,21 @@ logger.setLevel(Config.get('log-level'));
 //     }
 // }
 
-exports.loadStoryEntries = function(demandInfo, processingInfo, sinceTime) {
+exports.loadRawData = function(demandInfo, processingInfo, sinceTime) {
   logger.info(`loadStoryEntries for ${demandInfo.project} updated since [${sinceTime}]`);
 
   return new Promise(function (resolve, reject) {
-    module.exports.loadJiraDemand(demandInfo, [])
+    module.exports.loadJiraDemand(demandInfo, [], sinceTime)
     .then( function (stories) {
       if (stories.length < 1) {
-        resolve([]);
+        resolve(stories.length);
       }
       logger.debug(`total stories read - ${stories.length}`);
 
       var enhancedStories = module.exports.fixHistoryData(stories);
       processingInfo.storageFunction(processingInfo.dbUrl, processingInfo.rawLocation, enhancedStories)
       .then (function () {
-        resolve(module.exports.mapJiraDemand(enhancedStories, demandInfo.flow[0]));
+        resolve(stories.length);
       })
       .catch(function (reason) {
         reject(reason);
@@ -252,14 +252,37 @@ exports.loadStoryEntries = function(demandInfo, processingInfo, sinceTime) {
   });
 }
 
-function buildJQL(project, startPosition) {
+exports.transformRawToCommon = function(issueData, initialStatus) {
+  logger.info('mapJiraDemand into a common format');
+
+  var commonDataFormat = [];
+
+  issueData.forEach(function (aStory) {
+    var commonDemandEntry = new utils.CommonDemandEntry(aStory.id);
+    var historyEntry = new utils.DemandHistoryEntry(initialStatus, aStory.fields.created);
+
+    aStory.changelog.histories.forEach(function (history) {
+      if (history.items.field === 'status') {
+        historyEntry.changeDate = utils.dateFormatIWant(history.created);
+        commonDemandEntry.history.push(historyEntry);
+        historyEntry = new utils.DemandHistoryEntry(history.items.toString, history.created);
+      }
+    });
+    commonDemandEntry.history.push(historyEntry);
+    commonDataFormat.push(commonDemandEntry);
+  });
+
+  return commonDataFormat;
+}
+
+function buildJQL(project, startPosition, since) {
   const expand = ['changelog', 'history', 'items'];
   const fields = ['issuetype', 'created', 'updated', 'status', 'key', 'summary'];
-  var jqlData = `search?jql=project=${project} AND issueType=${constants.JIRADEMANDTYPE}
-    &startAt=${startPosition}&expand=${expand.toString()}&fields=${fields.toString()}`;
+  const jqlData = `search?jql=project=${project} AND issueType=${constants.JIRADEMANDTYPE} AND updated>=${since}`;
+  const queryString = `${jqlData}&startAt=${startPosition}&expand=${expand.toString()}&fields=${fields.toString()}`;
 
-  logger.debug("jqlData:[" + jqlData + "]");
-  return jqlData;
+  logger.debug(`queryString:[${queryString}]`);
+  return queryString;
 }
 
 exports.loadJiraDemand = function(demandInfo, issuesSoFar) {
@@ -305,29 +328,4 @@ exports.fixHistoryData = function(stories) {
   });
 
   return(stories);
-}
-
-exports.mapJiraDemand = function(issueData, initialStatus) {
-  logger.info('mapJiraDemand into a common format');
-
-  var commonDataFormat = [];
-
-  issueData.forEach(function (aStory) {
-    var commonDemandEntry = new utils.CommonDemandEntry(aStory.id);
-    var historyEntry = new utils.DemandHistoryEntry(initialStatus, aStory.fields.created);
-
-    aStory.changelog.histories.forEach(function (history) {
-      if (history.items.field === 'status') {
-        historyEntry.changeDate = utils.dateFormatIWant(history.created);
-        commonDemandEntry.history.push(historyEntry);
-        historyEntry = new utils.DemandHistoryEntry(history.items.toString, history.created);
-      }
-    });
-    commonDemandEntry.history.push(historyEntry);
-    commonDataFormat.push(commonDemandEntry);
-  });
-
-  logger.debug('commonDataFormat');
-  logger.debug(commonDataFormat);
-  return commonDataFormat;
 }

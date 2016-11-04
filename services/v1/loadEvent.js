@@ -2,6 +2,7 @@
 
 const Config = require('config');
 const dataStore = require('../datastore/mongodb');
+const demandLoader = require('../demand');
 const effortLoader = require('../effort');
 const errorHelper = require('../errors');
 const HttpStatus = require('http-status-codes');
@@ -188,15 +189,24 @@ exports.getMostRecentEvent = function (aProjectName) {
 }
 
 exports.kickoffLoad = function (aProject, anEvent) {
-  // if (!(aProject.demand === null) && (JIRA === aProject.demand.source.toUpperCase())) {
-  //   logger.info("Load Jira Demand for " + aProject.name + "(" + aProject.id + ")");
-  //   jiraDemand.load(aProject);
-  // }
-  // if (!(aProject.defect === null) && (JIRA === aProject.defect.source.toUpperCase())) {
-  //   logger.info("Load Jira Defects for " + aProject.name + "(" + aProject.id + ")");
-  //   jiraDefect.load(aProject);
-  // }
-  if (!(aProject.effort === null)) {
-    effortLoader.loadEffort(aProject.effort, anEvent, new utils.ProcessingInfo(utils.dbProjectPath(aProject.name)));
+  var proeccessingIntructions = new utils.ProcessingInfo(utils.dbProjectPath(aProject.name));
+  var proeccessingIntructions.endDate = utils.dateFormatIWant(determineProjectEndDate(aProject);
+
+  if (!(aProject.demand === null)) {
+    demandLoader.loadDemand(aProject.effort, anEvent, proeccessingIntructions);
   }
+  if (!(aProject.effort === null)) {
+    effortLoader.loadEffort(aProject.effort, anEvent, proeccessingIntructions);
+  }
+}
+
+function determineProjectEndDate(aProject) {
+  if (aProject.projection != undefined) {
+    if (aProject.projection.endDate != undefined) {
+      return aProject.projection.endDate;
+    }
+  } elseif (aProject.endDate != undefined) {
+    return aProject.endDate;
+  }
+  return (new Date());
 }
