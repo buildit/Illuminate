@@ -2,8 +2,7 @@
 
 const Config = require('config');
 const dataStore = require('../datastore/mongodb');
-const demandLoader = require('../demand');
-const effortLoader = require('../effort');
+const dataLoader = require('../dataLoader');
 const errorHelper = require('../errors');
 const HttpStatus = require('http-status-codes');
 const Log4js = require('log4js');
@@ -102,7 +101,7 @@ exports.createNewEvent = function (req, res) {
                     res.status(HttpStatus.CREATED);
                     var tmpBody = {url: `${req.protocol}://${req.hostname}${req.baseUrl}${req.path}/${aLoadEvent._id}`};
                     logger.debug("createNewEvent -> Created @ " + tmpBody.url);
-                    module.exports.kickoffLoad(aProject, aLoadEvent);
+                    dataLoader.processProjectData(aProject, aLoadEvent);  // NOW GO DO WORK
                     res.send(tmpBody);
                   } else {
                     logger.debug("createNewEvent -> Event was not created " + projectName);
@@ -186,27 +185,4 @@ exports.getMostRecentEvent = function (aProjectName) {
           reject(err);
         });
   });
-}
-
-exports.kickoffLoad = function (aProject, anEvent) {
-  var proeccessingIntructions = new utils.ProcessingInfo(utils.dbProjectPath(aProject.name));
-  var proeccessingIntructions.endDate = utils.dateFormatIWant(determineProjectEndDate(aProject);
-
-  if (!(aProject.demand === null)) {
-    demandLoader.loadDemand(aProject.effort, anEvent, proeccessingIntructions);
-  }
-  if (!(aProject.effort === null)) {
-    effortLoader.loadEffort(aProject.effort, anEvent, proeccessingIntructions);
-  }
-}
-
-function determineProjectEndDate(aProject) {
-  if (aProject.projection != undefined) {
-    if (aProject.projection.endDate != undefined) {
-      return aProject.projection.endDate;
-    }
-  } elseif (aProject.endDate != undefined) {
-    return aProject.endDate;
-  }
-  return (new Date());
 }

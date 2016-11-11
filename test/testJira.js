@@ -1,12 +1,12 @@
 'use strict'
 
+const Config = require('config');
 const jira = require('../services/demandSystem/jira');
+const Log4js = require('log4js');
 const Rest = require('restler');
 const Should = require('should');
 const Sinon = require('sinon');
-
-const Config = require('config');
-const Log4js = require('log4js');
+require('sinon-as-promised');
 
 Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
@@ -239,12 +239,16 @@ const EXPECTEDCOMMON = [
   { _id: '16204',
       history:[
         {statusValue: 'Backlog', startDate: '2016-03-22', changeDate: '2016-03-22'},
-        {statusValue: 'UX Review', startDate: '2016-03-22', changeDate: '2016-03-22'},
-        {statusValue: 'In Progress', startDate: '2016-03-22', changeDate: '2016-03-24'},
+        {statusValue: 'UX Review', startDate: '2016-03-22', changeDate: '2016-03-23'},
+        {statusValue: 'In Progress', startDate: '2016-03-23', changeDate: '2016-03-24'},
         {statusValue: 'UX Review', startDate: '2016-03-24', changeDate: null} ]
   }
 ];
 
+const CODENOTFOUND = 404;
+const MESSAGENOTFOUND = 'There Be Dragons';
+const ERRORRESULT = {statusCode: CODENOTFOUND, statusMessage: MESSAGENOTFOUND};
+const SINCETIME = '2000-01-01+00:00';
 
 describe('Test Fixing of Jira History', function() {
 
@@ -304,9 +308,32 @@ describe('Test getting all of the stories in a single request. ', function() {
 describe('Test creating common demand format from Jira issues ', function() {
 
   it('Convert Jira Object', function(done) {
-    var commonDataFormat = jira.mapJiraDemand([RAWJIRASTORY], DEMANDINFO.flow[0].name);
+    var commonDataFormat = jira.transformRawToCommon([RAWJIRASTORY], DEMANDINFO.flow[0].name);
 
     Should(commonDataFormat).match(EXPECTEDCOMMON);
     done();
+  });
+});
+
+describe('Jira GetRawData - fail getting stories', function() {
+  var aSetOfInfo = {};
+
+  beforeEach(function() {
+    this.loadJiraDemand = Sinon.stub(jira, 'loadJiraDemand').rejects(ERRORRESULT);
+  });
+
+  afterEach(function() {
+    jira.loadJiraDemand.restore();
+  })
+
+  it('Make sure the error is returned', function() {
+
+    return jira.loadRawData(DEMANDINFO, aSetOfInfo, SINCETIME)
+      .then(function() {
+        Should.ok(false);
+      }).catch ( function(error) {
+        logger.debug(error);
+        Should(error).deepEqual(ERRORRESULT);
+      });
   });
 });

@@ -1,12 +1,8 @@
 'use strict'
 
 const constants = require('../util/constants');
-const mongoDB = require('../services/datastore/mongodb');
 const myDemand = require('../services/demand');
-//const sampleData = require('../testData/sampleIssues');
 const Should = require('should');
-const Sinon = require('sinon');
-require('sinon-as-promised');
 const utils = require('../util/utils');
 
 const Config = require('config');
@@ -28,8 +24,6 @@ const DEMANDINFO = {
   userData: 'ZGlnaXRhbHJpZzpEMWchdGFsUmln',
   flow: [{name: 'Backlog'}]};
 
-const ERRORRETURN = {error: {status: 'BAD', message: 'FAILED'}};
-
 const COMMONDEMAND = [
   { _id: '16204',
       history:[
@@ -41,158 +35,47 @@ const COMMONDEMAND = [
 ];
 
 const SUMMARYDEMAND = [
-  { projectDate: '2016-03-21', status: { 'In Progress': 1 } },
-  { projectDate: '2016-03-22', status: { 'In Progress': 1 } }
+  { projectDate: '2016-03-22', status: { 'In Progress': 1 } },
+  { projectDate: '2016-03-23', status: { 'In Progress': 1 } }
 ];
 
-describe('Demand Loader - Bad effort System', function() {
-  var url = '';
-  var anEvent = new utils.DataEvent(constants.LOADEVENT);
+describe('configure Processing info', function() {
+  var originalInfo = null;
 
-  before('setup', function () {
-      url = utils.dbProjectPath(PROJECTNAME);
-      anEvent = new utils.DataEvent(constants.LOADEVENT);
-      anEvent.status = constants.PENDINGEVENT;
-      anEvent.demand = {};
-
-      this.loadRawData = Sinon.stub(myDemand, 'loadRawData').rejects(ERRORRETURN);
+  before('setup', function() {
+    originalInfo = new utils.ProcessingInfo(utils.dbProjectPath(PROJECTNAME));
+    originalInfo.rawLocation = constants.RAWDEMAND;
+    originalInfo.commonLocation = constants.COMMONDEMAND;
+    originalInfo.summaryLocation = constants.SUMMARYDEMAND;
+    originalInfo.eventSection = constants.DEMANDSECTION;
   });
 
-  after('Delete Event Details', function() {
-    myDemand.loadRawData.restore();
-    return mongoDB.clearData(utils.dbProjectPath(PROJECTNAME), constants.EVENTCOLLECTION)
-  });
+  it('Call effort function - should not effect the original object', function() {
+    var effortInfo = myDemand.configureProcessingInstructions(originalInfo);
 
-  it('Create An Event', function() {
-    return mongoDB.processEventData(url, constants.EVENTCOLLECTION, anEvent)
-    .then ( function() {
-      return mongoDB.getDocumentByID(url, constants.EVENTCOLLECTION, anEvent._id)
-      .then ( function(readData) {
-        Should(anEvent).match(readData);
-      })
-    }).catch ( function(error) {
-      logger.debug(error);
-      Should.ok(false);
-    });
-  });
-
-  it('Create in Load Raw', function() {
-    return (myDemand.loadDemand(DEMANDINFO, anEvent, new utils.ProcessingInfo(url)));
-  });
-
-  it('Validate Failed Event', function() {
-    process.nextTick( function() {
-      return mongoDB.getDocumentByID(url, constants.EVENTCOLLECTION, anEvent._id)
-        .then ( function(readData) {
-          Should(constants.FAILEDEVENT).match(readData.status);
-      });
-    });
+    Should(effortInfo).not.deepEqual(originalInfo);
+    Should(effortInfo.rawLocation).equal(constants.RAWDEMAND);
   });
 });
 
-describe('Effort Loader - Failed Common Load', function() {
-  var url = '';
-  var anEvent = new utils.DataEvent(constants.LOADEVENT);
-
-  before('setup', function () {
-      url = utils.dbProjectPath(PROJECTNAME);
-      anEvent = new utils.DataEvent(constants.LOADEVENT);
-      anEvent.status = constants.PENDINGEVENT;
-      anEvent.effort = {};
-
-      this.loadRawData = Sinon.stub(myDemand, 'loadRawData').resolves(COMMONDEMAND);
-      this.wipeAndStoreData = Sinon.stub(mongoDB, 'wipeAndStoreData').rejects(ERRORRETURN);
+describe('determine effort processing system', function() {
+  it('Should decode Harvest', function() {
+    var systemClass = myDemand.rawDataProcessor(DEMANDINFO);
+    Should(systemClass).not.equal(null);
   });
 
-  after('Delete Event Details', function() {
-    myDemand.loadRawData.restore();
-    mongoDB.wipeAndStoreData.restore();
-
-    return mongoDB.clearData(utils.dbProjectPath(PROJECTNAME), constants.EVENTCOLLECTION)
-  });
-
-  it('Create An Event', function() {
-    return mongoDB.processEventData(url, constants.EVENTCOLLECTION, anEvent)
-    .then ( function() {
-      return mongoDB.getDocumentByID(url, constants.EVENTCOLLECTION, anEvent._id)
-      .then ( function(readData) {
-        Should(anEvent).match(readData);
-      })
-    }).catch ( function(error) {
-      logger.debug(error);
-      Should.ok(false);
-    });
-  });
-
-  it('Create in Load Raw', function() {
-    return (myDemand.loadDemand(DEMANDINFO, anEvent, new utils.ProcessingInfo(url)));
-  });
-
-  it('Validate Failed Event', function() {
-    process.nextTick( function() {
-      return mongoDB.getDocumentByID(url, constants.EVENTCOLLECTION, anEvent._id)
-        .then ( function(readData) {
-          Should(constants.FAILEDEVENT).match(readData.status);
-      });
-    });
+  it('Should NOT decode not Harvest', function() {
+    var badEffort = JSON.parse(JSON.stringify(DEMANDINFO));
+    badEffort.source = GOODSOURCE + 'BADMAN';
+    var systemClass = myDemand.rawDataProcessor(badEffort);
+    Should(systemClass).equal(null);
   });
 });
 
-describe('Effort Loader - Failed Summary Load', function() {
-  var url = '';
-  var anEvent = new utils.DataEvent(constants.LOADEVENT);
+describe('convert common to summary', function() {
 
-  before('setup', function () {
-      url = utils.dbProjectPath(PROJECTNAME);
-      anEvent = new utils.DataEvent(constants.LOADEVENT);
-      anEvent.status = constants.PENDINGEVENT;
-      anEvent.effort = {};
-
-      this.loadRawData = Sinon.stub(myDemand, 'loadRawData').resolves(COMMONDEMAND);
-      this.wipeAndStoreData = Sinon.stub(mongoDB, 'wipeAndStoreData');
-      this.wipeAndStoreData.onCall(0).resolves(COMMONDEMAND);
-      this.wipeAndStoreData.onCall(1).rejects(ERRORRETURN);
-  });
-
-  after('Delete Event Details', function() {
-    myDemand.loadRawData.restore();
-    mongoDB.wipeAndStoreData.restore();
-
-    return mongoDB.clearData(utils.dbProjectPath(PROJECTNAME), constants.EVENTCOLLECTION)
-  });
-
-  it('Create An Event', function() {
-    return mongoDB.processEventData(url, constants.EVENTCOLLECTION, anEvent)
-    .then ( function() {
-      return mongoDB.getDocumentByID(url, constants.EVENTCOLLECTION, anEvent._id)
-      .then ( function(readData) {
-        Should(anEvent).match(readData);
-      })
-    }).catch ( function(error) {
-      logger.debug(error);
-      Should.ok(false);
-    });
-  });
-
-  it('Create in Load Raw', function() {
-    return (myDemand.loadDemand(DEMANDINFO, anEvent, new utils.ProcessingInfo(url)));
-  });
-
-  it('Validate Failed Event', function() {
-    process.nextTick( function() {
-      return mongoDB.getDocumentByID(url, constants.EVENTCOLLECTION, anEvent._id)
-        .then ( function(readData) {
-          Should(constants.FAILEDEVENT).match(readData.status);
-      });
-    });
-  });
-});
-
-describe('Test conversion of common format into summary data', function () {
-  it('Convert', function(done) {
-    var summaryDataFormat = myDemand.createSummaryData(COMMONDEMAND);
-
-    Should(summaryDataFormat).deepEqual(SUMMARYDEMAND);
-    done();
+  it('Should translate', function() {
+    var summaryData = myDemand.transformCommonToSummary(COMMONDEMAND);
+    Should(summaryData).deepEqual(SUMMARYDEMAND);
   });
 });

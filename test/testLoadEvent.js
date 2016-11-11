@@ -1,6 +1,7 @@
 'use strict'
 
 const constants = require('../util/constants');
+const dataLoader = require('../services/dataLoader');
 const HttpMocks = require('node-mocks-http');
 const HttpStatus = require('http-status-codes');
 const loadEvent = require('../services/v1/loadEvent');
@@ -273,14 +274,14 @@ describe('Testing load and update events SINCE time properties', function() {
     anEvent.endTime = new Date('2015-03-26T12:00:00');
     eventArray = [anEvent];
 
-    this.kickoffLoad = Sinon.stub(loadEvent, 'kickoffLoad');
+    this.processProjectData = Sinon.stub(dataLoader, 'processProjectData');
     this.getDocumentByName = Sinon.stub(mongoDB, 'getDocumentByName').resolves(UNITTESTPROJECT);
     this.getAllData = Sinon.stub(mongoDB, 'getAllData').resolves(eventArray);
   });
 
   after('Delete Project Details', function() {
     mongoDB.getDocumentByName.restore();
-    loadEvent.kickoffLoad.restore();
+    dataLoader.processProjectData.restore();
     return mongoDB.clearData(utils.dbProjectPath(UNITTESTPROJECT), constants.EVENTCOLLECTION)
   });
 
@@ -290,7 +291,7 @@ describe('Testing load and update events SINCE time properties', function() {
       params: {'name': UNITTESTPROJECT},
       query: {'type': constants.UPDATEEVENT}
     });
-    loadEvent.kickoffLoad.returns({
+    dataLoader.processProjectData.returns({
       on:Sinon.stub().yields(null)
     });
 
@@ -347,11 +348,11 @@ describe('Basic Project Load Event - create', function() {
   });
 
   beforeEach(function() {
-    this.kickoffLoad = Sinon.stub(loadEvent, 'kickoffLoad');
+    this.processProjectData = Sinon.stub(dataLoader, 'processProjectData');
   });
 
   afterEach(function() {
-    loadEvent.kickoffLoad.restore();
+    dataLoader.processProjectData.restore();
   })
 
   it('create a load event', function(done) {
@@ -360,7 +361,7 @@ describe('Basic Project Load Event - create', function() {
       params: {'name': UNITTESTPROJECT},
       query: {'type': constants.LOADEVENT}
     });
-    loadEvent.kickoffLoad.returns({
+    dataLoader.processProjectData.returns({
       on:Sinon.stub().yields(null)
     });
 

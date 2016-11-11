@@ -67,6 +67,9 @@ exports.createDayArray = function (start, end) {
 exports.ProcessingInfo = function (dbUrl) {
   this.dbUrl = dbUrl;
   this.rawLocation = null;
+  this.commonLocation = null;
+  this.summaryLocation = null;
+  this.eventSection = null;
   this.storageFunction = null;
 }
 

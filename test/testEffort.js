@@ -1,11 +1,8 @@
 'use strict'
 
 const constants = require('../util/constants');
-const mongoDB = require('../services/datastore/mongodb');
 const myEffort = require('../services/effort');
 const Should = require('should');
-const Sinon = require('sinon');
-require('sinon-as-promised');
 const utils = require('../util/utils');
 
 const Config = require('config');
@@ -40,147 +37,48 @@ const COMMONDATA = [
   }
 ];
 
-const ERRORRETURN = {error: {status: 'BAD', message: 'FAILED'}};
+const EXPECTEDSUMMARYEFFORT = [
+  { projectDate: '2015-10-21', activity: { 'Delivery': 8 } },
+  { projectDate: '2015-10-22', activity: { 'Delivery': 8 } }
+];
 
-describe('Effort Loader - Bad effort System', function() {
-  var url = '';
-  var anEvent = new utils.DataEvent(constants.LOADEVENT);
+describe('configure Processing info', function() {
+  var originalInfo = null;
 
-  before('setup', function () {
-      url = utils.dbProjectPath(PROJECTNAME);
-      anEvent = new utils.DataEvent(constants.LOADEVENT);
-      anEvent.status = constants.PENDINGEVENT;
-      anEvent.effort = {};
-
-      this.loadRawData = Sinon.stub(myEffort, 'loadRawData').rejects(ERRORRETURN);
+  before('setup', function() {
+    originalInfo = new utils.ProcessingInfo(utils.dbProjectPath(PROJECTNAME));
+    originalInfo.rawLocation = constants.RAWEFFORT;
+    originalInfo.commonLocation = constants.COMMONEFFORT;
+    originalInfo.summaryLocation = constants.SUMMARYEFFORT;
+    originalInfo.eventSection = constants.EFFORTSECTION;
   });
 
-  after('Delete Event Details', function() {
-    myEffort.loadRawData.restore();
-    return mongoDB.clearData(utils.dbProjectPath(PROJECTNAME), constants.EVENTCOLLECTION)
-  });
+  it('Call effort function - should not effect the original object', function() {
+    var effortInfo = myEffort.configureProcessingInstructions(originalInfo);
 
-  it('Create An Event', function() {
-    return mongoDB.processEventData(url, constants.EVENTCOLLECTION, anEvent)
-    .then ( function() {
-      return mongoDB.getDocumentByID(url, constants.EVENTCOLLECTION, anEvent._id)
-      .then ( function(readData) {
-        Should(anEvent).match(readData);
-      })
-    }).catch ( function(error) {
-      logger.debug(error);
-      Should.ok(false);
-    });
-  });
-
-  it('Create in Load Raw', function() {
-    return (myEffort.loadEffort(EFFORTINFO, anEvent, new utils.ProcessingInfo(url)));
-  });
-
-  it('Validate Failed Event', function() {
-    process.nextTick( function() {
-      return mongoDB.getDocumentByID(url, constants.EVENTCOLLECTION, anEvent._id)
-        .then ( function(readData) {
-          Should(constants.FAILEDEVENT).match(readData.status);
-      });
-    });
+    Should(effortInfo).not.deepEqual(originalInfo);
+    Should(effortInfo.rawLocation).equal(constants.RAWEFFORT);
   });
 });
 
-describe('Effort Loader - Failed Common Load', function() {
-  var url = '';
-  var anEvent = new utils.DataEvent(constants.LOADEVENT);
-
-  before('setup', function () {
-      url = utils.dbProjectPath(PROJECTNAME);
-      anEvent = new utils.DataEvent(constants.LOADEVENT);
-      anEvent.status = constants.PENDINGEVENT;
-      anEvent.effort = {};
-
-      this.loadRawData = Sinon.stub(myEffort, 'loadRawData').resolves(COMMONDATA);
-      this.wipeAndStoreData = Sinon.stub(mongoDB, 'wipeAndStoreData').rejects(ERRORRETURN);
+describe('determine effort processing system', function() {
+  it('Should decode Harvest', function() {
+    var systemClass = myEffort.rawDataProcessor(EFFORTINFO);
+    Should(systemClass).not.equal(null);
   });
 
-  after('Delete Event Details', function() {
-    myEffort.loadRawData.restore();
-    mongoDB.wipeAndStoreData.restore();
-
-    return mongoDB.clearData(utils.dbProjectPath(PROJECTNAME), constants.EVENTCOLLECTION)
-  });
-
-  it('Create An Event', function() {
-    return mongoDB.processEventData(url, constants.EVENTCOLLECTION, anEvent)
-    .then ( function() {
-      return mongoDB.getDocumentByID(url, constants.EVENTCOLLECTION, anEvent._id)
-      .then ( function(readData) {
-        Should(anEvent).match(readData);
-      })
-    }).catch ( function(error) {
-      logger.debug(error);
-      Should.ok(false);
-    });
-  });
-
-  it('Create in Load Raw', function() {
-    return (myEffort.loadEffort(EFFORTINFO, anEvent, new utils.ProcessingInfo(url)));
-  });
-
-  it('Validate Failed Event', function() {
-    process.nextTick( function() {
-      return mongoDB.getDocumentByID(url, constants.EVENTCOLLECTION, anEvent._id)
-        .then ( function(readData) {
-          Should(constants.FAILEDEVENT).match(readData.status);
-      });
-    });
+  it('Should NOT decode not Harvest', function() {
+    var badEffort = JSON.parse(JSON.stringify(EFFORTINFO));
+    badEffort.source = GOODSOURCE + 'BADMAN';
+    var systemClass = myEffort.rawDataProcessor(badEffort);
+    Should(systemClass).equal(null);
   });
 });
 
-describe('Effort Loader - Failed Summary Load', function() {
-  var url = '';
-  var anEvent = new utils.DataEvent(constants.LOADEVENT);
+describe('convert common to summary', function() {
 
-  before('setup', function () {
-      url = utils.dbProjectPath(PROJECTNAME);
-      anEvent = new utils.DataEvent(constants.LOADEVENT);
-      anEvent.status = constants.PENDINGEVENT;
-      anEvent.effort = {};
-
-      this.loadRawData = Sinon.stub(myEffort, 'loadRawData').resolves(COMMONDATA);
-      this.wipeAndStoreData = Sinon.stub(mongoDB, 'wipeAndStoreData');
-      this.wipeAndStoreData.onCall(0).resolves(COMMONDATA);
-      this.wipeAndStoreData.onCall(1).rejects(ERRORRETURN);
-  });
-
-  after('Delete Event Details', function() {
-    myEffort.loadRawData.restore();
-    mongoDB.wipeAndStoreData.restore();
-
-    return mongoDB.clearData(utils.dbProjectPath(PROJECTNAME), constants.EVENTCOLLECTION)
-  });
-
-  it('Create An Event', function() {
-    return mongoDB.processEventData(url, constants.EVENTCOLLECTION, anEvent)
-    .then ( function() {
-      return mongoDB.getDocumentByID(url, constants.EVENTCOLLECTION, anEvent._id)
-      .then ( function(readData) {
-        Should(anEvent).match(readData);
-      })
-    }).catch ( function(error) {
-      logger.debug(error);
-      Should.ok(false);
-    });
-  });
-
-  it('Create in Load Raw', function() {
-    return (myEffort.loadEffort(EFFORTINFO, anEvent, new utils.ProcessingInfo(url)));
-  });
-
-  it('Validate Failed Event', function() {
-    process.nextTick( function() {
-      return mongoDB.getDocumentByID(url, constants.EVENTCOLLECTION, anEvent._id)
-        .then ( function(readData) {
-          Should(constants.FAILEDEVENT).match(readData.status);
-      });
-    });
+  it('Should translate', function() {
+    var summaryData = myEffort.transformCommonToSummary(COMMONDATA);
+    Should(summaryData).deepEqual(EXPECTEDSUMMARYEFFORT);
   });
 });

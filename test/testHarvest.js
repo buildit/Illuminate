@@ -1,6 +1,5 @@
 'use strict'
 
-const constants = require('../util/constants');
 const myDatastore = require('../services/datastore/mongodb');
 const harvest = require('../services/effortSystem/harvest');
 const Rest = require('restler');
@@ -16,7 +15,6 @@ Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
 logger.setLevel(Config.get('log-level'));
 
-const PROJECTNAME = 'UNITESTEFFORT';
 const GOODPROJECT = 10284278;
 const BADPROJECT = 98765432;
 
@@ -284,7 +282,7 @@ describe('Harvest GetRawData - fail getting time', function() {
   it('Make sure the error is returned', function() {
 
     return harvest.loadRawData(EFFORTINFO, aSetOfInfo, SINCETIME)
-      .then(function(response) {
+      .then(function() {
         Should.ok(false);
       }).catch ( function(error) {
         logger.debug(error);
@@ -309,7 +307,7 @@ describe('Harvest GetRawData - fail getting task', function() {
   it('Make sure the error is returned', function() {
 
     return harvest.loadRawData(EFFORTINFO, aSetOfInfo, SINCETIME)
-      .then(function(response) {
+      .then(function() {
         Should.ok(false);
       }).catch ( function(error) {
         logger.debug(error);
@@ -341,7 +339,7 @@ describe('Harvest GetRawData - make sure count is returned', function() {
     return harvest.loadRawData(EFFORTINFO, aSetOfInfo, SINCETIME)
       .then(function(response) {
         Should(response).equal(2);
-      }).catch ( function(error) {
+      }).catch ( function() {
         Should.ok(false);
       });
   });

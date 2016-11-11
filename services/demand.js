@@ -2,8 +2,6 @@
 
 const Config = require('config');
 const constants = require('../util/constants');
-const dataStore = require('./datastore/mongodb');
-const errorHelper = require('./errors')
 const jira = require('./demandSystem/jira');
 const Log4js = require('log4js');
 const utils = require('../util/utils');
@@ -24,7 +22,7 @@ logger.setLevel(Config.get('log-level'));
 //       {name: "SD", groupWith: null}
 //     ]};
 
-exports.configureProcessingInstructionsn = function(processingInfo) {
+exports.configureProcessingInstructions = function(processingInfo) {
   var updatedInfo = JSON.parse(JSON.stringify(processingInfo)); // this does a deep copy on purpose
   updatedInfo.rawLocation = constants.RAWDEMAND;
   updatedInfo.commonLocation = constants.COMMONDEMAND;
@@ -33,11 +31,10 @@ exports.configureProcessingInstructionsn = function(processingInfo) {
   return updatedInfo;
 }
 
-exports.rawDataProcessor = function(effortData) {
-  switch(effortData.source.toUpperCase()) {
+exports.rawDataProcessor = function(demandData) {
+  switch(demandData.source.toUpperCase()) {
       case "JIRA":
         return jira;
-          break;
       default:
         return null;
   }
