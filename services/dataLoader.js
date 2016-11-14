@@ -6,6 +6,7 @@ const dataStore = require('./datastore/mongodb');
 const demandLoader = require('./demand');
 const effortLoader = require('./effort');
 const Log4js = require('log4js');
+const R = require('ramda');
 const utils = require('../util/utils');
 
 Log4js.configure('config/log4js_config.json', {});
@@ -19,24 +20,36 @@ exports.processProjectData = function (aProject, anEvent) {
   processingInstructions.endDate = utils.dateFormatIWant(determineProjectEndDate(aProject));
   processingInstructions.storageFunction = dataStore.upsertData;
 
-  if (aProject['demand']) {
+  if (R.isNil(aProject.demand) || R.isEmpty(aProject.demand)) {
+    logger.debug(`No Demand configured for ${aProject.name}`);
+  } else {
     var demandInstructions = demandLoader.configureProcessingInstructions(processingInstructions);
     demandInstructions.sourceSystem = demandLoader.rawDataProcessor(aProject.demand);
-    dataStore.processEventData(processingInstructions.dbUrl,
-      constants.EVENTCOLLECTION,
-      anEvent,
-      processingInstructions.eventSection,
-      module.exports.processProjectSystem(demandLoader, aProject.demand, anEvent, demandInstructions));
+    logger.debug(`*** DEMAND processing Info ${JSON.stringify(demandInstructions)}`);
+    module.exports.processProjectSystem(demandLoader, aProject.demand, anEvent, demandInstructions)
+    .then (function (aDemandEvent) {
+      dataStore.processEventData(demandInstructions.dbUrl,
+        constants.EVENTCOLLECTION,
+        anEvent,
+        demandInstructions.eventSection,
+        aDemandEvent);
+    });
   }
 
-  if (aProject['effort']) {
+  if (R.isNil(aProject.effort) || R.isEmpty(aProject.effort)) {
+    logger.debug(`No Effort configured for ${aProject.name}`);
+  } else {
     var effortInstructions = effortLoader.configureProcessingInstructions(processingInstructions);
     effortInstructions.sourceSystem = effortLoader.rawDataProcessor(aProject.effort);
-    dataStore.processEventData(processingInstructions.dbUrl,
-      constants.EVENTCOLLECTION,
-      anEvent,
-      processingInstructions.eventSection,
-      module.export.processProjectSystem(effortLoader, aProject.effort, anEvent, effortInstructions));
+    logger.debug(`*** EFFORT processing Info ${JSON.stringify(effortInstructions)}`);
+    module.exports.processProjectSystem(effortLoader, aProject.effort, anEvent, effortInstructions)
+    .then(function(anEffortEvent) {
+      dataStore.processEventData(effortInstructions.dbUrl,
+        constants.EVENTCOLLECTION,
+        anEvent,
+        effortInstructions.eventSection,
+        anEffortEvent);
+    });
   }
 }
 
@@ -66,35 +79,26 @@ exports.processProjectSystem = function (loaderClass, aProjectSystem, anEvent, p
       resolve(new utils.SystemEvent(constants.FAILEDEVENT, `unknown source system`));
     } else {
       processingInstructions.sourceSystem.loadRawData(aProjectSystem, processingInstructions, anEvent.since)
-        .then (function(recordsProcessesed) {
-          logger.debug(`processProjectSystem -> rawDataProcessed #[${recordsProcessesed}]`);
-          if (recordsProcessesed < 1) { // there wasn't any new data
+        .then (function(allRawData) {
+          logger.debug(`processProjectSystem -> rawDataProcessed #[${allRawData.length}]`);
+          if (allRawData.length < 1) { // there wasn't any new data
             resolve(new utils.SystemEvent(constants.SUCCESSEVENT, `no records processed`));
           } else {  // there was new data - reprocess to generate a common format
-            dataStore.getAllData(processingInstructions.dbUrl, processingInstructions.rawLocation)
-            .then (function (rawDataFormat) {
-              logger.debug(`processProjectSystem -> readRawData #[${rawDataFormat.length}]`);
-              var commonDataFormat = processingInstructions.sourceSystem.transformRawToCommon(rawDataFormat);
-              dataStore.wipeAndStoreData(processingInstructions.dbUrl, processingInstructions.commonLocation, commonDataFormat)
-                .then (function(response1) {  // now generate the summary data format
-                  logger.debug(`processProjectSystem -> updatedCommonData #[${commonDataFormat.length}]`);
-                  logger.debug(response1);
-                  var summaryDataFormat = loaderClass.transformCommonToSummary(commonDataFormat);
-                  dataStore.wipeAndStoreData(processingInstructions.dbUrl, processingInstructions.summaryLocation,  summaryDataFormat)
-                    .then (function (response2){
-                      logger.debug(`processProjectSystem -> updatedSummaryData #[${summaryDataFormat.length}]`);
-                      logger.debug(response2);
-                      resolve (new utils.SystemEvent(constants.SUCCESSEVENT, `${recordsProcessesed} records processed`));
-                    }).catch(function(err) {
-                      logger.debug('processProjectSystem -> ERROR Summary Data');
-                      resolve (new utils.SystemEvent(constants.FAILEDEVENT, JSON.stringify(err)));
-                    });
-                }).catch(function(err) {
-                  logger.debug('processProjectSystem -> ERROR Common Data');
-                  resolve (new utils.SystemEvent(constants.FAILEDEVENT, JSON.stringify(err)));
-                });
+            var commonDataFormat = processingInstructions.sourceSystem.transformRawToCommon(allRawData);
+            dataStore.wipeAndStoreData(processingInstructions.dbUrl, processingInstructions.commonLocation, commonDataFormat)
+              .then (function() {  // now generate the summary data format
+                logger.debug(`processProjectSystem -> updatedCommonData #[${commonDataFormat.length}]`);
+                var summaryDataFormat = loaderClass.transformCommonToSummary(commonDataFormat);
+                dataStore.wipeAndStoreData(processingInstructions.dbUrl, processingInstructions.summaryLocation,  summaryDataFormat)
+                  .then (function (){
+                    logger.debug(`processProjectSystem -> updatedSummaryData #[${summaryDataFormat.length}]`);
+                    resolve (new utils.SystemEvent(constants.SUCCESSEVENT, `${allRawData.length} records processed`));
+                  }).catch(function(err) {
+                    logger.debug('processProjectSystem -> ERROR Summary Data');
+                    resolve (new utils.SystemEvent(constants.FAILEDEVENT, JSON.stringify(err)));
+                  });
               }).catch(function(err) {
-                logger.debug('processProjectSystem -> ERROR reading Raw Data');
+                logger.debug('processProjectSystem -> ERROR Common Data');
                 resolve (new utils.SystemEvent(constants.FAILEDEVENT, JSON.stringify(err)));
               });
           }

@@ -63,8 +63,9 @@ exports.upsertData = function (projectPath, collectionName, documentToStore) {
       documentToStore.forEach(function(anEntry) {
         col.findOneAndReplace({_id: anEntry._id}, anEntry, {upsert: true});
       });
+      var result = yield col.find().toArray();
       db.close();
-      resolve ();
+      resolve (result);
     }).catch(function(err) {
       logger.error(err);
       reject (err);
@@ -161,8 +162,7 @@ exports.wipeAndStoreData = function (projectPath, aCollection, documentToStore) 
 
   return new Promise(function (resolve, reject) {
     module.exports.clearData(projectPath, aCollection)
-      .then(function (response1) {
-        logger.debug(response1);
+      .then(function () {
         module.exports.insertData(projectPath, aCollection, documentToStore)
         .then(function (response2) {
           resolve(response2);
@@ -185,7 +185,7 @@ const wasCompletedSuccessfully = anEvent =>
   && (anEvent.effort === null || anEvent.effort.status === constants.SUCCESSEVENT));
 
 exports.processEventData = function (projectPath, collectionName, eventInfo, sectionName, documentToStore) {
-  logger.info(`PROCESS EVENT ${sectionName} in [${collectionName}] at URL ${projectPath}`);
+  logger.info(`PROCESS EVENT ${eventInfo} for section ${sectionName} in [${collectionName}] at URL ${projectPath}`);
 
   return new Promise(function (resolve, reject) {
     CO(function*() {

@@ -1,6 +1,7 @@
 'use strict'
 
 const Config = require('config');
+const constants = require('../../util/constants');
 const dataStore = require('../datastore/mongodb');
 const dataLoader = require('../dataLoader');
 const errorHelper = require('../errors');
@@ -87,22 +88,34 @@ exports.createNewEvent = function (req, res) {
                 `There is currently an active event for this project, please wait for it to complete.  ${url}`));
             } else {
               aLoadEvent = new utils.DataEvent(req.query.type.toUpperCase());
-              logger.debug('createNewEvent -> NOT AN ACTIVE EVENT');
+              logger.debug('createNewEvent -> NO ACTIVE EVENTS');
               logger.debug(aLoadEvent);
               if ((anEvent != undefined) && (req.query.type.toUpperCase() === myConstants.UPDATEEVENT)) {
-                logger.debug('createNewEvent -> An Udate Event');
+                logger.debug('createNewEvent -> Create an Udate Event');
                 aLoadEvent.since = fromLastCompletion(anEvent);
                 logger.debug(aLoadEvent);
               }
+              configureLoadEventSystems(aProject, aLoadEvent);
+              logger.debug(`post configuration of event systems project`);
+              logger.debug(aProject);
+              logger.debug(aLoadEvent);
               var loadEvents = [aLoadEvent];
               dataStore.insertData(utils.dbProjectPath(projectName), myConstants.EVENTCOLLECTION, loadEvents)
                 .then ( function(result) {
                   if (result.insertedCount > 0) {
-                    res.status(HttpStatus.CREATED);
-                    var tmpBody = {url: `${req.protocol}://${req.hostname}${req.baseUrl}${req.path}/${aLoadEvent._id}`};
-                    logger.debug("createNewEvent -> Created @ " + tmpBody.url);
-                    dataLoader.processProjectData(aProject, aLoadEvent);  // NOW GO DO WORK
-                    res.send(tmpBody);
+                    if (aLoadEvent.status != constants.PENDINGEVENT) {
+                      logger.debug(`createNewEvent -> error configuring event for ${projectName}.`);
+                      logger.debug(aLoadEvent);
+                      res.status(HttpStatus.CONFLICT);
+                      res.send(errorHelper.errorBody(HttpStatus.CONFLICT,
+                        `Unable to fulill load request ${projectName}.  Verify configuration of Demand, Defect, and Effort systems.`));
+                    } else {
+                      res.status(HttpStatus.CREATED);
+                      var tmpBody = {url: `${req.protocol}://${req.hostname}${req.baseUrl}${req.path}/${aLoadEvent._id}`};
+                      logger.debug("createNewEvent -> Created @ " + tmpBody.url);
+                      res.send(tmpBody);
+                      dataLoader.processProjectData(aProject, aLoadEvent);  // NOW GO DO WORK
+                    }
                   } else {
                     logger.debug("createNewEvent -> Event was not created " + projectName);
                     res.status(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -114,8 +127,6 @@ exports.createNewEvent = function (req, res) {
                   res.status(HttpStatus.INTERNAL_SERVER_ERROR);
                   res.send(errorHelper.errorBody(HttpStatus.INTERNAL_SERVER_ERROR, 'Unable to find events for ' + projectName));
                 });
-                logger.debug('createNewEvent->aProject');
-                logger.debug(aProject);
               }
           }).catch(function(err) {
             logger.debug("createNewEvent -> ERROR 2");
@@ -136,9 +147,41 @@ exports.createNewEvent = function (req, res) {
   }
 };
 
+// okay Harvest wants a '+HH:MM' included, Jira does not.
+// so, I can implement a system specific version of this
+// write code to trim off the '+'
+// or just append a +00:00 for Harvest.  Bingo
 function fromLastCompletion(anEvent) {
   var endTime = anEvent.endTime.toJSON().toString();
-  return (endTime.slice(0, 10) + '+' + endTime.slice(11, 16));
+//  return (endTime.slice(0, 10) + '+' + endTime.slice(11, 16));
+  return (endTime.slice(0, 10));
+}
+
+// okay - here is a pessamistic view - set up for failure
+// allow for success
+function configureLoadEventSystems(aProject, anEvent) {
+  anEvent.status = constants.FAILEDEVENT;
+  anEvent.endTime = new Date();
+  anEvent.note = 'No Demand, Defect, or Effort system configure for this project';
+  if ((!R.isNil(aProject.demand)) && (!R.isEmpty(aProject.demand))) {
+//  if (aProject.demand != undefined && aProject.demand != null && aProject.demand['source'] != undefined) {
+      anEvent.demand = {};
+      anEvent.status = constants.PENDINGEVENT;
+      anEvent.endTime = null;
+      anEvent.note = '';
+  }
+  if (aProject.defect != undefined && aProject.defect != null && aProject.defect['source'] != undefined) {
+      anEvent.defect = {};
+      anEvent.status = constants.PENDINGEVENT;
+      anEvent.endTime = null;
+      anEvent.note = '';
+  }
+  if (aProject.effort != undefined && aProject.effort != null && aProject.effort['source'] != undefined) {
+      anEvent.effort = {};
+      anEvent.status = constants.PENDINGEVENT;
+      anEvent.endTime = null;
+      anEvent.note = '';
+  }
 }
 
 function getProjectData(aProjectName) {
@@ -175,8 +218,6 @@ exports.getMostRecentEvent = function (aProjectName) {
           } else {
             logger.debug(`loadEvent->getMostRecentEvent - ${allEvents.length} events found`);
             var orderedEvents = R.sort(dateSort, allEvents);
-            logger.debug('orderedEvents');
-            logger.debug(orderedEvents);
             resolve (R.last(orderedEvents));
           }
         }).catch(function(err) {

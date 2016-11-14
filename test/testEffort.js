@@ -3,6 +3,7 @@
 const constants = require('../util/constants');
 const myEffort = require('../services/effort');
 const Should = require('should');
+const testConstants = require('./testConstants');
 const utils = require('../util/utils');
 
 const Config = require('config');
@@ -12,7 +13,6 @@ Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
 logger.setLevel(Config.get('log-level'));
 
-const PROJECTNAME = 'UNITESTEFFORT';
 const GOODPROJECT = 10284278;
 const GOODSOURCE = 'Harvest';
 
@@ -46,11 +46,12 @@ describe('configure Processing info', function() {
   var originalInfo = null;
 
   before('setup', function() {
-    originalInfo = new utils.ProcessingInfo(utils.dbProjectPath(PROJECTNAME));
-    originalInfo.rawLocation = constants.RAWEFFORT;
+    originalInfo = new utils.ProcessingInfo(utils.dbProjectPath(testConstants.UNITTESTPROJECT));
+    originalInfo.rawLocation = constants.RAWDEMAND;
     originalInfo.commonLocation = constants.COMMONEFFORT;
     originalInfo.summaryLocation = constants.SUMMARYEFFORT;
     originalInfo.eventSection = constants.EFFORTSECTION;
+    originalInfo.storageFunction = myEffort.rawDataProcessor;
   });
 
   it('Call effort function - should not effect the original object', function() {
@@ -58,6 +59,7 @@ describe('configure Processing info', function() {
 
     Should(effortInfo).not.deepEqual(originalInfo);
     Should(effortInfo.rawLocation).equal(constants.RAWEFFORT);
+    Should(effortInfo.storageFunction).equal(myEffort.rawDataProcessor);
   });
 });
 

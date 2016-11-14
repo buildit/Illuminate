@@ -3,6 +3,7 @@
 const constants = require('../util/constants');
 const mongoDB = require('../services/datastore/mongodb');
 const Should = require('Should');
+const testConstants = require('./testConstants');
 const utils = require('../util/utils');
 
 const Config = require('config');
@@ -12,14 +13,12 @@ Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
 logger.setLevel(Config.get('log-level'));
 
-const PROJECTNAME = 'UNITESTEFFORT';
-
 describe('Test Creation of Event', function() {
   var url = '';
   var anEvent = {};
 
   before('setup', function () {
-      url = utils.dbProjectPath(PROJECTNAME);
+      url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
       anEvent = new utils.DataEvent(constants.LOADEVENT);
       anEvent.status = constants.PENDINGEVENT;
       anEvent.effort = {};
@@ -49,7 +48,7 @@ describe('Create an Event and then update the event and make sure the event is c
   var aSystemEvent = {};
 
   before('setup', function () {
-      url = utils.dbProjectPath(PROJECTNAME);
+      url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
       anEvent = new utils.DataEvent(constants.LOADEVENT);
       anEvent.status = constants.PENDINGEVENT;
       anEvent.effort = {};
@@ -94,7 +93,7 @@ describe('Create an Event and then update the event and make sure the event is c
   var aSystemEvent = {};
 
   before('setup', function () {
-      url = utils.dbProjectPath(PROJECTNAME);
+      url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
       anEvent = new utils.DataEvent(constants.LOADEVENT);
       anEvent.status = constants.PENDINGEVENT;
       anEvent.effort = {};
@@ -139,7 +138,7 @@ describe('Create an Event with multiple updates and  make sure the event is comp
   var aSystemEvent = {};
 
   before('setup', function () {
-      url = utils.dbProjectPath(PROJECTNAME);
+      url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
       anEvent = new utils.DataEvent(constants.LOADEVENT);
       anEvent.status = constants.PENDINGEVENT;
       anEvent.demand = {};
@@ -197,7 +196,7 @@ describe('Create an Event with multiple updates and make sure the event is compl
   var aSystemEvent = {};
 
   before('setup', function () {
-      url = utils.dbProjectPath(PROJECTNAME);
+      url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
       anEvent = new utils.DataEvent(constants.LOADEVENT);
       anEvent.status = constants.PENDINGEVENT;
       anEvent.demand = {};

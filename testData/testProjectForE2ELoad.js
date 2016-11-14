@@ -22,6 +22,13 @@ var projectionInfo = {};
 // ***************************************
 // *********  Project structures
 // ***************************************
+demandInfo = {
+  source: 'Jira',
+  url: "https://digitalrig.atlassian.net/rest/api/latest/",
+  project: 'CIT',
+  authPolicy: 'Basic',
+  userData: 'ZGlnaXRhbHJpZzpEMWchdGFsUmln',
+  flow: [{name: 'Backlog'}, {name: 'In Progress'}, {name: 'UX Review'}, {name: 'Done'}]};
 
 roleNames = [];
 roleNames.push({name: "General / Delivery", groupWith: null});
@@ -36,7 +43,7 @@ effortInfo = {
   role: roleNames};
 
   project = {
-    name: "TESTHARVESTLOAD",
+    name: "TESTE2ELOAD",
     program: "Basic Test Data",
     portfolio: "Acceptance Test Data",
     description: "Configured to load actual data from Harvest for a known project to test ETL",
@@ -44,7 +51,7 @@ effortInfo = {
     endDate: "2016-12-01",
     demand: demandInfo,
     defect: defectInfo,
-    effort: effortInfo,
+    effort: {},
     projection: projectionInfo};
 
 MongoClient.connect(utils.dbCorePath(), function (err, db) {

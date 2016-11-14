@@ -22,7 +22,11 @@ exportConstant('RAWDEMAND', 'rawDemand');
 exportConstant('COMMONDEMAND', 'commonDemand');
 exportConstant('SUMMARYDEMAND', 'dailyDemandSummary');
 
-exportConstant('DEFAULTSTARTDATE', '2000-01-01+00:00');
+exportConstant('RAWDEFECT', 'rawDefect');
+exportConstant('COMMONDEFECT', 'commonDefect');
+exportConstant('SUMMARYDEFECT', 'dailyDefectSummary');
+
+exportConstant('DEFAULTSTARTDATE', '2000-01-01');
 
 exportConstant('JIRADEMANDTYPE', 'Story');
 exportConstant('JIRADEFECTTYPE', 'Bug');

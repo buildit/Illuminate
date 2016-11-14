@@ -3,6 +3,7 @@
 const constants = require('../../util/constants');
 const Config = require('config');
 const errorHelper = require('../errors');
+const HttpStatus = require('http-status-codes');
 const Log4js = require('log4js');
 //const R = require('ramda');
 const Rest = require('restler');
@@ -231,15 +232,15 @@ exports.loadRawData = function(demandInfo, processingInfo, sinceTime) {
   return new Promise(function (resolve, reject) {
     module.exports.loadJiraDemand(demandInfo, [], sinceTime)
     .then( function (stories) {
-      if (stories.length < 1) {
-        resolve(stories.length);
-      }
       logger.debug(`total stories read - ${stories.length}`);
+      if (stories.length < 1) {
+        resolve(stories);
+      }
 
       var enhancedStories = module.exports.fixHistoryData(stories);
       processingInfo.storageFunction(processingInfo.dbUrl, processingInfo.rawLocation, enhancedStories)
-      .then (function () {
-        resolve(stories.length);
+      .then (function (allRawData) {
+        resolve(allRawData);
       })
       .catch(function (reason) {
         reject(reason);
@@ -285,24 +286,31 @@ function buildJQL(project, startPosition, since) {
   return queryString;
 }
 
-exports.loadJiraDemand = function(demandInfo, issuesSoFar) {
+exports.loadJiraDemand = function(demandInfo, issuesSoFar, sinceTime) {
   logger.info(`loadJiraDemand() for JIRA project ${demandInfo.project}.  Start Pos ${issuesSoFar.length}`);
 
   return new Promise(function (resolve, reject) {
-    Rest.get(demandInfo.url + buildJQL(demandInfo.project, issuesSoFar.length),
+    Rest.get(demandInfo.url + buildJQL(demandInfo.project, issuesSoFar.length, sinceTime),
       {headers: utils.createBasicAuthHeader(demandInfo.userData)}
       ).on('complete', function (data, response) {
-        logger.info(`Success reading demand from [${data.startAt}] count [${data.issues.length}] of [${data.total}]`);
-        logger.debug(response);
+        if (response.statusCode === HttpStatus.OK) {
+          logger.info(`Success reading demand from [${data.startAt}] count [${data.issues.length}] of [${data.total}]`);
 
-        var issues = issuesSoFar.concat(data.issues);
-        if ((data.issues.length > 0) && (issues.length < data.total)) {
-          module.exports.loadJiraDemand(demandInfo, issues);
+          var issues = issuesSoFar.concat(data.issues);
+          if ((data.issues.length > 0) && (issues.length < data.total)) {
+            module.exports.loadJiraDemand(demandInfo, issues, sinceTime)
+            .then( function(issues) {  // unwind the promise chain
+              resolve(issues);
+            })
+          } else {
+            resolve(issues);
+          }
         } else {
-          resolve(issues);
+          logger.error("FAIL: " + response.statusCode + " MESSAGE " + response.statusMessage);
+          reject(errorHelper.errorBody(response.statusCode, 'Error retrieving stories from Jira'));
         }
       }).on('fail', function (data, response) {
-        logger.error("FAIL: " + response.statusCode + " MESSAGE " + data.errorMessages);
+        logger.error("FAIL: " + response.statusCode + " MESSAGE " + response.statusMessage);
         reject(errorHelper.errorBody(response.statusCode, 'Error retrieving stories from Jira'));
       }).on('error', function (data, response) {
         logger.error("ERROR: " + data.message + " / " + response);

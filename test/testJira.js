@@ -1,6 +1,7 @@
 'use strict'
 
 const Config = require('config');
+const HttpStatus = require('http-status-codes');
 const jira = require('../services/demandSystem/jira');
 const Log4js = require('log4js');
 const Rest = require('restler');
@@ -261,9 +262,11 @@ describe('Test Fixing of Jira History', function() {
 });
 
 describe('Empty result from Jira test', function() {
+  var jiraResponse = {};
 
   beforeEach(function() {
     this.get = Sinon.stub(Rest, 'get');
+    jiraResponse.statusCode = HttpStatus.OK;
   });
 
   afterEach(function() {
@@ -272,7 +275,7 @@ describe('Empty result from Jira test', function() {
 
   it('Test Getting an empty set of Jira Issues', function() {
     Rest.get.returns({
-      on:Sinon.stub().yields(EMPTYJIRARESPONSE, null)
+      on:Sinon.stub().yields(EMPTYJIRARESPONSE, jiraResponse)
     });
 
     return jira.loadJiraDemand(DEMANDINFO, [])
@@ -283,9 +286,11 @@ describe('Empty result from Jira test', function() {
 });
 
 describe('Test getting all of the stories in a single request. ', function() {
+  var jiraResponse = {};
 
   beforeEach(function() {
     this.get = Sinon.stub(Rest, 'get');
+    jiraResponse.statusCode = HttpStatus.OK;
   });
 
   afterEach(function() {
@@ -294,7 +299,7 @@ describe('Test getting all of the stories in a single request. ', function() {
 
   it('Test Getting an empty set of Jira Issues', function() {
     Rest.get.returns({
-      on:Sinon.stub().yields(SINGLEJIRARESPOSE, null)
+      on:Sinon.stub().yields(SINGLEJIRARESPOSE, jiraResponse)
     });
 
     return jira.loadJiraDemand(DEMANDINFO, [])

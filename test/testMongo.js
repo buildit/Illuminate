@@ -3,6 +3,7 @@
 const constants = require('../util/constants');
 const mongoDB = require('../services/datastore/mongodb');
 const Should = require('Should');
+const testConstants = require('./testConstants');
 const utils = require('../util/utils');
 
 const Config = require('config');
@@ -12,7 +13,6 @@ Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
 logger.setLevel(Config.get('log-level'));
 
-const PROJECTNAME = 'UNITESTEFFORT';
 const VALIDID = 'f9d6e2df-ca15-4ebb-ac1d-1a6bf1129af9';
 const INVALIDID = 99999999;
 const VALIDNAME = "UncleBob";
@@ -103,7 +103,7 @@ describe('Test of Insert and Update function. (well and the getall and clear too
   var url = '';
 
   before('setup', function () {
-      url = utils.dbProjectPath(PROJECTNAME);
+      url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
   });
 
   it('Insert 2 things', function() {
@@ -144,7 +144,7 @@ describe('Test of Wipe and Insert', function() {
   var url = '';
 
   before('setup', function () {
-      url = utils.dbProjectPath(PROJECTNAME);
+      url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
   });
 
   it('Insert 2 things', function() {
@@ -180,7 +180,7 @@ describe('Test of Get by ID and by Name', function() {
   var url = '';
 
   before('setup', function () {
-      url = utils.dbProjectPath(PROJECTNAME);
+      url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
   });
 
   it('Insert a thing', function() {

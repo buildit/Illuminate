@@ -3,6 +3,7 @@
 const constants = require('../util/constants');
 const myDemand = require('../services/demand');
 const Should = require('should');
+const testConstants = require('./testConstants');
 const utils = require('../util/utils');
 
 const Config = require('config');
@@ -12,7 +13,6 @@ Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
 logger.setLevel(Config.get('log-level'));
 
-const PROJECTNAME = 'UNITESTEFFORT';
 const GOODPROJECT = 'CIT';
 const GOODSOURCE = 'Jira';
 
@@ -43,18 +43,20 @@ describe('configure Processing info', function() {
   var originalInfo = null;
 
   before('setup', function() {
-    originalInfo = new utils.ProcessingInfo(utils.dbProjectPath(PROJECTNAME));
-    originalInfo.rawLocation = constants.RAWDEMAND;
+    originalInfo = new utils.ProcessingInfo(utils.dbProjectPath(testConstants.UNITTESTPROJECT));
+    originalInfo.rawLocation = constants.RAWEFFORT;
     originalInfo.commonLocation = constants.COMMONDEMAND;
     originalInfo.summaryLocation = constants.SUMMARYDEMAND;
     originalInfo.eventSection = constants.DEMANDSECTION;
+    originalInfo.storageFunction = myDemand.rawDataProcessor;
   });
 
   it('Call effort function - should not effect the original object', function() {
     var effortInfo = myDemand.configureProcessingInstructions(originalInfo);
 
     Should(effortInfo).not.deepEqual(originalInfo);
-    Should(effortInfo.rawLocation).equal(constants.RAWDEMAND);
+    Should(effortInfo.rawLocation).equal(constants.RAWDEMAND);  // make sure things get set
+    Should(effortInfo.storageFunction).equal(myDemand.rawDataProcessor); // make sure we don't slame the db function
   });
 });
 

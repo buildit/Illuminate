@@ -3,6 +3,7 @@
 const Config = require('config');
 const constants = require('../../util/constants');
 const errorHelper = require('../errors');
+const HttpStatus = require('http-status-codes');
 const Log4js = require('log4js');
 const R = require('ramda');
 const Rest = require('restler');
@@ -48,25 +49,28 @@ logger.setLevel(Config.get('log-level'));
 //const DEFAULTSTARTDATE = MILLENIUM+'+00:00';
 
 exports.loadRawData = function(effortInfo, processingInfo, sinceTime) {
-  logger.info(`loadTimeEntries for ${effortInfo.project} updated since [${sinceTime}]`);
+  logger.info(`loadRawData for ${effortInfo.project} updated since [${sinceTime}]`);
+  logger.debug(`processing Instructions`);
+  logger.debug(processingInfo);
 
   return new Promise(function (resolve, reject) {
     module.exports.getTimeEntries(effortInfo, sinceTime)
       .then(function (timeData) {
         if (timeData.length < 1) {
-          resolve(timeData.length);
+          resolve(timeData);
         }
         logger.debug(`total time entries - ${timeData.length}`);
         module.exports.getTaskEntries(effortInfo)
           .then(function (taskData) {
-            logger.debug(`total task entries - ${taskData.length}`);
             module.exports.replaceTaskIdwithName(timeData, taskData);
             processingInfo.storageFunction(processingInfo.dbUrl, processingInfo.rawLocation, timeData)
-            .then (function () {
-              resolve(timeData.length); // return the number of records
+            .then (function (allRawData) {
+              resolve(allRawData); // return the number of records
             });
           })
           .catch(function (reason) {
+            logger.error('loadRawData - ERROR');
+            logger.error(reason);
             reject(reason);
           });
       })
@@ -91,8 +95,8 @@ exports.transformRawToCommon = function(timeData) {
 exports.getTimeEntries = function(effortInfo, startDate) {
   logger.info(`getTimeEntries since ${startDate}`);
 
-  var harvestURL = `${effortInfo.url}/projects/${effortInfo.project}/entries?from=${constants.DEFAULTSTARTDATE}&to=${utils.dateFormatIWant(new Date())}&updated_since=${startDate}`;
-  logger.debug(`harvestURL ${harvestURL}`);
+  var harvestURL = `${effortInfo.url}/projects/${effortInfo.project}/entries?from=${constants.DEFAULTSTARTDATE}&to=${utils.dateFormatIWant(new Date())}&updated_since=${startDate}+00:00`;
+  logger.debug(`getTimeEntries->harvestURL ${harvestURL}`);
   return new Promise(function (resolve, reject) {
     Rest.get(encodeURI(harvestURL),
       {headers: utils.createBasicAuthHeader(effortInfo.userData)}
@@ -112,13 +116,17 @@ exports.getTimeEntries = function(effortInfo, startDate) {
           resolve(data);
         }
       }).on('fail', function(data, response) {
-        logger.debug('getTimeEntries - FAIL');
+        logger.debug('getTimeEntries -> FAIL');
         logger.error(`FAIL: ${response.statusCode} - MESSAGE ${data.errorMessages}`);
         reject(errorHelper.errorBody(response.statusCode, 'Error retrieving time entries from Harvest'));
       }).on('error', function(data, response) {
-        logger.debug('getTimeEntries - ERROR');
-        logger.error(`FAIL: ${response.statusCode} - MESSAGE ${data.errorMessages}`);
-        reject(errorHelper.errorBody(response.statusCode, 'Error retrieving time entries from Harvest'));
+        logger.debug('getTimeEntries -> ERROR');
+        logger.error(`ERROR: ${response}`);
+        if (response === null) {
+          reject(errorHelper.errorBody(HttpStatus.NOT_FOUND, 'Error retrieving time entries from Harvest'));
+        } else {
+          reject(errorHelper.errorBody(response.statusCode, 'Error retrieving time entries from Harvest'));
+        }
       });
   });
 }
@@ -127,6 +135,7 @@ exports.getTaskEntries = function(effortInfo) {
   logger.info('getTaskEntries');
 
   var harvestURL = `${effortInfo.url}/tasks`;
+  logger.debug(`getTaskEntries->harvestURL ${harvestURL}`);
   return new Promise(function (resolve, reject) {
     Rest.get(harvestURL,
       {headers: utils.createBasicAuthHeader(effortInfo.userData)}
@@ -143,11 +152,9 @@ exports.getTaskEntries = function(effortInfo) {
         } else {
           logger.debug(`task entries retrieved - ${data.length}`);
           const availableTasks = {};
-
           data.forEach(function(aTask) {
             availableTasks[aTask.task.id] = aTask.task.name;
           });
-
           resolve(availableTasks);
         }
       }).on('fail', function(data, response) {

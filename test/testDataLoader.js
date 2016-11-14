@@ -2,12 +2,14 @@
 
 const constants = require('../util/constants');
 const dataLoader = require('../services/dataLoader');
+const demandLoader = require('../services/demand');
 const effortLoader = require('../services/effort');
 const myDatastore = require('../services/datastore/mongodb');
 const Should = require('should');
 const Sinon = require('sinon');
 require('sinon-as-promised');
 const testClass = require('../services/effortSystem/harvest');
+const testConstants = require('./testConstants');
 const utils = require('../util/utils');
 
 const Config = require('config');
@@ -16,8 +18,6 @@ const Log4js = require('log4js');
 Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
 logger.setLevel(Config.get('log-level'));
-
-const PROJECTNAME = 'UNITESTEFFORT';
 
 const ANEFFORTSYSTEM = {
   source: 'Harvest',
@@ -88,7 +88,7 @@ describe('Test Error - unknown demand system', function() {
   var processingInfo = {};
 
   before('Setup', function() {
-    processingInfo = new utils.ProcessingInfo(utils.dbProjectPath(PROJECTNAME));
+    processingInfo = new utils.ProcessingInfo(utils.dbProjectPath(testConstants.UNITTESTPROJECT));
     processingInfo.sourceSystem = null;
     dataEvent = new utils.DataEvent(constants.LOADEVENT);
   });
@@ -109,7 +109,7 @@ describe('Test Error Getting Raw Data', function() {
 
   before('Setup', function() {
     dataEvent = new utils.DataEvent(constants.LOADEVENT);
-    processingInfo = new utils.ProcessingInfo(utils.dbProjectPath(PROJECTNAME));
+    processingInfo = new utils.ProcessingInfo(utils.dbProjectPath(testConstants.UNITTESTPROJECT));
     processingInfo.sourceSystem = testClass;
     this.loadRawData = Sinon.stub(testClass, 'loadRawData').rejects('error');
   });
@@ -135,7 +135,7 @@ describe('Test Getting 0 Raw Records', function() {
 
   before('Setup', function() {
     dataEvent = new utils.DataEvent(constants.LOADEVENT);
-    processingInfo = new utils.ProcessingInfo(utils.dbProjectPath(PROJECTNAME));
+    processingInfo = new utils.ProcessingInfo(utils.dbProjectPath(testConstants.UNITTESTPROJECT));
     processingInfo.sourceSystem = testClass;
     this.loadRawData = Sinon.stub(testClass, 'loadRawData').resolves(0);
   });
@@ -160,7 +160,7 @@ describe('Test Error Reading Raw Data', function() {
 
   before('Setup', function() {
     dataEvent = new utils.DataEvent(constants.LOADEVENT);
-    processingInfo = new utils.ProcessingInfo(utils.dbProjectPath(PROJECTNAME));
+    processingInfo = new utils.ProcessingInfo(utils.dbProjectPath(testConstants.UNITTESTPROJECT));
     processingInfo.sourceSystem = testClass;
     this.loadRawData = Sinon.stub(testClass, 'loadRawData').resolves(1);
     this.getAllData = Sinon.stub(myDatastore, 'getAllData').rejects('Error');
@@ -187,7 +187,7 @@ describe('Test Error Writting Common Data', function() {
 
   before('Setup', function() {
     dataEvent = new utils.DataEvent(constants.LOADEVENT);
-    processingInfo = new utils.ProcessingInfo(utils.dbProjectPath(PROJECTNAME));
+    processingInfo = new utils.ProcessingInfo(utils.dbProjectPath(testConstants.UNITTESTPROJECT));
     processingInfo.sourceSystem = testClass;
     this.loadRawData = Sinon.stub(testClass, 'loadRawData').resolves(1);
     this.getAllData = Sinon.stub(myDatastore, 'getAllData').resolves(RAWDATA);
@@ -216,7 +216,7 @@ describe('Test Error Writting Summary Data', function() {
 
   before('Setup', function() {
     dataEvent = new utils.DataEvent(constants.LOADEVENT);
-    processingInfo = new utils.ProcessingInfo(utils.dbProjectPath(PROJECTNAME));
+    processingInfo = new utils.ProcessingInfo(utils.dbProjectPath(testConstants.UNITTESTPROJECT));
     processingInfo.sourceSystem = testClass;
     this.loadRawData = Sinon.stub(testClass, 'loadRawData').resolves(1);
     this.getAllData = Sinon.stub(myDatastore, 'getAllData').resolves(RAWDATA);
@@ -238,5 +238,42 @@ describe('Test Error Writting Summary Data', function() {
     }).catch ( function() {
       Should.ok(false);
     });
+  });
+});
+
+describe('Finding or not finding a demand or defect or effort system', function() {
+  var aProject = {};
+  var dataEvent = {};
+  var effortSpy = {};
+  var demandSpy = {};
+
+  before('Setup', function() {
+    dataEvent = new utils.DataEvent(constants.LOADEVENT);
+    aProject = {
+        name: 'COLLECTION-FOR-UNITESTING', // warning - I can't figure out how to use runtime constants for defineing other constants - change at your own risk
+        program: "Projection Test Data",
+        portfolio: "Unit Test Data",
+        description: "A set of basic test data to be used to validate behavior of client systems.",
+        startDate: null,
+        endDate: null,
+        demand: null,
+        defect: {},
+        effort: {},
+        projection: {}};
+
+        effortSpy = Sinon.spy(effortLoader, 'configureProcessingInstructions');
+        demandSpy = Sinon.spy(demandLoader, 'configureProcessingInstructions');
+  });
+
+  after('Cleanup', function() {
+    effortLoader.configureProcessingInstructions.restore();
+    demandLoader.configureProcessingInstructions.restore();
+  });
+
+  it('Act', function(done) {
+    dataLoader.processProjectData(aProject, dataEvent);
+    Should(effortSpy.callCount).equal(0);
+    Should(demandSpy.callCount).equal(0);
+    done();
   });
 });
