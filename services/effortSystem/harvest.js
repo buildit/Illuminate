@@ -70,7 +70,6 @@ exports.loadRawData = function(effortInfo, processingInfo, sinceTime) {
           })
           .catch(function (reason) {
             logger.error('loadRawData - ERROR');
-            logger.error(reason);
             reject(reason);
           });
       })

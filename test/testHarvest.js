@@ -159,7 +159,7 @@ const CODENOTFOUND = 404;
 const MESSAGENOTFOUND = 'There Be Dragons';
 const ERRORRESULT = {statusCode: CODENOTFOUND, statusMessage: MESSAGENOTFOUND};
 
-describe('Harvest Stubbed Tests', function() {
+describe('testHarvest - Stubbed Tests', function() {
   const TIMEERRORMESSAGE = 'Error retrieving time entries from Harvest';
   const TASKERRORMESSAGE = 'Error retrieving task entries from Harvest';
 
@@ -243,7 +243,7 @@ describe('Harvest Stubbed Tests', function() {
   });
 });
 
-describe('Harvest Utility Function Test', function() {
+describe('testHarvest -  Utility Function Test', function() {
 
   it('Translate task_id into task_name', function(done) {
     var time = JSON.parse(JSON.stringify(TIMERESPONSE));
@@ -258,7 +258,7 @@ describe('Harvest Utility Function Test', function() {
   });
 });
 
-describe('Harvest Data Convertion Test', function() {
+describe('testHarvest -  Data Convertion Test', function() {
   it('Convert', function(done) {
     var commonDataFormat = harvest.transformRawToCommon(MODIFIEDTIMERESPONSE);
 
@@ -268,7 +268,7 @@ describe('Harvest Data Convertion Test', function() {
 });
 
 
-describe('Harvest GetRawData - fail getting time', function() {
+describe('testHarvest -  GetRawData - fail getting time', function() {
   var aSetOfInfo = {};
 
   beforeEach(function() {
@@ -285,13 +285,12 @@ describe('Harvest GetRawData - fail getting time', function() {
       .then(function() {
         Should.ok(false);
       }).catch ( function(error) {
-        logger.debug(error);
         Should(error).deepEqual(ERRORRESULT);
       });
   });
 });
 
-describe('Harvest GetRawData - fail getting task', function() {
+describe('testHarvest - GetRawData - fail getting task', function() {
   var aSetOfInfo = {};
 
   beforeEach(function() {
@@ -316,13 +315,13 @@ describe('Harvest GetRawData - fail getting task', function() {
   });
 });
 
-describe('Harvest GetRawData - make sure count is returned', function() {
+describe('testHarvest - GetRawData - make sure count is returned', function() {
   var aSetOfInfo = {};
 
   beforeEach(function() {
     this.getTimeEntries = Sinon.stub(harvest, 'getTimeEntries').resolves(TIMERESPONSE);
     this.getTaskEntries = Sinon.stub(harvest, 'getTaskEntries').resolves(TASKREPONSE);
-    this.upsertData = Sinon.stub(myDatastore, 'upsertData').resolves();
+    this.upsertData = Sinon.stub(myDatastore, 'upsertData').resolves(MODIFIEDTIMERESPONSE);
 
     aSetOfInfo = new utils.ProcessingInfo('');
     aSetOfInfo.storageFunction = this.upsertData;
@@ -338,7 +337,7 @@ describe('Harvest GetRawData - make sure count is returned', function() {
 
     return harvest.loadRawData(EFFORTINFO, aSetOfInfo, SINCETIME)
       .then(function(response) {
-        Should(response).equal(2);
+        Should(response).deepEqual(MODIFIEDTIMERESPONSE);
       }).catch ( function() {
         Should.ok(false);
       });

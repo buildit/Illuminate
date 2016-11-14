@@ -42,7 +42,7 @@ const EXPECTEDSUMMARYEFFORT = [
   { projectDate: '2015-10-22', activity: { 'Delivery': 8 } }
 ];
 
-describe('configure Processing info', function() {
+describe('testEffort - configure Processing info', function() {
   var originalInfo = null;
 
   before('setup', function() {
@@ -63,7 +63,7 @@ describe('configure Processing info', function() {
   });
 });
 
-describe('determine effort processing system', function() {
+describe('testEffort - determine effort processing system', function() {
   it('Should decode Harvest', function() {
     var systemClass = myEffort.rawDataProcessor(EFFORTINFO);
     Should(systemClass).not.equal(null);
@@ -77,7 +77,7 @@ describe('determine effort processing system', function() {
   });
 });
 
-describe('convert common to summary', function() {
+describe('testEffort - convert common to summary', function() {
 
   it('Should translate', function() {
     var summaryData = myEffort.transformCommonToSummary(COMMONDATA);

@@ -38,11 +38,11 @@ exports.configureProcessingInstructions = function(processingInfo) {
 exports.rawDataProcessor = function(demandData) {
   if (R.isNil(demandData) || R.isEmpty(demandData)) {
     logger.debug('UNKNOWN DEMAND SYSTEM ');
-    logger.debug(effortData);
+    logger.debug(demandData);
     return null;
   } else {
     switch(demandData.source.toUpperCase()) {
-        case "JIRA":
+        case 'JIRA':
           return jira;
         default:
           return null;

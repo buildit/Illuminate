@@ -39,7 +39,7 @@ const SUMMARYDEMAND = [
   { projectDate: '2016-03-23', status: { 'In Progress': 1 } }
 ];
 
-describe('configure Processing info', function() {
+describe('testDemand - configure Processing info', function() {
   var originalInfo = null;
 
   before('setup', function() {
@@ -60,7 +60,7 @@ describe('configure Processing info', function() {
   });
 });
 
-describe('determine effort processing system', function() {
+describe('testDemand - determine effort processing system', function() {
   it('Should decode Harvest', function() {
     var systemClass = myDemand.rawDataProcessor(DEMANDINFO);
     Should(systemClass).not.equal(null);
@@ -74,7 +74,7 @@ describe('determine effort processing system', function() {
   });
 });
 
-describe('convert common to summary', function() {
+describe('testDemand - convert common to summary', function() {
 
   it('Should translate', function() {
     var summaryData = myDemand.transformCommonToSummary(COMMONDEMAND);

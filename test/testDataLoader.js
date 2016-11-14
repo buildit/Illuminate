@@ -83,7 +83,7 @@ const EXPECTEDCOMMONDATA = [
   }
 ];
 
-describe('Test Error - unknown demand system', function() {
+describe('testDataLoader - Test Error - unknown demand system', function() {
   var dataEvent = {};
   var processingInfo = {};
 
@@ -103,7 +103,7 @@ describe('Test Error - unknown demand system', function() {
   });
 });
 
-describe('Test Error Getting Raw Data', function() {
+describe('testDataLoader - Test Error Getting Raw Data', function() {
   var dataEvent = {};
   var processingInfo = {};
 
@@ -129,7 +129,7 @@ describe('Test Error Getting Raw Data', function() {
   });
 });
 
-describe('Test Getting 0 Raw Records', function() {
+describe('testDataLoader - Test Getting 0 Raw Records', function() {
   var dataEvent = {};
   var processingInfo = {};
 
@@ -137,7 +137,7 @@ describe('Test Getting 0 Raw Records', function() {
     dataEvent = new utils.DataEvent(constants.LOADEVENT);
     processingInfo = new utils.ProcessingInfo(utils.dbProjectPath(testConstants.UNITTESTPROJECT));
     processingInfo.sourceSystem = testClass;
-    this.loadRawData = Sinon.stub(testClass, 'loadRawData').resolves(0);
+    this.loadRawData = Sinon.stub(testClass, 'loadRawData').resolves([]);
   });
 
   after('Restore', function() {
@@ -154,7 +154,7 @@ describe('Test Getting 0 Raw Records', function() {
   });
 });
 
-describe('Test Error Reading Raw Data', function() {
+describe('testDataLoader - Test Error Reading Raw Data', function() {
   var dataEvent = {};
   var processingInfo = {};
 
@@ -181,7 +181,7 @@ describe('Test Error Reading Raw Data', function() {
   });
 });
 
-describe('Test Error Writting Common Data', function() {
+describe('testDataLoader - Test Error Writting Common Data', function() {
   var dataEvent = {};
   var processingInfo = {};
 
@@ -210,7 +210,7 @@ describe('Test Error Writting Common Data', function() {
   });
 });
 
-describe('Test Error Writting Summary Data', function() {
+describe('testDataLoader - Test Error Writting Summary Data', function() {
   var dataEvent = {};
   var processingInfo = {};
 
@@ -241,7 +241,7 @@ describe('Test Error Writting Summary Data', function() {
   });
 });
 
-describe('Finding or not finding a demand or defect or effort system', function() {
+describe('testDataLoader - Finding or not finding a demand or defect or effort system', function() {
   var aProject = {};
   var dataEvent = {};
   var effortSpy = {};
