@@ -3,6 +3,7 @@
 const Config = require('config');
 const constants = require('../util/constants');
 const dataStore = require('./datastore/mongodb');
+const defectLoader = require('./defect');
 const demandLoader = require('./demand');
 const effortLoader = require('./effort');
 const Log4js = require('log4js');
@@ -33,6 +34,22 @@ exports.processProjectData = function (aProject, anEvent) {
         anEvent,
         demandInstructions.eventSection,
         aDemandEvent);
+    });
+  }
+
+  if (R.isNil(aProject.defect) || R.isEmpty(aProject.defect)) {
+    logger.debug(`No Defect configured for ${aProject.name}`);
+  } else {
+    var defectInstructions = defectLoader.configureProcessingInstructions(processingInstructions);
+    defectInstructions.sourceSystem = defectLoader.rawDataProcessor(aProject.demand);
+    logger.debug(`*** DEFECT processing Info ${JSON.stringify(defectInstructions)}`);
+    module.exports.processProjectSystem(defectLoader, aProject.defect, anEvent, defectInstructions)
+    .then (function (aDefectEvent) {
+      dataStore.processEventData(defectInstructions.dbUrl,
+        constants.EVENTCOLLECTION,
+        anEvent,
+        defectInstructions.eventSection,
+        aDefectEvent);
     });
   }
 
