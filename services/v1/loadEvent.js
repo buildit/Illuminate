@@ -68,6 +68,12 @@ exports.createNewEvent = function (req, res) {
   var projectName = decodeURIComponent(req.params.name);
   logger.info(`createNewEvent for ${projectName}`);
   var aLoadEvent = {};
+  var overrideOpenEvent = false;
+
+  if (req.query.override != undefined && req.query.override === true) {
+    logger.debug(`Forced override of event creation request.`);
+    overrideOpenEvent = true;
+  }
 
   if (req.query.type === undefined || ((req.query.type.toUpperCase() != myConstants.LOADEVENT) && (req.query.type.toUpperCase() != myConstants.UPDATEEVENT))) {
     logger.debug(`Missing or invalid type query parameter`);
@@ -79,6 +85,19 @@ exports.createNewEvent = function (req, res) {
       .then (function(aProject) {
         module.exports.getMostRecentEvent(projectName)
           .then (function(anEvent) {
+            if (anEvent != undefined && isActive(anEvent) && overrideOpenEvent) {
+              anEvent.status = constants.FAILEDEVENT;
+              anEvent.note = constants.FORCEDCLOSEDMESSAGE;
+              anEvent.endTime = new Date();
+              dataStore.upsertData(utils.dbProjectPath(projectName), constants.EVENTCOLLECTION, [anEvent])
+                .then (function () {
+                  logger.debug(`createNewEvent->Event [${anEvent._id}] forced complete.`);
+                }).catch (function () {
+                  logger.debug(`createNewEvent->Error trying to override open event ${anEvent._id}`);
+                  anEvent.endTime = null;
+                });
+            }
+
             if (anEvent != undefined && isActive(anEvent)) {
               var url = `${req.protocol}://${req.hostname}${req.baseUrl}${req.path}/${anEvent._id}`;
               logger.debug(`createNewEvent -> There is an existing active event ${url}`);
@@ -91,7 +110,7 @@ exports.createNewEvent = function (req, res) {
               logger.debug('createNewEvent -> NO ACTIVE EVENTS');
               logger.debug(aLoadEvent);
               if ((anEvent != undefined) && (req.query.type.toUpperCase() === myConstants.UPDATEEVENT)) {
-                logger.debug('createNewEvent -> Create an Udate Event');
+                logger.debug('createNewEvent -> Create an Update Event');
                 aLoadEvent.since = fromLastCompletion(anEvent);
                 logger.debug(aLoadEvent);
               }
@@ -164,19 +183,18 @@ function configureLoadEventSystems(aProject, anEvent) {
   anEvent.endTime = new Date();
   anEvent.note = 'No Demand, Defect, or Effort system configure for this project';
   if ((!R.isNil(aProject.demand)) && (!R.isEmpty(aProject.demand))) {
-//  if (aProject.demand != undefined && aProject.demand != null && aProject.demand['source'] != undefined) {
       anEvent.demand = {};
       anEvent.status = constants.PENDINGEVENT;
       anEvent.endTime = null;
       anEvent.note = '';
   }
-  if (aProject.defect != undefined && aProject.defect != null && aProject.defect['source'] != undefined) {
+  if ((!R.isNil(aProject.defect)) && (!R.isEmpty(aProject.defect))) {
       anEvent.defect = {};
       anEvent.status = constants.PENDINGEVENT;
       anEvent.endTime = null;
       anEvent.note = '';
   }
-  if (aProject.effort != undefined && aProject.effort != null && aProject.effort['source'] != undefined) {
+  if ((!R.isNil(aProject.effort)) && (!R.isEmpty(aProject.effort))) {
       anEvent.effort = {};
       anEvent.status = constants.PENDINGEVENT;
       anEvent.endTime = null;

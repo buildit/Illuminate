@@ -6,6 +6,7 @@ exportConstant('EVENTCOLLECTION', 'loadEvents');
 exportConstant('SUCCESSEVENT', 'COMPLETED SUCCESSFULLY');
 exportConstant('FAILEDEVENT', 'FAILED');
 exportConstant('PENDINGEVENT', 'PENDING');
+exportConstant('FORCEDCLOSEDMESSAGE', 'Event forced complete');
 
 exportConstant('DEMANDSECTION', 'demand');
 exportConstant('DEFECTSECTION', 'defect');

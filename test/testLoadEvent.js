@@ -214,6 +214,52 @@ describe('Project Load Event Error Path Tests', function() {
   });
 });
 
+// tried doing this with stubs - gave up
+describe('Test use of Override when there is an active event', function() {
+  var anEvent = {};
+
+  before('Create Test Project', function() {
+    anEvent = new utils.DataEvent(constants.LOADEVENT);
+    var events = [anEvent];
+    return mongoDB.insertData(utils.dbCorePath(), constants.PROJECTCOLLECTION, [SAMPLEPROJECTDATA] )
+      .then( function() {
+        return mongoDB.insertData(utils.dbProjectPath(testConstants.UNITTESTPROJECT), constants.EVENTCOLLECTION, events );
+      });
+  });
+
+  after('Delete Project Details', function() {
+    return mongoDB.clearData(utils.dbCorePath(), constants.PROJECTCOLLECTION)
+      .then(function() {
+        return mongoDB.clearData(utils.dbProjectPath(testConstants.UNITTESTPROJECT), constants.EVENTCOLLECTION)
+      });
+  });
+
+  it('Create an override load event type', function(done) {
+    var response = buildResponse();
+    var request  = HttpMocks.createRequest({
+      params: {'name': testConstants.UNITTESTPROJECT},
+      query: {'type': constants.UPDATEEVENT, 'override': true}
+    });
+
+    response.on('end', function() {
+      Should(response.statusCode).equal(HttpStatus.CREATED);
+      var body = response._getData();
+      Should(body).have.property('url');
+      done();
+    });
+
+    loadEvent.createNewEvent(request, response);
+  });
+
+  it('try to read the existing event and make sure it failed', function() {
+    return mongoDB.getDocumentByID(utils.dbProjectPath(testConstants.UNITTESTPROJECT), constants.EVENTCOLLECTION, anEvent._id)
+      .then(function(updatedEvent) {
+        Should(updatedEvent.status).equal(constants.FAILEDEVENT);
+        Should(updatedEvent.note).equal(constants.FORCEDCLOSEDMESSAGE);
+      });
+  });
+});
+
 describe('Test getting the most recent event', function() {
   var anEvent = {};
   var anotherEvent = {};
