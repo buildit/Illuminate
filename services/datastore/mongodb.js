@@ -4,6 +4,7 @@ const CO = require('co');
 const Config = require('config');
 const constants = require('../../util/constants');
 const Log4js = require('log4js');
+const Moment = require('moment');
 const MongoClient = require('mongodb');
 
 Log4js.configure('config/log4js_config.json', {});
@@ -205,7 +206,7 @@ exports.processEventData = function (projectPath, collectionName, eventInfo, sec
 
         if (eventIsComplete(tmpObj)) {
           logger.debug('EVENT COMPLETE');
-          tmpObj.endTime = new Date();
+          tmpObj.endTime = Moment.utc();
           if (wasCompletedSuccessfully(tmpObj)) {
             logger.debug('EVENT COMPLETE SUCCESSFULLY');
             tmpObj.status = constants.SUCCESSEVENT;

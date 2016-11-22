@@ -7,6 +7,7 @@ const dataLoader = require('../dataLoader');
 const errorHelper = require('../errors');
 const HttpStatus = require('http-status-codes');
 const Log4js = require('log4js');
+const Moment = require('moment');
 const myConstants = require('../../util/constants');
 const R = require('ramda');
 const utils = require('../../util/utils');
@@ -88,7 +89,7 @@ exports.createNewEvent = function (req, res) {
             if (anEvent != undefined && isActive(anEvent) && overrideOpenEvent) {
               anEvent.status = constants.FAILEDEVENT;
               anEvent.note = constants.FORCEDCLOSEDMESSAGE;
-              anEvent.endTime = new Date();
+              anEvent.endTime = Moment.utc();
               dataStore.upsertData(utils.dbProjectPath(projectName), constants.EVENTCOLLECTION, [anEvent])
                 .then (function () {
                   logger.debug(`createNewEvent->Event [${anEvent._id}] forced complete.`);
@@ -111,7 +112,7 @@ exports.createNewEvent = function (req, res) {
               logger.debug(aLoadEvent);
               if ((anEvent != undefined) && (req.query.type.toUpperCase() === myConstants.UPDATEEVENT)) {
                 logger.debug('createNewEvent -> Create an Update Event');
-                aLoadEvent.since = fromLastCompletion(anEvent);
+                aLoadEvent.since = utils.dateFormatIWant(anEvent.endTime);
                 logger.debug(aLoadEvent);
               }
               configureLoadEventSystems(aProject, aLoadEvent);
@@ -166,21 +167,11 @@ exports.createNewEvent = function (req, res) {
   }
 };
 
-// okay Harvest wants a '+HH:MM' included, Jira does not.
-// so, I can implement a system specific version of this
-// write code to trim off the '+'
-// or just append a +00:00 for Harvest.  Bingo
-function fromLastCompletion(anEvent) {
-  var endTime = anEvent.endTime.toJSON().toString();
-//  return (endTime.slice(0, 10) + '+' + endTime.slice(11, 16));
-  return (endTime.slice(0, 10));
-}
-
 // okay - here is a pessamistic view - set up for failure
 // allow for success
 function configureLoadEventSystems(aProject, anEvent) {
   anEvent.status = constants.FAILEDEVENT;
-  anEvent.endTime = new Date();
+  anEvent.endTime = Moment.utc();
   anEvent.note = 'No Demand, Defect, or Effort system configure for this project';
   if ((!R.isNil(aProject.demand)) && (!R.isEmpty(aProject.demand))) {
       anEvent.demand = {};

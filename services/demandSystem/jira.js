@@ -5,9 +5,9 @@ const Config = require('config');
 const errorHelper = require('../errors');
 const HttpStatus = require('http-status-codes');
 const Log4js = require('log4js');
-//const R = require('ramda');
 const Rest = require('restler');
 const utils = require('../../util/utils');
+const ValidUrl = require('valid-url');
 
 Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
@@ -290,6 +290,10 @@ exports.loadJiraDemand = function(demandInfo, issuesSoFar, sinceTime) {
   logger.info(`loadJiraDemand() for JIRA project ${demandInfo.project}.  Start Pos ${issuesSoFar.length}`);
 
   return new Promise(function (resolve, reject) {
+    if (!(ValidUrl.isUri(demandInfo.url))) {
+      reject (errorHelper.errorBody(HttpStatus.BAD_REQUEST, `invalid demand URL [${demandInfo.url}]`));
+    }
+
     Rest.get(demandInfo.url + buildJQL(demandInfo.project, issuesSoFar.length, sinceTime),
       {headers: utils.createBasicAuthHeader(demandInfo.userData)}
       ).on('complete', function (data, response) {

@@ -59,6 +59,12 @@ exports.transformCommonToSummary = function(commonData) {
   commonData.forEach(function (storySummary) {
     storySummary.history.forEach(function (aStatusChange) {
       var daysDifference = utils.createDayArray(aStatusChange.startDate, aStatusChange.changeDate);
+
+      logger.debug('aStatusChange');
+      logger.debug(aStatusChange);
+      logger.debug('daysDifference');
+      logger.debug(daysDifference);
+
       for (var i = 0; i < daysDifference.length; i++) {
         if (!(daysDifference[i] in datedData)) {
           datedData.push(daysDifference[i]);

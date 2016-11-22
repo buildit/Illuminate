@@ -9,10 +9,17 @@ const effortLoader = require('./effort');
 const Log4js = require('log4js');
 const R = require('ramda');
 const utils = require('../util/utils');
+const ValidUrl = require('valid-url');
 
 Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
 logger.setLevel(Config.get('log-level'));
+
+const systemDefinitionExists = (aSystemDeffiniton) =>
+  (R.not(R.isNil(aSystemDeffiniton)) &&
+  R.not(R.isEmpty(aSystemDeffiniton)) &&
+  R.not(R.isNil(aSystemDeffiniton.source)) &&
+  R.not(R.isNil(aSystemDeffiniton.url)));
 
 // there is an event for a project, so go get data for it
 // check if it is configured for demand, defect, and / or effort
@@ -21,9 +28,7 @@ exports.processProjectData = function (aProject, anEvent) {
   processingInstructions.endDate = utils.dateFormatIWant(determineProjectEndDate(aProject));
   processingInstructions.storageFunction = dataStore.upsertData;
 
-  if (R.isNil(aProject.demand) || R.isEmpty(aProject.demand)) {
-    logger.debug(`No Demand configured for ${aProject.name}`);
-  } else {
+  if (systemDefinitionExists(aProject.demand)) {
     var demandInstructions = demandLoader.configureProcessingInstructions(processingInstructions);
     demandInstructions.sourceSystem = demandLoader.rawDataProcessor(aProject.demand);
     logger.debug(`*** DEMAND processing Info ${JSON.stringify(demandInstructions)}`);
@@ -37,11 +42,9 @@ exports.processProjectData = function (aProject, anEvent) {
     });
   }
 
-  if (R.isNil(aProject.defect) || R.isEmpty(aProject.defect)) {
-    logger.debug(`No Defect configured for ${aProject.name}`);
-  } else {
+  if (systemDefinitionExists(aProject.defect)) {
     var defectInstructions = defectLoader.configureProcessingInstructions(processingInstructions);
-    defectInstructions.sourceSystem = defectLoader.rawDataProcessor(aProject.demand);
+    defectInstructions.sourceSystem = defectLoader.rawDataProcessor(aProject.defect);
     logger.debug(`*** DEFECT processing Info ${JSON.stringify(defectInstructions)}`);
     module.exports.processProjectSystem(defectLoader, aProject.defect, anEvent, defectInstructions)
     .then (function (aDefectEvent) {
@@ -53,9 +56,7 @@ exports.processProjectData = function (aProject, anEvent) {
     });
   }
 
-  if (R.isNil(aProject.effort) || R.isEmpty(aProject.effort)) {
-    logger.debug(`No Effort configured for ${aProject.name}`);
-  } else {
+  if (systemDefinitionExists(aProject.effort)) {
     var effortInstructions = effortLoader.configureProcessingInstructions(processingInstructions);
     effortInstructions.sourceSystem = effortLoader.rawDataProcessor(aProject.effort);
     logger.debug(`*** EFFORT processing Info ${JSON.stringify(effortInstructions)}`);
@@ -75,16 +76,15 @@ exports.processProjectData = function (aProject, anEvent) {
 // if there isn't a project with and end date / see if the project has an end date
 // otherwise default to today
 function determineProjectEndDate(aProject) {
-  if (aProject.projection != undefined) {
-    if (aProject.projection.endDate != undefined) {
-      return aProject.projection.endDate;
-    }
-  } else {
-    if (aProject.endDate != undefined) {
-      return aProject.endDate;
-    }
+  if (R.not(R.isNil(aProject.projection)) && R.not(R.isNil(aProject.projection.endDate)) && R.not(R.isEmpty(aProject.projection.endDate))) {
+    return (aProject.projection.endDate);
   }
-  return (new Date());
+
+  if (R.not(R.isNil(aProject.endDate)) && R.not(R.isEmpty(aProject.endDate))) {
+    return (aProject.endDate);    
+  }
+
+  return (utils.dateFormatIWant());
 }
 
 exports.processProjectSystem = function (loaderClass, aProjectSystem, anEvent, processingInstructions) {
@@ -92,37 +92,42 @@ exports.processProjectSystem = function (loaderClass, aProjectSystem, anEvent, p
 
   return new Promise(function (resolve) {
     if (processingInstructions.sourceSystem === null) {
-      logger.debug(`processProjectSystem -> unknown source system`);
-      resolve(new utils.SystemEvent(constants.FAILEDEVENT, `unknown source system`));
-    } else {
-      processingInstructions.sourceSystem.loadRawData(aProjectSystem, processingInstructions, anEvent.since)
-        .then (function(allRawData) {
-          logger.debug(`processProjectSystem -> rawDataProcessed #[${allRawData.length}]`);
-          if (allRawData.length < 1) { // there wasn't any new data
-            resolve(new utils.SystemEvent(constants.SUCCESSEVENT, `no records processed`));
-          } else {  // there was new data - reprocess to generate a common format
-            var commonDataFormat = processingInstructions.sourceSystem.transformRawToCommon(allRawData);
-            dataStore.wipeAndStoreData(processingInstructions.dbUrl, processingInstructions.commonLocation, commonDataFormat)
-              .then (function() {  // now generate the summary data format
-                logger.debug(`processProjectSystem -> updatedCommonData #[${commonDataFormat.length}]`);
-                var summaryDataFormat = loaderClass.transformCommonToSummary(commonDataFormat);
-                dataStore.wipeAndStoreData(processingInstructions.dbUrl, processingInstructions.summaryLocation,  summaryDataFormat)
-                  .then (function (){
-                    logger.debug(`processProjectSystem -> updatedSummaryData #[${summaryDataFormat.length}]`);
-                    resolve (new utils.SystemEvent(constants.SUCCESSEVENT, `${allRawData.length} records processed`));
-                  }).catch(function(err) {
-                    logger.debug('processProjectSystem -> ERROR Summary Data');
-                    resolve (new utils.SystemEvent(constants.FAILEDEVENT, JSON.stringify(err)));
-                  });
-              }).catch(function(err) {
-                logger.debug('processProjectSystem -> ERROR Common Data');
-                resolve (new utils.SystemEvent(constants.FAILEDEVENT, JSON.stringify(err)));
-              });
-          }
-        }).catch(function(err) {
-          logger.debug('processProjectSystem -> ERROR getting Raw Data');
-          resolve (new utils.SystemEvent(constants.FAILEDEVENT, JSON.stringify(err)));
-        });
+      logger.debug(`processProjectSystem -> unknown source system [${aProjectSystem.source}]`);
+      resolve(new utils.SystemEvent(constants.FAILEDEVENT, `unknown source system [${aProjectSystem.source}]`));
     }
+
+    if (!(ValidUrl.isUri(aProjectSystem.url))) {
+      logger.debug(`processProjectSystem -> invalid source system url [${aProjectSystem.url}]`);
+      resolve(new utils.SystemEvent(constants.FAILEDEVENT, `invalid source system url [${aProjectSystem.url}]`));
+    }
+
+    processingInstructions.sourceSystem.loadRawData(aProjectSystem, processingInstructions, anEvent.since)
+      .then (function(allRawData) {
+        logger.debug(`processProjectSystem -> rawDataProcessed #[${allRawData.length}]`);
+        if (allRawData.length < 1) { // there wasn't any new data
+          resolve(new utils.SystemEvent(constants.SUCCESSEVENT, `no records processed`));
+        } else {  // there was new data - reprocess to generate a common format
+          var commonDataFormat = processingInstructions.sourceSystem.transformRawToCommon(allRawData);
+          dataStore.wipeAndStoreData(processingInstructions.dbUrl, processingInstructions.commonLocation, commonDataFormat)
+            .then (function() {  // now generate the summary data format
+              logger.debug(`processProjectSystem -> updatedCommonData #[${commonDataFormat.length}]`);
+              var summaryDataFormat = loaderClass.transformCommonToSummary(commonDataFormat);
+              dataStore.wipeAndStoreData(processingInstructions.dbUrl, processingInstructions.summaryLocation,  summaryDataFormat)
+                .then (function (){
+                  logger.debug(`processProjectSystem -> updatedSummaryData #[${summaryDataFormat.length}]`);
+                  resolve (new utils.SystemEvent(constants.SUCCESSEVENT, `${allRawData.length} records processed`));
+                }).catch(function(err) {
+                  logger.debug('processProjectSystem -> ERROR Summary Data');
+                  resolve (new utils.SystemEvent(constants.FAILEDEVENT, JSON.stringify(err)));
+                });
+            }).catch(function(err) {
+              logger.debug('processProjectSystem -> ERROR Common Data');
+              resolve (new utils.SystemEvent(constants.FAILEDEVENT, JSON.stringify(err)));
+            });
+        }
+      }).catch(function(err) {
+        logger.debug('processProjectSystem -> ERROR getting Raw Data');
+        resolve (new utils.SystemEvent(constants.FAILEDEVENT, JSON.stringify(err)));
+      });
   });
 };

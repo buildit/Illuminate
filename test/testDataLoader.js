@@ -249,6 +249,10 @@ describe('testDataLoader - Finding or not finding a demand or defect or effort s
 
   before('Setup', function() {
     dataEvent = new utils.DataEvent(constants.LOADEVENT);
+    // NOTICE
+    // There are 3 differnt styles for demand, defect, and effort on purpose
+    // demand is null and effort is an empty objects - these are ways that projects have been structured in the plfu-feasability
+    // defect is how Synpase creates a default empty project
     aProject = {
         name: 'COLLECTION-FOR-UNITESTING', // warning - I can't figure out how to use runtime constants for defineing other constants - change at your own risk
         program: "Projection Test Data",
@@ -257,7 +261,7 @@ describe('testDataLoader - Finding or not finding a demand or defect or effort s
         startDate: null,
         endDate: null,
         demand: null,
-        defect: {},
+        defect: { severity:[] },
         effort: {},
         projection: {}};
 

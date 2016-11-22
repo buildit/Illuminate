@@ -2,7 +2,15 @@
 
 const Config = require('config');
 const constants = require('./constants');
+const Moment = require('moment');
+const R = require('ramda');
 const UUID = require('uuid');
+
+const Log4js = require('log4js');
+
+Log4js.configure('config/log4js_config.json', {});
+const logger = Log4js.getLogger();
+logger.setLevel(Config.get('log-level'));
 
 exports.dbProjectPath = function (projectName) {
   var dbUrl = `${Config.get('datastore.dbUrl')}/${Config.get('datastore.context')}-${projectName.replace(/\W/g, '')}`;
@@ -41,24 +49,29 @@ exports.createBasicAuthHeader = function(encodedUser) {
   return headers;
 }
 
-//
-//  Which is YYYY-MM-DD because is is the only way I can keep helpful utilities time zone adjusting for me
-//
 exports.dateFormatIWant = function (incomming) {
-  var tmpDate = new Date(incomming);
-  var theDay = tmpDate.getFullYear() + "-" + ('0' + (tmpDate.getMonth() + 1)).slice(-2) + "-" + ('0' + tmpDate.getDate()).slice(-2);
-  return theDay;
+  if (R.isNil(incomming) || R.isEmpty(incomming)) {
+    return Moment.utc().format('YYYY-MM-DD')
+  } else {
+    return Moment.utc(incomming).format('YYYY-MM-DD');    
+  }
 };
 
 exports.createDayArray = function (start, end) {
-  var daysArray = [];
-  var startDate = new Date(start);
-  var endDate = new Date(end);
-  var daysDiff = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24));
 
-  for (var i = 0; i < daysDiff; i++) {
-    daysArray.push(this.dateFormatIWant(startDate));
-    startDate.setUTCDate(startDate.getUTCDate() + 1);
+  var daysArray = [];
+  var startDate = Moment.utc(start);
+  var endDate = Moment.utc(end);
+
+  if (R.isNil(start)) {
+    return daysArray;
+  };
+  if (R.isNil(end)) {
+    return daysArray;
+  }
+
+  for (; startDate < endDate; startDate.add(1, 'd')) {
+    daysArray.push(startDate.format('YYYY-MM-DD'));
   }
 
   return daysArray;
@@ -74,7 +87,7 @@ exports.ProcessingInfo = function (dbUrl) {
 }
 
 exports.SystemEvent = function (status, message) {
-  this.completion = new Date();
+  this.completion = Moment.utc();
   this.status = status;
   this.message;
 }
@@ -82,7 +95,7 @@ exports.SystemEvent = function (status, message) {
 exports.DataEvent = function (type) {
   this._id = UUID.v4();
   this.type = type;
-  this.startTime = new Date();
+  this.startTime = Moment.utc();
   this.endTime = null;
   this.since = constants.DEFAULTSTARTDATE;
   this.status = constants.PENDINGEVENT;

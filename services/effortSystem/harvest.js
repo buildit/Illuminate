@@ -94,7 +94,7 @@ exports.transformRawToCommon = function(timeData) {
 exports.getTimeEntries = function(effortInfo, startDate) {
   logger.info(`getTimeEntries since ${startDate}`);
 
-  var harvestURL = `${effortInfo.url}/projects/${effortInfo.project}/entries?from=${constants.DEFAULTSTARTDATE}&to=${utils.dateFormatIWant(new Date())}&updated_since=${startDate}+00:00`;
+  var harvestURL = `${effortInfo.url}/projects/${effortInfo.project}/entries?from=${constants.DEFAULTSTARTDATE}&to=${utils.dateFormatIWant()}&updated_since=${startDate}+00:00`;
   logger.debug(`getTimeEntries->harvestURL ${harvestURL}`);
   return new Promise(function (resolve, reject) {
     Rest.get(encodeURI(harvestURL),

@@ -5,9 +5,9 @@ const Config = require('config');
 const errorHelper = require('../errors');
 const HttpStatus = require('http-status-codes');
 const Log4js = require('log4js');
-//const R = require('ramda');
 const Rest = require('restler');
 const utils = require('../../util/utils');
+const ValidUrl = require('valid-url');
 
 Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
@@ -226,11 +226,11 @@ logger.setLevel(Config.get('log-level'));
 //     }
 // }
 
-exports.loadRawData = function(demandInfo, processingInfo, sinceTime) {
-  logger.info(`loadBugEntries for ${demandInfo.project} updated since [${sinceTime}]`);
+exports.loadRawData = function(defectInfo, processingInfo, sinceTime) {
+  logger.info(`loadBugEntries for ${defectInfo.project} updated since [${sinceTime}]`);
 
   return new Promise(function (resolve, reject) {
-    module.exports.loadJiraDemand(demandInfo, [], sinceTime)
+    module.exports.loadJiraDemand(defectInfo, [], sinceTime)
     .then( function (stories) {
       logger.debug(`total stories read - ${stories.length}`);
       if (stories.length < 1) {
@@ -286,19 +286,23 @@ function buildJQL(project, startPosition, since) {
   return queryString;
 }
 
-exports.loadJiraDemand = function(demandInfo, issuesSoFar, sinceTime) {
-  logger.info(`loadJiraDemand() for JIRA project ${demandInfo.project}.  Start Pos ${issuesSoFar.length}`);
+exports.loadJiraDemand = function(defectInfo, issuesSoFar, sinceTime) {
+  logger.info(`loadJiraDemand() for JIRA project ${defectInfo.project}.  Start Pos ${issuesSoFar.length}`);
 
   return new Promise(function (resolve, reject) {
-    Rest.get(demandInfo.url + buildJQL(demandInfo.project, issuesSoFar.length, sinceTime),
-      {headers: utils.createBasicAuthHeader(demandInfo.userData)}
+    if (!(ValidUrl.isUri(defectInfo.url))) {
+      reject (errorHelper.errorBody(HttpStatus.BAD_REQUEST, `invalid defect URL [${defectInfo.url}]`));
+    }
+
+    Rest.get(defectInfo.url + buildJQL(defectInfo.project, issuesSoFar.length, sinceTime),
+      {headers: utils.createBasicAuthHeader(defectInfo.userData)}
       ).on('complete', function (data, response) {
         if (response.statusCode === HttpStatus.OK) {
           logger.info(`Success reading demand from [${data.startAt}] count [${data.issues.length}] of [${data.total}]`);
 
           var issues = issuesSoFar.concat(data.issues);
           if ((data.issues.length > 0) && (issues.length < data.total)) {
-            module.exports.loadJiraDemand(demandInfo, issues, sinceTime)
+            module.exports.loadJiraDemand(defectInfo, issues, sinceTime)
             .then( function(issues) {  // unwind the promise chain
               resolve(issues);
             })

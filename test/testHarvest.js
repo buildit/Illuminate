@@ -19,7 +19,7 @@ const GOODPROJECT = 10284278;
 const BADPROJECT = 98765432;
 
 const SINCETIME = '2000-01-01+00:00';
-const FUTURETIME = utils.dateFormatIWant(new Date()) + '+23:59';
+const FUTURETIME = utils.dateFormatIWant() + '+23:59';
 
 const EFFORTINFO = {
   source: 'Harvest',

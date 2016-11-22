@@ -48,11 +48,13 @@
     "http-status-codes": "^1.0.6",
     "log4js": "^0.6.37",
     "method-override": "^2.3.6",
+    "moment": "^2.17.0",
     "mongodb": "^2.2.4",
     "ramda": "^0.22.1",
     "response-time": "^2.3.1",
     "restler": "^3.4.0",
     "try": "^0.13.3",
-    "uuid": "^2.0.3"
+    "uuid": "^2.0.3",
+    "valid-url": "^1.0.9"
   }
 }
