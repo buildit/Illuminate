@@ -71,12 +71,12 @@ exports.createNewEvent = function (req, res) {
   var aLoadEvent = {};
   var overrideOpenEvent = false;
 
-  if (req.query.override != undefined && req.query.override === true) {
+  if (R.not(R.isNil(req.query.override)) && req.query.override === true) {
     logger.debug(`Forced override of event creation request.`);
     overrideOpenEvent = true;
   }
 
-  if (req.query.type === undefined || ((req.query.type.toUpperCase() != myConstants.LOADEVENT) && (req.query.type.toUpperCase() != myConstants.UPDATEEVENT))) {
+  if (R.isNil(req.query.type) || ((req.query.type.toUpperCase() != myConstants.LOADEVENT) && (req.query.type.toUpperCase() != myConstants.UPDATEEVENT))) {
     logger.debug(`Missing or invalid type query parameter`);
     res.status(HttpStatus.BAD_REQUEST);
     res.send(errorHelper.errorBody(HttpStatus.BAD_REQUEST,
@@ -86,7 +86,7 @@ exports.createNewEvent = function (req, res) {
       .then (function(aProject) {
         module.exports.getMostRecentEvent(projectName)
           .then (function(anEvent) {
-            if (anEvent != undefined && isActive(anEvent) && overrideOpenEvent) {
+            if (R.not(R.isNil(anEvent)) && isActive(anEvent) && overrideOpenEvent) {
               anEvent.status = constants.FAILEDEVENT;
               anEvent.note = constants.FORCEDCLOSEDMESSAGE;
               anEvent.endTime = Moment.utc();
@@ -99,7 +99,7 @@ exports.createNewEvent = function (req, res) {
                 });
             }
 
-            if (anEvent != undefined && isActive(anEvent)) {
+            if (R.not(R.isNil(anEvent)) && isActive(anEvent)) {
               var url = `${req.protocol}://${req.hostname}${req.baseUrl}${req.path}/${anEvent._id}`;
               logger.debug(`createNewEvent -> There is an existing active event ${url}`);
               logger.debug(anEvent);
@@ -116,11 +116,7 @@ exports.createNewEvent = function (req, res) {
                 logger.debug(aLoadEvent);
               }
               configureLoadEventSystems(aProject, aLoadEvent);
-              logger.debug(`post configuration of event systems project`);
-              logger.debug(aProject);
-              logger.debug(aLoadEvent);
-              var loadEvents = [aLoadEvent];
-              dataStore.insertData(utils.dbProjectPath(projectName), myConstants.EVENTCOLLECTION, loadEvents)
+              dataStore.insertData(utils.dbProjectPath(projectName), myConstants.EVENTCOLLECTION, [aLoadEvent])
                 .then ( function(result) {
                   if (result.insertedCount > 0) {
                     if (aLoadEvent.status != constants.PENDINGEVENT) {

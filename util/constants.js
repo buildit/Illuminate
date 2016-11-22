@@ -14,6 +14,7 @@ exportConstant('EFFORTSECTION', 'effort');
 
 exportConstant('LOADEVENT', 'LOAD');
 exportConstant('UPDATEEVENT', 'UPDATE');
+exportConstant('REPROCESSEVENT', 'REPROCESS');
 
 exportConstant('RAWEFFORT', 'rawEffort');
 exportConstant('COMMONEFFORT', 'commonEffort');

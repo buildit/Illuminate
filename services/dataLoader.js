@@ -81,10 +81,20 @@ function determineProjectEndDate(aProject) {
   }
 
   if (R.not(R.isNil(aProject.endDate)) && R.not(R.isEmpty(aProject.endDate))) {
-    return (aProject.endDate);    
+    return (aProject.endDate);
   }
 
   return (utils.dateFormatIWant());
+}
+
+function getMeRawData(aProjectSystem, anEvent, processingInstructions) {
+  if (anEvent.type === constants.REPROCESSEVENT) {
+    logger.debug('*****');
+    return dataStore.getAllData(processingInstructions.dbUrl, processingInstructions.rawLoacation)
+  } else {
+    logger.debug('@@@@@');
+    return processingInstructions.sourceSystem.loadRawData(aProjectSystem, processingInstructions, anEvent.since)
+  }
 }
 
 exports.processProjectSystem = function (loaderClass, aProjectSystem, anEvent, processingInstructions) {
@@ -101,7 +111,7 @@ exports.processProjectSystem = function (loaderClass, aProjectSystem, anEvent, p
       resolve(new utils.SystemEvent(constants.FAILEDEVENT, `invalid source system url [${aProjectSystem.url}]`));
     }
 
-    processingInstructions.sourceSystem.loadRawData(aProjectSystem, processingInstructions, anEvent.since)
+    getMeRawData(aProjectSystem, anEvent, processingInstructions)
       .then (function(allRawData) {
         logger.debug(`processProjectSystem -> rawDataProcessed #[${allRawData.length}]`);
         if (allRawData.length < 1) { // there wasn't any new data
