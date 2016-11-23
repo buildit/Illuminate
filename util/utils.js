@@ -53,7 +53,7 @@ exports.dateFormatIWant = function (incomming) {
   if (R.isNil(incomming) || R.isEmpty(incomming)) {
     return Moment.utc().format('YYYY-MM-DD')
   } else {
-    return Moment.utc(incomming).format('YYYY-MM-DD');    
+    return Moment.utc(incomming).format('YYYY-MM-DD');
   }
 };
 
@@ -87,7 +87,7 @@ exports.ProcessingInfo = function (dbUrl) {
 }
 
 exports.SystemEvent = function (status, message) {
-  this.completion = Moment.utc();
+  this.completion = Moment.utc().format();
   this.status = status;
   this.message;
 }
@@ -95,7 +95,7 @@ exports.SystemEvent = function (status, message) {
 exports.DataEvent = function (type) {
   this._id = UUID.v4();
   this.type = type;
-  this.startTime = Moment.utc();
+  this.startTime = Moment.utc().format();
   this.endTime = null;
   this.since = constants.DEFAULTSTARTDATE;
   this.status = constants.PENDINGEVENT;

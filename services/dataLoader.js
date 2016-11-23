@@ -90,7 +90,7 @@ function determineProjectEndDate(aProject) {
 function getMeRawData(aProjectSystem, anEvent, processingInstructions) {
   if (anEvent.type === constants.REPROCESSEVENT) {
     logger.debug('*****');
-    return dataStore.getAllData(processingInstructions.dbUrl, processingInstructions.rawLoacation)
+    return dataStore.getAllData(processingInstructions.dbUrl, processingInstructions.rawLocation)
   } else {
     logger.debug('@@@@@');
     return processingInstructions.sourceSystem.loadRawData(aProjectSystem, processingInstructions, anEvent.since)

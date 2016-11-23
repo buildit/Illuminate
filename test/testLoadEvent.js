@@ -260,6 +260,53 @@ describe('Test use of Override when there is an active event', function() {
   });
 });
 
+describe('Test Reprocess functionality', function() {
+
+  before('Create Test Project', function() {
+    this.processProjectData = Sinon.stub(dataLoader, 'processProjectData');
+
+    return mongoDB.insertData(utils.dbCorePath(), constants.PROJECTCOLLECTION, [SAMPLEPROJECTDATA] )
+  });
+
+  after('Delete Project Details', function() {
+    dataLoader.processProjectData.restore();
+
+    return mongoDB.clearData(utils.dbCorePath(), constants.PROJECTCOLLECTION)
+      .then(function() {
+        return mongoDB.clearData(utils.dbProjectPath(testConstants.UNITTESTPROJECT), constants.EVENTCOLLECTION)
+      });
+  });
+
+  it('Create an reprocess load event type', function(done) {
+    var response = buildResponse();
+    var request  = HttpMocks.createRequest({
+      params: {'name': testConstants.UNITTESTPROJECT},
+      query: {'type': constants.REPROCESSEVENT}
+    });
+    dataLoader.processProjectData.returns({
+      on:Sinon.stub().yields(null)
+    });
+
+    response.on('end', function() {
+      Should(response.statusCode).equal(HttpStatus.CREATED);
+      var body = response._getData();
+      Should(body).have.property('url');
+      done();
+    });
+
+    loadEvent.createNewEvent(request, response);
+  });
+
+  it('try to read the existing event and make sure it is active and of the right type', function() {
+    return loadEvent.getMostRecentEvent(testConstants.UNITTESTPROJECT)
+      .then (function(anEvent) {
+        Should(anEvent.type).equal(constants.REPROCESSEVENT);
+        Should(anEvent.status).equal(constants.PENDINGEVENT);
+        Should(anEvent.endDate).be.undefined();
+      });
+  });
+});
+
 describe('Test getting the most recent event', function() {
   var anEvent = {};
   var anotherEvent = {};

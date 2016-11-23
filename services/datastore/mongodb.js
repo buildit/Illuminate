@@ -206,7 +206,7 @@ exports.processEventData = function (projectPath, collectionName, eventInfo, sec
 
         if (eventIsComplete(tmpObj)) {
           logger.debug('EVENT COMPLETE');
-          tmpObj.endTime = Moment.utc();
+          tmpObj.endTime = Moment.utc().format();
           if (wasCompletedSuccessfully(tmpObj)) {
             logger.debug('EVENT COMPLETE SUCCESSFULLY');
             tmpObj.status = constants.SUCCESSEVENT;

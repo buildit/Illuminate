@@ -1,5 +1,6 @@
 'use strict'
 
+const Moment = require('moment');
 const Should = require('should');
 const utils = require('../util/utils');
 
@@ -78,4 +79,21 @@ describe('#dateFormatIWant() method', function() {
     Should(result).equal(today);
   });
 
+});
+
+// some of this is questionable but make sure that
+// the _id is a GUID
+// endTime is null
+// startTime is aValid timestamp (in string form)
+describe('#DataEvent() class', function() {
+  it('create an Event - make sure the startTime is a date value', function() {
+    var result = new utils.DataEvent('TEST TYPE');
+    logger.debug(result);
+    Should(result._id.length).equal(36);
+    Should(result._id).containEql('-');
+    Should(result.endTime).be.null();
+    Should(result.startTime).containEql('T');
+    Should(result.startTime).containEql('Z');
+    Should.ok(Moment(result.startTime).isValid);
+  });
 });

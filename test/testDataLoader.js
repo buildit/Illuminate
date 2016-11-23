@@ -281,3 +281,35 @@ describe('testDataLoader - Finding or not finding a demand or defect or effort s
     done();
   });
 });
+
+describe('testDataLoader - Make sure that process raw data is not called for a REPROCESS event', function() {
+  var dataEvent = {};
+  var processingInfo = {};
+  var getDataStub = {};
+  var loadRawDataSpy = {};
+
+  before('Setup', function() {
+    dataEvent = new utils.DataEvent(constants.REPROCESSEVENT);
+    processingInfo = new utils.ProcessingInfo(utils.dbProjectPath(testConstants.UNITTESTPROJECT));
+    processingInfo.sourceSystem = testClass;
+
+    getDataStub = Sinon.stub(myDatastore, 'getAllData').resolves([]);
+    loadRawDataSpy = Sinon.spy(testClass, 'loadRawData');
+  });
+
+  after('Restore', function() {
+    testClass.loadRawData.restore();
+    myDatastore.getAllData.restore();
+  });
+
+  it('trap empty result', function() {
+    return dataLoader.processProjectSystem(effortLoader, ANEFFORTSYSTEM, dataEvent, processingInfo)
+    .then ( function(returnValue) {
+      Should(returnValue.status).equal(constants.SUCCESSEVENT);
+      Should(getDataStub.callCount).equal(1);
+      Should(loadRawDataSpy.callCount).equal(0);
+    }).catch ( function() {
+      Should.ok(false);
+    });
+  });
+});

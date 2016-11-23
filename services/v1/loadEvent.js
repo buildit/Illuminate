@@ -63,33 +63,38 @@ exports.listAnEvent = function (req, res) {
     });
 };
 
-const isActive = (anEvent) => anEvent.endTime === null;
+const isActiveEvent = (anEvent) => R.isNil(anEvent.endTime);
+const isValidEventType = (eventType) => R.not(R.isNil(eventType)) && R.contains(R.toUpper(eventType), [myConstants.LOADEVENT, myConstants.UPDATEEVENT, myConstants.REPROCESSEVENT]);
+const isOverrideEvent = (queryParm) => R.not(R.isNil(queryParm)) && R.equals(R.toUpper(queryParm), 'TRUE');
 
 exports.createNewEvent = function (req, res) {
   var projectName = decodeURIComponent(req.params.name);
   logger.info(`createNewEvent for ${projectName}`);
-  var aLoadEvent = {};
+  var aNewEvent = {};
   var overrideOpenEvent = false;
 
-  if (R.not(R.isNil(req.query.override)) && req.query.override === true) {
+  logger.debug('req.query');
+  logger.debug(req.query);
+
+  if (isOverrideEvent(req.query.override)) {
     logger.debug(`Forced override of event creation request.`);
     overrideOpenEvent = true;
   }
 
-  if (R.isNil(req.query.type) || ((req.query.type.toUpperCase() != myConstants.LOADEVENT) && (req.query.type.toUpperCase() != myConstants.UPDATEEVENT))) {
+  if (!isValidEventType(req.query.type)) {
     logger.debug(`Missing or invalid type query parameter`);
     res.status(HttpStatus.BAD_REQUEST);
     res.send(errorHelper.errorBody(HttpStatus.BAD_REQUEST,
-      `Query Parameter type must be specified.  Must either be ${myConstants.LOADEVENT} or ${myConstants.UPDATEEVENT}`));
+      `Query Parameter "type" must be specified.  Must either be ${myConstants.LOADEVENT}, ${myConstants.UPDATEEVENT}, or ${myConstants.REPROCESSEVENT}`));
   } else {
     getProjectData(projectName)
       .then (function(aProject) {
         module.exports.getMostRecentEvent(projectName)
           .then (function(anEvent) {
-            if (R.not(R.isNil(anEvent)) && isActive(anEvent) && overrideOpenEvent) {
+            if (R.not(R.isNil(anEvent)) && isActiveEvent(anEvent) && overrideOpenEvent) {
               anEvent.status = constants.FAILEDEVENT;
               anEvent.note = constants.FORCEDCLOSEDMESSAGE;
-              anEvent.endTime = Moment.utc();
+              anEvent.endTime = Moment.utc().format();
               dataStore.upsertData(utils.dbProjectPath(projectName), constants.EVENTCOLLECTION, [anEvent])
                 .then (function () {
                   logger.debug(`createNewEvent->Event [${anEvent._id}] forced complete.`);
@@ -99,7 +104,7 @@ exports.createNewEvent = function (req, res) {
                 });
             }
 
-            if (R.not(R.isNil(anEvent)) && isActive(anEvent)) {
+            if (R.not(R.isNil(anEvent)) && isActiveEvent(anEvent)) {
               var url = `${req.protocol}://${req.hostname}${req.baseUrl}${req.path}/${anEvent._id}`;
               logger.debug(`createNewEvent -> There is an existing active event ${url}`);
               logger.debug(anEvent);
@@ -107,30 +112,30 @@ exports.createNewEvent = function (req, res) {
               res.send(errorHelper.errorBody(HttpStatus.CONFLICT,
                 `There is currently an active event for this project, please wait for it to complete.  ${url}`));
             } else {
-              aLoadEvent = new utils.DataEvent(req.query.type.toUpperCase());
+              aNewEvent = new utils.DataEvent(req.query.type.toUpperCase());
               logger.debug('createNewEvent -> NO ACTIVE EVENTS');
-              logger.debug(aLoadEvent);
+              logger.debug(aNewEvent);
               if ((anEvent != undefined) && (req.query.type.toUpperCase() === myConstants.UPDATEEVENT)) {
                 logger.debug('createNewEvent -> Create an Update Event');
-                aLoadEvent.since = utils.dateFormatIWant(anEvent.endTime);
-                logger.debug(aLoadEvent);
+                aNewEvent.since = utils.dateFormatIWant(anEvent.endTime);
+                logger.debug(aNewEvent);
               }
-              configureLoadEventSystems(aProject, aLoadEvent);
-              dataStore.insertData(utils.dbProjectPath(projectName), myConstants.EVENTCOLLECTION, [aLoadEvent])
+              configureLoadEventSystems(aProject, aNewEvent);
+              dataStore.insertData(utils.dbProjectPath(projectName), myConstants.EVENTCOLLECTION, [aNewEvent])
                 .then ( function(result) {
                   if (result.insertedCount > 0) {
-                    if (aLoadEvent.status != constants.PENDINGEVENT) {
+                    if (aNewEvent.status != constants.PENDINGEVENT) {
                       logger.debug(`createNewEvent -> error configuring event for ${projectName}.`);
-                      logger.debug(aLoadEvent);
+                      logger.debug(aNewEvent);
                       res.status(HttpStatus.CONFLICT);
                       res.send(errorHelper.errorBody(HttpStatus.CONFLICT,
                         `Unable to fulill load request ${projectName}.  Verify configuration of Demand, Defect, and Effort systems.`));
                     } else {
                       res.status(HttpStatus.CREATED);
-                      var tmpBody = {url: `${req.protocol}://${req.hostname}${req.baseUrl}${req.path}/${aLoadEvent._id}`};
+                      var tmpBody = {url: `${req.protocol}://${req.hostname}${req.baseUrl}${req.path}/${aNewEvent._id}`};
                       logger.debug("createNewEvent -> Created @ " + tmpBody.url);
                       res.send(tmpBody);
-                      dataLoader.processProjectData(aProject, aLoadEvent);  // NOW GO DO WORK
+                      dataLoader.processProjectData(aProject, aNewEvent);  // NOW GO DO WORK
                     }
                   } else {
                     logger.debug("createNewEvent -> Event was not created " + projectName);
@@ -163,25 +168,32 @@ exports.createNewEvent = function (req, res) {
   }
 };
 
+const systemDefinitionExists = (aSystemDeffiniton) =>
+  (R.not(R.isNil(aSystemDeffiniton)) &&
+  R.not(R.isEmpty(aSystemDeffiniton)) &&
+  R.not(R.isNil(aSystemDeffiniton.source)) &&
+  R.not(R.isNil(aSystemDeffiniton.url)));
+
+
 // okay - here is a pessamistic view - set up for failure
 // allow for success
 function configureLoadEventSystems(aProject, anEvent) {
   anEvent.status = constants.FAILEDEVENT;
-  anEvent.endTime = Moment.utc();
+  anEvent.endTime = Moment.utc().format();
   anEvent.note = 'No Demand, Defect, or Effort system configure for this project';
-  if ((!R.isNil(aProject.demand)) && (!R.isEmpty(aProject.demand))) {
+  if (systemDefinitionExists(aProject.demand)) {
       anEvent.demand = {};
       anEvent.status = constants.PENDINGEVENT;
       anEvent.endTime = null;
       anEvent.note = '';
   }
-  if ((!R.isNil(aProject.defect)) && (!R.isEmpty(aProject.defect))) {
+  if (systemDefinitionExists(aProject.defect)) {
       anEvent.defect = {};
       anEvent.status = constants.PENDINGEVENT;
       anEvent.endTime = null;
       anEvent.note = '';
   }
-  if ((!R.isNil(aProject.effort)) && (!R.isEmpty(aProject.effort))) {
+  if (systemDefinitionExists(aProject.effort)) {
       anEvent.effort = {};
       anEvent.status = constants.PENDINGEVENT;
       anEvent.endTime = null;
