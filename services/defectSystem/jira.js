@@ -253,14 +253,14 @@ exports.loadRawData = function(defectInfo, processingInfo, sinceTime) {
   });
 }
 
-exports.transformRawToCommon = function(issueData, initialStatus) {
+exports.transformRawToCommon = function(issueData, systemInformation) {
   logger.info('mapJiraDefect into a common format');
 
   var commonDataFormat = [];
 
   issueData.forEach(function (aStory) {
     var commonDemandEntry = new utils.CommonDemandEntry(aStory.id);
-    var historyEntry = new utils.DemandHistoryEntry(initialStatus, aStory.fields.created);
+    var historyEntry = new utils.DemandHistoryEntry("REPLACE ME", aStory.fields.created);
 
     aStory.changelog.histories.forEach(function (history) {
       if (history.items.field === 'status') {

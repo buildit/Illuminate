@@ -51,14 +51,15 @@ exports.rawDataProcessor = function(demandData) {
 }
 
 
-exports.transformCommonToSummary = function(commonData) {
+exports.transformCommonToSummary = function(commonData, processingInstructions) {
   logger.info(`mapCommonDataToSummary for ${commonData.length} records`);
 
   var datedData = [];
 
   commonData.forEach(function (storySummary) {
     storySummary.history.forEach(function (aStatusChange) {
-      var daysDifference = utils.createDayArray(aStatusChange.startDate, aStatusChange.changeDate);
+      var endDate = (R.isNil(aStatusChange.changeDate)) ? processingInstructions.endDate : aStatusChange.changeDate;
+      var daysDifference = utils.createDayArray(aStatusChange.startDate, endDate);
       for (var i = 0; i < daysDifference.length; i++) {
         if (!(daysDifference[i] in datedData)) {
           datedData.push(daysDifference[i]);

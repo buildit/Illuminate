@@ -117,11 +117,11 @@ exports.processProjectSystem = function (loaderClass, aProjectSystem, anEvent, p
         if (allRawData.length < 1) { // there wasn't any new data
           resolve(new utils.SystemEvent(constants.SUCCESSEVENT, `no records processed`));
         } else {  // there was new data - reprocess to generate a common format
-          var commonDataFormat = processingInstructions.sourceSystem.transformRawToCommon(allRawData);
+          var commonDataFormat = processingInstructions.sourceSystem.transformRawToCommon(allRawData, aProjectSystem);
           dataStore.wipeAndStoreData(processingInstructions.dbUrl, processingInstructions.commonLocation, commonDataFormat)
             .then (function() {  // now generate the summary data format
               logger.debug(`processProjectSystem -> updatedCommonData #[${commonDataFormat.length}]`);
-              var summaryDataFormat = loaderClass.transformCommonToSummary(commonDataFormat);
+              var summaryDataFormat = loaderClass.transformCommonToSummary(commonDataFormat, processingInstructions);
               dataStore.wipeAndStoreData(processingInstructions.dbUrl, processingInstructions.summaryLocation,  summaryDataFormat)
                 .then (function (){
                   logger.debug(`processProjectSystem -> updatedSummaryData #[${summaryDataFormat.length}]`);

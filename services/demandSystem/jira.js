@@ -253,18 +253,20 @@ exports.loadRawData = function(demandInfo, processingInfo, sinceTime) {
   });
 }
 
-exports.transformRawToCommon = function(issueData, initialStatus) {
+exports.transformRawToCommon = function(issueData, systemInformation) {
   logger.info('mapJiraDemand into a common format');
 
   var commonDataFormat = [];
 
   issueData.forEach(function (aStory) {
     var commonDemandEntry = new utils.CommonDemandEntry(aStory.id);
-    var historyEntry = new utils.DemandHistoryEntry(initialStatus, aStory.fields.created);
+    commonDemandEntry.key = aStory.key;
+    var historyEntry = new utils.DemandHistoryEntry(systemInformation.flow[0].name, aStory.fields.created);
 
     aStory.changelog.histories.forEach(function (history) {
       if (history.items.field === 'status') {
-        historyEntry.changeDate = utils.dateFormatIWant(history.created);
+        // historyEntry.changeDate = utils.dateFormatIWant(history.created);
+        historyEntry.changeDate = history.created;
         commonDemandEntry.history.push(historyEntry);
         historyEntry = new utils.DemandHistoryEntry(history.items.toString, history.created);
       }

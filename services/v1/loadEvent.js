@@ -221,7 +221,7 @@ function getProjectData(aProjectName) {
   });
 }
 
-var dateSort = function(a, b) { return (a.startTime.getTime() - b.startTime.getTime()); };
+var dateSort = function(a, b) { return (Moment.utc(a.startTime) - Moment.utc(b.startTime)); };
 
 exports.getMostRecentEvent = function (aProjectName) {
   logger.debug(`loadEvent->getMostRecentEvent for ${aProjectName}`);

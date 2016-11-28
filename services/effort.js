@@ -49,7 +49,7 @@ exports.rawDataProcessor = function(effortData) {
   }
 }
 
-exports.transformCommonToSummary = function(commonData) {
+exports.transformCommonToSummary = function(commonData, processingInstructions) {
   return createSummaryData(commonData);
 }
 

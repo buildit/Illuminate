@@ -107,7 +107,8 @@ exports.DataEvent = function (type) {
 
 exports.DemandHistoryEntry = function (status, startDate) {
   this.statusValue = status;
-  this.startDate = module.exports.dateFormatIWant(startDate);
+  // this.startDate = module.exports.dateFormatIWant(startDate);
+  this.startDate = startDate;
   this.changeDate = null;
 }
 
