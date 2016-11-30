@@ -49,9 +49,11 @@ exports.rawDataProcessor = function(effortData) {
   }
 }
 
+/* eslint-disable no-unused-vars */
 exports.transformCommonToSummary = function(commonData, processingInstructions) {
   return createSummaryData(commonData);
 }
+/* eslint-enable no-unused-vars */
 
 const createSummaryData = data => {
     const objectResult = data.reduce((result, point) => {

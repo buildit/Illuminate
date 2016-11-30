@@ -66,18 +66,18 @@ exports.transformCommonToSummary = function(commonData, processingInstructions) 
           datedData[daysDifference[i]] = {};
         }
         var temp = datedData[daysDifference[i]];
-        if (!(aStatusChange.statusValue in temp)) {
-          temp[aStatusChange.statusValue] = 0;
+        if (!(aStatusChange.severity in temp)) {
+          temp[aStatusChange.severity] = 0;
         }
-        temp[aStatusChange.statusValue]++;
+        temp[aStatusChange.severity]++;
       }
     });
   });
 
   var defectStatusByDay = [];
   datedData.forEach(function (aDayInTime) {
-    var statusSummary = datedData[aDayInTime];
-    var datedStatus = {projectDate: aDayInTime, status: statusSummary};
+    var severitySummary = datedData[aDayInTime];
+    var datedStatus = {projectDate: aDayInTime, severity: severitySummary};
     defectStatusByDay.push(datedStatus);
   });
 

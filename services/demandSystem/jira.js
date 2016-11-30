@@ -265,7 +265,6 @@ exports.transformRawToCommon = function(issueData, systemInformation) {
 
     aStory.changelog.histories.forEach(function (history) {
       if (history.items.field === 'status') {
-        // historyEntry.changeDate = utils.dateFormatIWant(history.created);
         historyEntry.changeDate = history.created;
         commonDemandEntry.history.push(historyEntry);
         historyEntry = new utils.DemandHistoryEntry(history.items.toString, history.created);

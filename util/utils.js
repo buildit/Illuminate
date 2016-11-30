@@ -105,14 +105,27 @@ exports.DataEvent = function (type) {
   this.effort = null;
 }
 
+exports.DefectHistoryEntry = function (severity, status, startDate) {
+  this.severity = severity;
+  this.startDate = startDate;
+  this.statusValue = status;
+  this.changeDate = null;
+}
+
+exports.CommonDefectEntry = function (id) {
+  this._id = id;
+  this.key = null;
+  this.history = [];
+}
+
 exports.DemandHistoryEntry = function (status, startDate) {
   this.statusValue = status;
-  // this.startDate = module.exports.dateFormatIWant(startDate);
   this.startDate = startDate;
   this.changeDate = null;
 }
 
 exports.CommonDemandEntry = function (id) {
   this._id = id;
+  this.key = null;
   this.history = [];
 }

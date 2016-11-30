@@ -5,6 +5,7 @@ const Config = require('config');
 const errorHelper = require('../errors');
 const HttpStatus = require('http-status-codes');
 const Log4js = require('log4js');
+const R = require('ramda');
 const Rest = require('restler');
 const utils = require('../../util/utils');
 const ValidUrl = require('valid-url');
@@ -230,7 +231,7 @@ exports.loadRawData = function(defectInfo, processingInfo, sinceTime) {
   logger.info(`loadBugEntries for ${defectInfo.project} updated since [${sinceTime}]`);
 
   return new Promise(function (resolve, reject) {
-    module.exports.loadJiraDemand(defectInfo, [], sinceTime)
+    module.exports.loadJiraDefects(defectInfo, [], sinceTime)
     .then( function (stories) {
       logger.debug(`total stories read - ${stories.length}`);
       if (stories.length < 1) {
@@ -257,20 +258,44 @@ exports.transformRawToCommon = function(issueData, systemInformation) {
   logger.info('mapJiraDefect into a common format');
 
   var commonDataFormat = [];
+  var defaultDefectStatus = R.isNil(systemInformation.initialStatus) ? "CREATED" : systemInformation.initialStatus;
 
-  issueData.forEach(function (aStory) {
-    var commonDemandEntry = new utils.CommonDemandEntry(aStory.id);
-    var historyEntry = new utils.DemandHistoryEntry("REPLACE ME", aStory.fields.created);
+  issueData.forEach(function (aDefect) {
+    var commonDefectEntry = new utils.CommonDefectEntry(aDefect.id);
+    commonDefectEntry.key = aDefect.key;
 
-    aStory.changelog.histories.forEach(function (history) {
-      if (history.items.field === 'status') {
-        historyEntry.changeDate = utils.dateFormatIWant(history.created);
-        commonDemandEntry.history.push(historyEntry);
-        historyEntry = new utils.DemandHistoryEntry(history.items.toString, history.created);
+    // yes this is a pain in the ass, so feel free to make a better algorithm.
+    // essensentially, there is no way to determine the initial priority of a Jira story
+    // you know what it is.  So look to see if it changed, and if so capture the very first
+    // from string as the initial priority (which is the same a severity for Jira)
+    var currentDefectPriority = null;
+    aDefect.changelog.histories.forEach(function (history) {
+      if (history.items.field === 'priority') {
+        if (R.isNil(currentDefectPriority)) {
+          currentDefectPriority = history.items.fromString
+        }
       }
     });
-    commonDemandEntry.history.push(historyEntry);
-    commonDataFormat.push(commonDemandEntry);
+    if (R.isNil(currentDefectPriority)) {
+      currentDefectPriority = aDefect.fields.priority.name;
+    }
+    var historyEntry = new utils.DefectHistoryEntry(currentDefectPriority, defaultDefectStatus, aDefect.fields.created);
+
+    aDefect.changelog.histories.forEach(function (history) {
+      if (history.items.field === 'status') {
+        historyEntry.changeDate = history.created;
+        commonDefectEntry.history.push(historyEntry);
+        historyEntry = new utils.DefectHistoryEntry(currentDefectPriority, history.items.toString, history.created);
+      }
+      if (history.items.field === 'priority') {
+        historyEntry.changeDate = history.created;
+        commonDefectEntry.history.push(historyEntry);
+        currentDefectPriority = history.items.toString
+        historyEntry = new utils.DefectHistoryEntry(currentDefectPriority, historyEntry.statusValue, history.created);
+      }
+    });
+    commonDefectEntry.history.push(historyEntry);
+    commonDataFormat.push(commonDefectEntry);
   });
 
   return commonDataFormat;
@@ -286,8 +311,8 @@ function buildJQL(project, startPosition, since) {
   return queryString;
 }
 
-exports.loadJiraDemand = function(defectInfo, issuesSoFar, sinceTime) {
-  logger.info(`loadJiraDemand() for JIRA project ${defectInfo.project}.  Start Pos ${issuesSoFar.length}`);
+exports.loadJiraDefects = function(defectInfo, issuesSoFar, sinceTime) {
+  logger.info(`loadJiraDefects() for JIRA project ${defectInfo.project}.  Start Pos ${issuesSoFar.length}`);
 
   return new Promise(function (resolve, reject) {
     if (!(ValidUrl.isUri(defectInfo.url))) {

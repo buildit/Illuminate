@@ -238,11 +238,12 @@ const DEMANDINFO = {
 
 const EXPECTEDCOMMON = [
   { _id: '16204',
+    key: 'CIT-1055',
       history:[
-        {statusValue: 'Backlog', startDate: '2016-03-22', changeDate: '2016-03-22'},
-        {statusValue: 'UX Review', startDate: '2016-03-22', changeDate: '2016-03-23'},
-        {statusValue: 'In Progress', startDate: '2016-03-23', changeDate: '2016-03-24'},
-        {statusValue: 'UX Review', startDate: '2016-03-24', changeDate: null} ]
+        {statusValue: 'Backlog', startDate: '2016-03-22T02:46:19.000-0600', changeDate: '2016-03-22T04:40:55.652-0600'},
+        {statusValue: 'UX Review', startDate: '2016-03-22T04:40:55.652-0600', changeDate: '2016-03-22T23:27:04.360-0600'},
+        {statusValue: 'In Progress', startDate: '2016-03-22T23:27:04.360-0600', changeDate: '2016-03-24T03:39:03.178-0600'},
+        {statusValue: 'UX Review', startDate: '2016-03-24T03:39:03.178-0600', changeDate: null} ]
   }
 ];
 
@@ -313,7 +314,7 @@ describe('Test getting all of the stories in a single request. ', function() {
 describe('Test creating common demand format from Jira issues ', function() {
 
   it('Convert Jira Object', function(done) {
-    var commonDataFormat = jira.transformRawToCommon([RAWJIRASTORY], DEMANDINFO.flow[0].name);
+    var commonDataFormat = jira.transformRawToCommon([RAWJIRASTORY], DEMANDINFO);
 
     Should(commonDataFormat).match(EXPECTEDCOMMON);
     done();

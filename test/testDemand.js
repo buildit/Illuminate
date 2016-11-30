@@ -75,9 +75,15 @@ describe('testDemand - determine effort processing system', function() {
 });
 
 describe('testDemand - convert common to summary', function() {
+  var processingInstructions = {};
+
+  before('set up', function() {
+    processingInstructions = new utils.ProcessingInfo(utils.dbProjectPath(testConstants.UNITTESTPROJECT));
+    processingInstructions.endDate = '2016-03-24';
+  });
 
   it('Should translate', function() {
-    var summaryData = myDemand.transformCommonToSummary(COMMONDEMAND);
+    var summaryData = myDemand.transformCommonToSummary(COMMONDEMAND, processingInstructions);
     Should(summaryData).deepEqual(SUMMARYDEMAND);
   });
 });

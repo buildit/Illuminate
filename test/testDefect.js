@@ -22,21 +22,26 @@ const DEFECTINFO = {
   project: GOODPROJECT,
   authPolicy: 'Basic',
   userData: 'ZGlnaXRhbHJpZzpEMWchdGFsUmln',
-  flow: [{name: 'Backlog'}]};
+  initalStatus: 'Backlog',
+  resolvedStatus: 'Closed',
+  severity: [{name: 'Low'}]};
 
 const COMMONDEFECT = [
   { _id: '16204',
+    key: 'JIRA-KEY',
       history:[
-        {statusValue: 'Backlog', startDate: '2016-03-22', changeDate: '2016-03-22'},
-        {statusValue: 'UX Review', startDate: '2016-03-22', changeDate: '2016-03-22'},
-        {statusValue: 'In Progress', startDate: '2016-03-22', changeDate: '2016-03-24'},
-        {statusValue: 'UX Review', startDate: '2016-03-24', changeDate: null} ]
+        {severity: 'Medium', statusValue: 'Backlog', startDate: '2016-03-22', changeDate: '2016-03-22'},
+        {severity: 'Medium', statusValue: 'In Progress', startDate: '2016-03-22', changeDate: '2016-03-24'},
+        {severity: 'High', statusValue: 'In Progress', startDate: '2016-03-24', changeDate: '2016-03-26'},
+        {severity: 'High', statusValue: 'Closed', startDate: '2016-03-26', changeDate: null} ]
   }
 ];
 
 const SUMMARYDEFECT = [
-  { projectDate: '2016-03-22', status: { 'In Progress': 1 } },
-  { projectDate: '2016-03-23', status: { 'In Progress': 1 } }
+  { projectDate: '2016-03-22', severity: { 'Medium': 1 } },
+  { projectDate: '2016-03-23', severity: { 'Medium': 1 } },
+  { projectDate: '2016-03-24', severity: { 'High': 1 } },
+  { projectDate: '2016-03-25', severity: { 'High': 1 } }
 ];
 
 describe('testDefect - configure Processing info', function() {
@@ -61,12 +66,12 @@ describe('testDefect - configure Processing info', function() {
 });
 
 describe('testDefect - determine effort processing system', function() {
-  it('Should decode Harvest', function() {
+  it('Should decode Jira', function() {
     var systemClass = myDefect.rawDataProcessor(DEFECTINFO);
     Should(systemClass).not.equal(null);
   });
 
-  it('Should NOT decode not Harvest', function() {
+  it('Should NOT decode not Jira', function() {
     var badEffort = JSON.parse(JSON.stringify(DEFECTINFO));
     badEffort.source = GOODSOURCE + 'BADMAN';
     var systemClass = myDefect.rawDataProcessor(badEffort);
@@ -75,9 +80,15 @@ describe('testDefect - determine effort processing system', function() {
 });
 
 describe('testDefect - convert common to summary', function() {
+  var processingInstructions = {};
+
+  before('set up', function() {
+    processingInstructions = new utils.ProcessingInfo(utils.dbProjectPath(testConstants.UNITTESTPROJECT));
+    processingInstructions.endDate = '2016-03-24';
+  });
 
   it('Should translate', function() {
-    var summaryData = myDefect.transformCommonToSummary(COMMONDEFECT);
+    var summaryData = myDefect.transformCommonToSummary(COMMONDEFECT, processingInstructions);
     Should(summaryData).deepEqual(SUMMARYDEFECT);
   });
 });

@@ -238,7 +238,7 @@ describe('Test use of Override when there is an active event', function() {
     var response = buildResponse();
     var request  = HttpMocks.createRequest({
       params: {'name': testConstants.UNITTESTPROJECT},
-      query: {'type': constants.UPDATEEVENT, 'override': true}
+      query: {'type': constants.UPDATEEVENT, 'override': 'true'}
     });
 
     response.on('end', function() {
