@@ -84,6 +84,7 @@ exports.ProcessingInfo = function (dbUrl) {
   this.summaryLocation = null;
   this.eventSection = null;
   this.storageFunction = null;
+  this.endDate = null;
 }
 
 exports.SystemEvent = function (status, message) {

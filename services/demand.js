@@ -24,13 +24,11 @@ logger.setLevel(Config.get('log-level'));
 //     ]};
 
 exports.configureProcessingInstructions = function(processingInfo) {
-  var upsertFunction = processingInfo.storageFunction;
-  var updatedInfo = JSON.parse(JSON.stringify(processingInfo)); // this does a deep copy on purpose
+  var updatedInfo = R.clone(processingInfo);
   updatedInfo.rawLocation = constants.RAWDEMAND;
   updatedInfo.commonLocation = constants.COMMONDEMAND;
   updatedInfo.summaryLocation = constants.SUMMARYDEMAND;
   updatedInfo.eventSection = constants.DEMANDSECTION;
-  updatedInfo.storageFunction = upsertFunction;
   logger.debug(`configured demand proceessing info ${JSON.stringify(updatedInfo)}`);
   return updatedInfo;
 }

@@ -84,7 +84,8 @@ describe('testDefect - convert common to summary', function() {
 
   before('set up', function() {
     processingInstructions = new utils.ProcessingInfo(utils.dbProjectPath(testConstants.UNITTESTPROJECT));
-    processingInstructions.endDate = '2016-03-24';
+    processingInstructions.resolvedStatus = DEFECTINFO.resolvedStatus;
+    processingInstructions.endDate = '2016-03-30';
   });
 
   it('Should translate', function() {

@@ -45,6 +45,7 @@ exports.processProjectData = function (aProject, anEvent) {
   if (systemDefinitionExists(aProject.defect)) {
     var defectInstructions = defectLoader.configureProcessingInstructions(processingInstructions);
     defectInstructions.sourceSystem = defectLoader.rawDataProcessor(aProject.defect);
+    defectInstructions.resolvedStatus = aProject.defect.resolvedStatus;
     logger.debug(`*** DEFECT processing Info ${JSON.stringify(defectInstructions)}`);
     module.exports.processProjectSystem(defectLoader, aProject.defect, anEvent, defectInstructions)
     .then (function (aDefectEvent) {

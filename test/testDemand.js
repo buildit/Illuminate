@@ -56,7 +56,7 @@ describe('testDemand - configure Processing info', function() {
 
     Should(effortInfo).not.deepEqual(originalInfo);
     Should(effortInfo.rawLocation).equal(constants.RAWDEMAND);  // make sure things get set
-    Should(effortInfo.storageFunction).equal(myDemand.rawDataProcessor); // make sure we don't slame the db function
+    Should(effortInfo.storageFunction).equal(myDemand.rawDataProcessor); // make sure we don't slam the db function
   });
 });
 

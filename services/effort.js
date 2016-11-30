@@ -23,13 +23,11 @@ logger.setLevel(Config.get('log-level'));
 //     ]};
 
 exports.configureProcessingInstructions = function(processingInfo) {
-  var upsertFunction = processingInfo.storageFunction;
-  var updatedInfo = JSON.parse(JSON.stringify(processingInfo)); // this does a deep copy on purpose
+  var updatedInfo = R.clone(processingInfo);
   updatedInfo.rawLocation = constants.RAWEFFORT;
   updatedInfo.commonLocation = constants.COMMONEFFORT;
   updatedInfo.summaryLocation = constants.SUMMARYEFFORT;
   updatedInfo.eventSection = constants.EFFORTSECTION;
-  updatedInfo.storageFunction = upsertFunction;
   logger.debug(`configured effort proceessing info ${JSON.stringify(updatedInfo)}`);
   return updatedInfo;
 }

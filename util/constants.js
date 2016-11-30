@@ -33,6 +33,9 @@ exportConstant('DEFAULTSTARTDATE', '2000-01-01');
 exportConstant('JIRADEMANDTYPE', 'Story');
 exportConstant('JIRADEFECTTYPE', 'Bug');
 
+exportConstant('DEFAULTDEFECTINITIALSTATE', 'Created');
+exportConstant('DEFAULTDEFECTRESOLVEDSTATE', 'Closed');
+
 function exportConstant (name, value) {
     Object.defineProperty(exports, name, {
         value:      value,
