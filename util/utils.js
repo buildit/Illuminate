@@ -115,7 +115,7 @@ exports.DefectHistoryEntry = function (severity, status, startDate) {
 
 exports.CommonDefectEntry = function (id) {
   this._id = id;
-  this.key = null;
+  this.uri = null;
   this.history = [];
 }
 
@@ -127,6 +127,6 @@ exports.DemandHistoryEntry = function (status, startDate) {
 
 exports.CommonDemandEntry = function (id) {
   this._id = id;
-  this.key = null;
+  this.uri = null;
   this.history = [];
 }

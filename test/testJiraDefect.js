@@ -174,7 +174,7 @@ const DEFECTINFO = {
 
 const EXPECTEDCOMMON = [
   { _id: '24904',
-    key: 'SYNAPSE-88',
+    uri: 'https://digitalrig.atlassian.net/rest/api/latest/issue/24904',
       history:[
         {statusValue: 'CREATED', severity: 'Medium', startDate: '2016-11-23T14:39:04.000-0700', changeDate: '2016-11-23T14:39:12.428-0700'},
         {statusValue: 'Selected for development', severity: 'Medium', startDate: '2016-11-23T14:39:12.428-0700', changeDate: '2016-11-28T13:16:16.733-0700'},
@@ -187,7 +187,7 @@ const MESSAGENOTFOUND = 'There Be Dragons';
 const ERRORRESULT = {statusCode: CODENOTFOUND, statusMessage: MESSAGENOTFOUND};
 const SINCETIME = '2000-01-01+00:00';
 
-describe('Test Fixing of Jira History', function() {
+describe('Test Fixing of Jira Defect History', function() {
 
     it('Convert Jira Object', function(done) {
       var fixedStory = jira.fixHistoryData([RAWJIRASTORY]);
@@ -209,7 +209,7 @@ describe('Empty result from Jira test', function() {
     Rest.get.restore();
   })
 
-  it('Test Getting an empty set of Jira Issues', function() {
+  it('Test Getting an empty set of Jira Defects', function() {
     Rest.get.returns({
       on:Sinon.stub().yields(EMPTYJIRARESPONSE, jiraResponse)
     });
@@ -246,7 +246,7 @@ describe('Test getting all of the defects in a single request. ', function() {
 });
 
 
-describe('Test creating common demand format from Jira issues ', function() {
+describe('Test creating common defect format from Jira defects ', function() {
 
   it('Convert Jira Object', function(done) {
     var commonDataFormat = jira.transformRawToCommon([RAWJIRASTORY], DEFECTINFO);

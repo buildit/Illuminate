@@ -238,7 +238,7 @@ const DEMANDINFO = {
 
 const EXPECTEDCOMMON = [
   { _id: '16204',
-    key: 'CIT-1055',
+    uri: 'https://digitalrig.atlassian.net/rest/api/latest/issue/16204',
       history:[
         {statusValue: 'Backlog', startDate: '2016-03-22T02:46:19.000-0600', changeDate: '2016-03-22T04:40:55.652-0600'},
         {statusValue: 'UX Review', startDate: '2016-03-22T04:40:55.652-0600', changeDate: '2016-03-22T23:27:04.360-0600'},

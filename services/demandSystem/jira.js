@@ -260,7 +260,7 @@ exports.transformRawToCommon = function(issueData, systemInformation) {
 
   issueData.forEach(function (aStory) {
     var commonDemandEntry = new utils.CommonDemandEntry(aStory.id);
-    commonDemandEntry.key = aStory.key;
+    commonDemandEntry.uri = aStory.self;
     var historyEntry = new utils.DemandHistoryEntry(systemInformation.flow[0].name, aStory.fields.created);
 
     aStory.changelog.histories.forEach(function (history) {

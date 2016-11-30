@@ -262,12 +262,12 @@ exports.transformRawToCommon = function(issueData, systemInformation) {
 
   issueData.forEach(function (aDefect) {
     var commonDefectEntry = new utils.CommonDefectEntry(aDefect.id);
-    commonDefectEntry.key = aDefect.key;
+    commonDefectEntry.uri = aDefect.self;
 
     // yes this is a pain in the ass, so feel free to make a better algorithm.
     // essensentially, there is no way to determine the initial priority of a Jira story
-    // you know what it is.  So look to see if it changed, and if so capture the very first
-    // from string as the initial priority (which is the same a severity for Jira)
+    // you do know what it is now.  So look to see if it changed, and if so capture the very first
+    // fromString as the initial priority (which is the same a severity for Jira)
     var currentDefectPriority = null;
     aDefect.changelog.histories.forEach(function (history) {
       if (history.items.field === 'priority') {
