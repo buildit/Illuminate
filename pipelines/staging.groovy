@@ -1,18 +1,36 @@
+// Staging release pipeline
+@Library('buildit')
+def LOADED = true
+
 node {
   withEnv(["PATH+NODE=${tool name: 'latest', type: 'jenkins.plugins.nodejs.tools.NodeJSInstallation'}/bin"]) {
     currentBuild.result = "SUCCESS"
+    sendNotifications = !env.DEV_MODE
 
     try {
       stage ('Set Up') {
-        sh "curl -L https://dl.bintray.com/buildit/maven/jenkins-pipeline-libraries-${env.PIPELINE_LIBS_VERSION}.zip -o lib.zip && echo 'A' | unzip lib.zip"
+        // clean the workspace before checking out
+        if(fileExists('.git')) {
+          echo 'Perform workspace cleanup'
+          sh "git clean -ffdx"
+        }
 
-        ecr = load "lib/ecr.groovy"
-        git = load "lib/git.groovy"
-        npm = load "lib/npm.groovy"
-        shell = load "lib/shell.groovy"
-        slack = load "lib/slack.groovy"
-        convox = load "lib/convox.groovy"
-        template = load "lib/template.groovy"
+        if (env.USE_GLOBAL_LIB) {
+          ecrInst = new ecr()
+          gitInst = new git()
+          npmInst = new npm()
+          slackInst = new slack()
+          convoxInst = new convox()
+          templateInst = new template()
+        } else {
+          sh "curl -L https://dl.bintray.com/buildit/maven/jenkins-pipeline-libraries-${env.PIPELINE_LIBS_VERSION}.zip -o lib.zip && echo 'A' | unzip -o lib.zip"
+          ecrInst = load "lib/ecr.groovy"
+          gitInst = load "lib/git.groovy"
+          npmInst = load "lib/npm.groovy"
+          slackInst = load "lib/slack.groovy"
+          convoxInst = load "lib/convox.groovy"
+          templateInst = load "lib/template.groovy"
+        }
 
         domainName = "${env.MONGO_HOSTNAME}".substring(8)
         registryBase = "006393696278.dkr.ecr.${env.AWS_REGION}.amazonaws.com"
@@ -25,8 +43,8 @@ node {
 
         // global for exception handling
         slackChannel = "synapse"
-        gitUrl = "https://bitbucket.org/digitalrigbitbucketteam/illuminate"
-        appUrl = "http://illuminate.staging.${domainName}"
+        gitUrl = "https://bitbucket.org/digitalrigbitbucketteam/${appName}"
+        appUrl = "http://${appName}.staging.${domainName}"
       }
 
 
@@ -89,12 +107,12 @@ node {
         docker.withRegistry(registry) {
           image.push("latest")
         }
-        slack.notify("Deployed to Staging", "Commit <${gitUrl}/commits/${shortCommitHash}|${shortCommitHash}> has been deployed to <${appUrl}|${appUrl}>\n\n${commitMessage}", "good", "http://i3.kym-cdn.com/entries/icons/square/000/002/230/42.png", slackChannel)
+        slack.notify("Deployed to Staging", "Commit <${gitUrl}/commits/${shortCommitHash}|${shortCommitHash}> has been deployed to <${appUrl}|${appUrl}>\n\n${commitMessage}", "good", "http://i3.kym-cdn.com/entries/icons/original/000/006/536/illuminati-conspiracy.jpg", slackChannel)
       }
     }
     catch (err) {
       currentBuild.result = "FAILURE"
-      slack.notify("Error while deploying to Staging", "Commit <${gitUrl}/commits/${shortCommitHash}|${shortCommitHash}> failed to deploy to <${appUrl}|${appUrl}>", "danger", "http://i2.kym-cdn.com/entries/icons/original/000/002/325/Evil.jpg", slackChannel)
+      slack.notify("Error while deploying to Staging", "Commit <${gitUrl}/commits/${shortCommitHash}|${shortCommitHash}> failed to deploy to <${appUrl}|${appUrl}>", "danger", "http://i3.kym-cdn.com/entries/icons/original/000/004/240/CandleCove.jpg", slackChannel)
       throw err
     }
   }

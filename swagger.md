@@ -1,6 +1,6 @@
 # Generating Swagger style documentation
 
-This section describes how the Swagger style API documentation file for Eolas is generated and maintained.  Eolas does not support the whole Swagger experinece.  That is it is not used to generate stubbs and what not.  The Swagger editor tool is just used to document the Eolas REST experience.  Also, as the swagger doc is served as JSON, Eolas expects the file to be in JSON format.
+This section describes how the Swagger style API documentation file for Illuminate is generated and maintained.  Illuminate does not support the whole Swagger experinece.  That is it is not used to generate stubbs and what not.  The Swagger editor tool is just used to document the Illuminate REST experience.  Also, as the swagger doc is served as JSON, Illuminate expects the file to be in JSON format.
 
 ##  Maintaining the API definitions
 

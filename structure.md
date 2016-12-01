@@ -18,12 +18,30 @@ Express routing is accomplished in the routes directory.
 The services directory contains the implementations of the callable services.
 
 - about.js - ping implementation and ping/deep structure.  If you add a new dependant service, implement a deepPing function and call it from here.
-- effort.js - core logic for processing effort related data into summary information.
 - errors.js - the generic express error handler functions.
 - swaggerDoc.js - serves up the swagger.json file from the 'appropriate' version in teh api_doc directory.
-- dataStore - interfaces for the supported datastore.
-- effortSystems - interfaces to the effort data source systems.
 - v# - contains the implementations for the REST resources.
+
+- dataLoader.js - This file is the entry point for processing a project's source systems.
+  - processProjectData - Deterimines if the project is configured for demand and/or defect and/or effort.  Configures rules for each, fires off the work and updates the triggering event.
+  - processProjectSystem - Common central logic for processing.  The pattern is to:
+    - Gather and store the raw information from the source system
+    - Convert that to a common format and store that.
+    - Generate a summary format that will be served to clients.
+
+
+- defect.js, demand.js, & effort.js - Generic logic for processing a particular system type.  The goal here is that these files should not change when adding new source systems to process a particular information type.  These all implement the following interface:
+  - configureProcessingInstructions - The ProcessingInfo structure contains information about the collections to be used to store the raw, common, and summary data as well as datastore information.
+  - rawDataProcessor - This determines which raw data processor implementation to use for collecting the raw data.
+  - transformCommonToSummary - Pretty much what it says.
+
+
+- defectSystem, demandSystem, & effortSystem - These directories contain the application specific logic required to collect their specific information type.  To expand the systems supported by Illuminate, all you should need to do is implement one of these and expand the rawDataProcessor function previously described.  All of the source files in these directories implement the following interface:
+    - loadRawData - Interact with the source system to collect the data required.  This function needs to work with both initial load (get it all) and update (changed since 'this' time).  In order for this to work this function _*MUST*_ set a \_id property in its data structure that is unique (or updates just wont work).
+    - transformRawToCommon - Pretty much what it says
+
+
+- dataStore - interfaces for the supported datastore.  To implement a new datastore technology, just implement the methods that exist in mongodb.js and duplicate the functionality of testMongo.js
 
 # API Versioning
 
@@ -92,6 +110,7 @@ Right now the interaction with mongo is spread across several files.  If a chang
 
 - uuid - generate a GUID for each event.
 
+- valid-url - reg-ex for validating a url.
 
 # Development Dependencies
 

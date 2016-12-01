@@ -37,16 +37,13 @@ $ npm install
 ## USAGE
 
 ### Serve data
-To start the REST server:
-```sh
-$ npm start
-```
-
 Edit `config/development.json` to change the port on which the server listens.
 
-## DEVELOPMENT
-
-[For discussion on the structure of this project](structure.md "Illuminate structure")
+To start the REST server:
+```sh
+$ npm run start
+```
+Other useful commands (like always run these prior to checkin!)
 
 | cli                 | purpose                                                             |
 |---------------------|---------------------------------------------------------------------|
@@ -56,5 +53,9 @@ Edit `config/development.json` to change the port on which the server listens.
 | `npm run validate`  | Run all of the above                                                |
 | `npm run accept`    | Run acceptance tests (chakram) - requires the server to be running  |
 
+## DEVELOPMENT
+
+[For discussion on the structure of this project](structure.md "Illuminate structure").
+
 ## Swagger API
-[Directions](swagger.md "Swagger documentation generation")
+Illuminates REST API is documented using Swagger.  For information on how to view and edit that information look [here](swagger.md "Swagger documentation generation").

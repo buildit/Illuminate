@@ -133,8 +133,15 @@
                     {
                         "name": "type",
                         "in": "query",
-                        "description": "Either Load or Update",
+                        "description": "Either Load, Update, or Reprocess",
                         "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "override",
+                        "in": "query",
+                        "description": "must be true",
+                        "required": false,
                         "type": "string"
                     }
                 ],
