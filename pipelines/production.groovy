@@ -12,16 +12,9 @@ node {
     stage ('Set Up') {
       checkout scm
 
-      if (env.USE_GLOBAL_LIB) {
-        slackInst = new slack()
-        templateInst = new template()
-        convoxInst = new convox()
-      } else {
-        sh "curl -L https://dl.bintray.com/buildit/maven/jenkins-pipeline-libraries-${env.PIPELINE_LIBS_VERSION}.zip -o lib.zip && echo 'A' | unzip lib.zip"
-        slackInst = load "lib/slack.groovy"
-        convoxInst = load "lib/convox.groovy"
-        templateInst = load "lib/template.groovy"
-      }
+      slackInst = new slack()
+      templateInst = new template()
+      convoxInst = new convox()
 
       appName = "illuminate"
       domainName = "${env.MONGO_HOSTNAME}".substring(8)
@@ -42,7 +35,7 @@ node {
       // global for exception handling
       tag = "latest"
       tmpFile = UUID.randomUUID().toString() + ".tmp"
-      ymlData = template.transform(readFile("docker-compose.yml.template"), [tag: tag, registry_base: registryBase, mongo_url: mongoUrl, server_url: serverUrl, server_port: serverPort])
+      ymlData = templateInst.transform(readFile("docker-compose.yml.template"), [tag: tag, registry_base: registryBase, mongo_url: mongoUrl, server_url: serverUrl, server_port: serverPort])
 
       writeFile(file: tmpFile, text: ymlData)
     }
@@ -54,14 +47,14 @@ node {
       sh "rm ${tmpFile}"
 
       // wait until the app is deployed
-      convox.waitUntilDeployed("${appName}")
-      convox.ensureSecurityGroupSet("${appName}", env.CONVOX_SECURITYGROUP)
-      slack.notify("Deployed to Production", "Tag <${gitUrl}/commits/tag/${tag}|${tag}> has been deployed to <${appUrl}|${appUrl}>", "good", "http://i3.kym-cdn.com/entries/icons/original/000/006/536/illuminati-conspiracy.jpg", slackChannel)
+      convoxInst.waitUntilDeployed("${appName}")
+      convoxInst.ensureSecurityGroupSet("${appName}", env.CONVOX_SECURITYGROUP)
+      slackInst.notify("Deployed to Production", "Tag <${gitUrl}/commits/tag/${tag}|${tag}> has been deployed to <${appUrl}|${appUrl}>", "good", "http://i3.kym-cdn.com/entries/icons/original/000/006/536/illuminati-conspiracy.jpg", slackChannel)
     }
   }
   catch (err) {
     currentBuild.result = "FAILURE"
-    slack.notify("Error while deploying to Production", "Tag <${gitUrl}/commits/tag/${tag}|${tag}> failed to deploy to <${appUrl}|${appUrl}>", "danger", "http://i3.kym-cdn.com/entries/icons/original/000/004/240/CandleCove.jpg", slackChannel)
+    slackInst.notify("Error while deploying to Production", "Tag <${gitUrl}/commits/tag/${tag}|${tag}> failed to deploy to <${appUrl}|${appUrl}>", "danger", "http://i3.kym-cdn.com/entries/icons/original/000/004/240/CandleCove.jpg", slackChannel)
     throw err
   }
 }
