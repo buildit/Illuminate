@@ -2,7 +2,7 @@
 
 const constants = require('../util/constants');
 const mongoDB = require('../services/datastore/mongodb');
-const Should = require('Should');
+const Should = require('should');
 const testConstants = require('./testConstants');
 const utils = require('../util/utils');
 
