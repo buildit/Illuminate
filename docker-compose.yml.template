@@ -1,6 +1,6 @@
 node:
   restart: always
-  image: ${registry_base}/eolas:${tag}
+  image: ${registry_base}/illuminate:${tag}
   ports:
     - "80"
   environment:
