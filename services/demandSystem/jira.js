@@ -5,6 +5,7 @@ const Config = require('config');
 const errorHelper = require('../errors');
 const HttpStatus = require('http-status-codes');
 const Log4js = require('log4js');
+const R = require('ramda');
 const Rest = require('restler');
 const utils = require('../../util/utils');
 const ValidUrl = require('valid-url');
@@ -26,204 +27,271 @@ logger.setLevel(Config.get('log-level'));
 //
 //
 //  SAMPLE JIRA ITEM DATA
+//
+//    Of note here is the history item of resolution.  Workflows in Jira can be customized.
+//    Some of those workflows define status values as resolutions.  (think bug tracking)
+//    Others do not.  Thus the algoritm needs to support resolution as a status change.
+//
+//    Also a "released" issue has a history item of Fix Version.
+//    Will figure out what to do about this.
+//
 // {
-//     "expand": "operations,versionedRepresentations,editmeta,changelog,renderedFields",
-//     "id": "16204",
-//     "self": "https://digitalrig.atlassian.net/rest/api/latest/issue/16204",
-//     "key": "CIT-1055",
-//     "changelog":
-//     {
-//         "startAt": 0,
-//         "maxResults": 4,
-//         "total": 4,
-//         "histories":
-//         [
-//             {
-//                 "id": "32317",
-//                 "author":
-//                 {
-//                     "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=amit.sarkar",
-//                     "name": "amit.sarkar",
-//                     "key": "amit.sarkar",
-//                     "emailAddress": "amit.sarkar5@wipro.com",
-//                     "avatarUrls":
-//                     {
-//                         "48x48": "https://digitalrig.atlassian.net/secure/useravatar?avatarId=11529",
-//                         "24x24": "https://digitalrig.atlassian.net/secure/useravatar?size=small&avatarId=11529",
-//                         "16x16": "https://digitalrig.atlassian.net/secure/useravatar?size=xsmall&avatarId=11529",
-//                         "32x32": "https://digitalrig.atlassian.net/secure/useravatar?size=medium&avatarId=11529"
-//                     },
-//                     "displayName": "Amit Sarkar",
-//                     "active": true,
-//                     "timeZone": "Asia/Kolkata"
-//                 },
-//                 "created": "2016-03-22T02:59:01.278-0600",
-//                 "items":
-//                 [
-//                     {
-//                         "field": "assignee",
-//                         "fieldtype": "jira",
-//                         "from": "amit.sarkar",
-//                         "fromString": "Amit Sarkar",
-//                         "to": "darpan.36",
-//                         "toString": "Darpan"
-//                     }
-//                 ]
-//             },
-//             {
-//                 "id": "32327",
-//                 "author":
-//                 {
-//                     "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=darpan.36",
-//                     "name": "darpan.36",
-//                     "key": "darpan.36",
-//                     "emailAddress": "darpan.36@wipro.com",
-//                     "avatarUrls":
-//                     {
-//                         "48x48": "https://secure.gravatar.com/avatar/885cc62992c29993fa7389fb7c00ea70?d=mm&s=48",
-//                         "24x24": "https://secure.gravatar.com/avatar/885cc62992c29993fa7389fb7c00ea70?d=mm&s=24",
-//                         "16x16": "https://secure.gravatar.com/avatar/885cc62992c29993fa7389fb7c00ea70?d=mm&s=16",
-//                         "32x32": "https://secure.gravatar.com/avatar/885cc62992c29993fa7389fb7c00ea70?d=mm&s=32"
-//                     },
-//                     "displayName": "Darpan",
-//                     "active": false,
-//                     "timeZone": "America/Denver"
-//                 },
-//                 "created": "2016-03-22T04:40:55.652-0600",
-//                 "items":
-//                 [
-//                     {
-//                         "field": "status",
-//                         "fieldtype": "jira",
-//                         "from": "10000",
-//                         "fromString": "Backlog",
-//                         "to": "10700",
-//                         "toString": "UX Review"
-//                     }
-//                 ]
-//             },
-//             {
-//                 "id": "32372",
-//                 "author":
-//                 {
-//                     "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=ashok.chockalingam",
-//                     "name": "ashok.chockalingam",
-//                     "key": "ashok.chockalingam",
-//                     "emailAddress": "ashok.chockalingam@wipro.com",
-//                     "avatarUrls":
-//                     {
-//                         "48x48": "https://secure.gravatar.com/avatar/ca496c8ecf18d8aa471b3353c4db250b?d=mm&s=48",
-//                         "24x24": "https://secure.gravatar.com/avatar/ca496c8ecf18d8aa471b3353c4db250b?d=mm&s=24",
-//                         "16x16": "https://secure.gravatar.com/avatar/ca496c8ecf18d8aa471b3353c4db250b?d=mm&s=16",
-//                         "32x32": "https://secure.gravatar.com/avatar/ca496c8ecf18d8aa471b3353c4db250b?d=mm&s=32"
-//                     },
-//                     "displayName": "Ashok Bharathi Chockalingam",
-//                     "active": false,
-//                     "timeZone": "America/Denver"
-//                 },
-//                 "created": "2016-03-22T23:27:04.360-0600",
-//                 "items":
-//                 [
-//                     {
-//                         "field": "status",
-//                         "fieldtype": "jira",
-//                         "from": "10700",
-//                         "fromString": "UX Review",
-//                         "to": "10501",
-//                         "toString": "In Progress"
-//                     }
-//                 ]
-//             },
-//             {
-//                 "id": "32530",
-//                 "author":
-//                 {
-//                     "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=darpan.36",
-//                     "name": "darpan.36",
-//                     "key": "darpan.36",
-//                     "emailAddress": "darpan.36@wipro.com",
-//                     "avatarUrls":
-//                     {
-//                         "48x48": "https://secure.gravatar.com/avatar/885cc62992c29993fa7389fb7c00ea70?d=mm&s=48",
-//                         "24x24": "https://secure.gravatar.com/avatar/885cc62992c29993fa7389fb7c00ea70?d=mm&s=24",
-//                         "16x16": "https://secure.gravatar.com/avatar/885cc62992c29993fa7389fb7c00ea70?d=mm&s=16",
-//                         "32x32": "https://secure.gravatar.com/avatar/885cc62992c29993fa7389fb7c00ea70?d=mm&s=32"
-//                     },
-//                     "displayName": "Darpan",
-//                     "active": false,
-//                     "timeZone": "America/Denver"
-//                 },
-//                 "created": "2016-03-24T03:39:03.178-0600",
-//                 "items":
-//                 [
-//                     {
-//                         "field": "status",
-//                         "fieldtype": "jira",
-//                         "from": "10501",
-//                         "fromString": "In Progress",
-//                         "to": "10700",
-//                         "toString": "UX Review"
-//                     }
-//                 ]
-//             }
-//         ]
-//     },
-//     "fields":
-//     {
-//         "summary": "Select Meeting Screen Changes..",
-//         "issuetype":
-//         {
-//             "self": "https://digitalrig.atlassian.net/rest/api/2/issuetype/10001",
-//             "id": "10001",
-//             "description": "A user story. Created by JIRA Software - do not edit or delete.",
-//             "iconUrl": "https://digitalrig.atlassian.net/secure/viewavatar?size=xsmall&avatarId=10315&avatarType=issuetype",
-//             "name": "Story",
-//             "subtask": false,
-//             "avatarId": 10315
+//   "_id": "16607",
+//   "expand": "operations,versionedRepresentations,editmeta,changelog,renderedFields",
+//   "id": "16607",
+//   "self": "https://digitalrig.atlassian.net/rest/api/latest/issue/16607",
+//   "key": "NETWRKDIAG-14",
+//   "changelog": {
+//     "startAt": 0,
+//     "maxResults": 8,
+//     "total": 8,
+//     "histories": [
+//       {
+//         "id": "33115",
+//         "author": {
+//           "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=david.moss",
+//           "name": "david.moss",
+//           "key": "david.moss",
+//           "emailAddress": "david.moss@wipro.com",
+//           "avatarUrls": {
+//             "48x48": "https://digitalrig.atlassian.net/secure/useravatar?ownerId=david.moss&avatarId=11700",
+//             "24x24": "https://digitalrig.atlassian.net/secure/useravatar?size=small&ownerId=david.moss&avatarId=11700",
+//             "16x16": "https://digitalrig.atlassian.net/secure/useravatar?size=xsmall&ownerId=david.moss&avatarId=11700",
+//             "32x32": "https://digitalrig.atlassian.net/secure/useravatar?size=medium&ownerId=david.moss&avatarId=11700"
+//           },
+//           "displayName": "David Moss",
+//           "active": true,
+//           "timeZone": "America/Denver"
 //         },
-//         "created": "2016-03-22T02:46:19.000-0600",
-//         "reporter":
-//         {
-//             "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=murugaraj.arjunamurthy",
-//             "name": "murugaraj.arjunamurthy",
-//             "key": "murugaraj.arjunamurthy",
-//             "emailAddress": "murugaraj.arjunamurthy@wipro.com",
-//             "avatarUrls":
-//             {
-//                 "48x48": "https://secure.gravatar.com/avatar/253d32d0af4451e7c56a0914b0ca38eb?d=mm&s=48",
-//                 "24x24": "https://secure.gravatar.com/avatar/253d32d0af4451e7c56a0914b0ca38eb?d=mm&s=24",
-//                 "16x16": "https://secure.gravatar.com/avatar/253d32d0af4451e7c56a0914b0ca38eb?d=mm&s=16",
-//                 "32x32": "https://secure.gravatar.com/avatar/253d32d0af4451e7c56a0914b0ca38eb?d=mm&s=32"
-//             },
-//             "displayName": "Murugaraj Arjunamurthy",
-//             "active": true,
-//             "timeZone": "America/Denver"
-//         },
-//         "priority":
-//         {
-//             "self": "https://digitalrig.atlassian.net/rest/api/2/priority/3",
-//             "iconUrl": "https://digitalrig.atlassian.net/images/icons/priorities/medium.svg",
-//             "name": "Medium",
-//             "id": "3"
-//         },
-//         "updated": "2016-03-24T03:39:03.000-0600",
-//         "status":
-//         {
-//             "self": "https://digitalrig.atlassian.net/rest/api/2/status/10700",
-//             "description": "",
-//             "iconUrl": "https://digitalrig.atlassian.net/images/icons/statuses/generic.png",
-//             "name": "UX Review",
-//             "id": "10700",
-//             "statusCategory":
-//             {
-//                 "self": "https://digitalrig.atlassian.net/rest/api/2/statuscategory/4",
-//                 "id": 4,
-//                 "key": "indeterminate",
-//                 "colorName": "yellow",
-//                 "name": "In Progress"
-//             }
+//         "created": "2016-04-06T03:55:07.314-0600",
+//         "items": {
+//           "field": "Rank",
+//           "fieldtype": "custom",
+//           "from": "",
+//           "fromString": "",
+//           "to": "",
+//           "toString": "Ranked higher"
 //         }
+//       },
+//       {
+//         "id": "33123",
+//         "author": {
+//           "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=david.moss",
+//           "name": "david.moss",
+//           "key": "david.moss",
+//           "emailAddress": "david.moss@wipro.com",
+//           "avatarUrls": {
+//             "48x48": "https://digitalrig.atlassian.net/secure/useravatar?ownerId=david.moss&avatarId=11700",
+//             "24x24": "https://digitalrig.atlassian.net/secure/useravatar?size=small&ownerId=david.moss&avatarId=11700",
+//             "16x16": "https://digitalrig.atlassian.net/secure/useravatar?size=xsmall&ownerId=david.moss&avatarId=11700",
+//             "32x32": "https://digitalrig.atlassian.net/secure/useravatar?size=medium&ownerId=david.moss&avatarId=11700"
+//           },
+//           "displayName": "David Moss",
+//           "active": true,
+//           "timeZone": "America/Denver"
+//         },
+//         "created": "2016-04-06T04:16:38.749-0600",
+//         "items": {
+//           "field": "status",
+//           "fieldtype": "jira",
+//           "from": "10000",
+//           "fromString": "Backlog",
+//           "to": "10501",
+//           "toString": "In Progress"
+//         }
+//       },
+//       {
+//         "id": "33124",
+//         "author": {
+//           "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=david.moss",
+//           "name": "david.moss",
+//           "key": "david.moss",
+//           "emailAddress": "david.moss@wipro.com",
+//           "avatarUrls": {
+//             "48x48": "https://digitalrig.atlassian.net/secure/useravatar?ownerId=david.moss&avatarId=11700",
+//             "24x24": "https://digitalrig.atlassian.net/secure/useravatar?size=small&ownerId=david.moss&avatarId=11700",
+//             "16x16": "https://digitalrig.atlassian.net/secure/useravatar?size=xsmall&ownerId=david.moss&avatarId=11700",
+//             "32x32": "https://digitalrig.atlassian.net/secure/useravatar?size=medium&ownerId=david.moss&avatarId=11700"
+//           },
+//           "displayName": "David Moss",
+//           "active": true,
+//           "timeZone": "America/Denver"
+//         },
+//         "created": "2016-04-06T04:16:40.482-0600",
+//         "items": {
+//           "field": "assignee",
+//           "fieldtype": "jira",
+//           "from": null,
+//           "fromString": null,
+//           "to": "david.moss",
+//           "toString": "David Moss"
+//         }
+//       },
+//       {
+//         "id": "33144",
+//         "author": {
+//           "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=david.moss",
+//           "name": "david.moss",
+//           "key": "david.moss",
+//           "emailAddress": "david.moss@wipro.com",
+//           "avatarUrls": {
+//             "48x48": "https://digitalrig.atlassian.net/secure/useravatar?ownerId=david.moss&avatarId=11700",
+//             "24x24": "https://digitalrig.atlassian.net/secure/useravatar?size=small&ownerId=david.moss&avatarId=11700",
+//             "16x16": "https://digitalrig.atlassian.net/secure/useravatar?size=xsmall&ownerId=david.moss&avatarId=11700",
+//             "32x32": "https://digitalrig.atlassian.net/secure/useravatar?size=medium&ownerId=david.moss&avatarId=11700"
+//           },
+//           "displayName": "David Moss",
+//           "active": true,
+//           "timeZone": "America/Denver"
+//         },
+//         "created": "2016-04-06T06:49:15.171-0600",
+//         "items": {
+//           "field": "resolution",
+//           "fieldtype": "jira",
+//           "from": null,
+//           "fromString": null,
+//           "to": "10000",
+//           "toString": "Done"
+//         }
+//       },
+//       {
+//         "id": "33147",
+//         "author": {
+//           "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=david.moss",
+//           "name": "david.moss",
+//           "key": "david.moss",
+//           "emailAddress": "david.moss@wipro.com",
+//           "avatarUrls": {
+//             "48x48": "https://digitalrig.atlassian.net/secure/useravatar?ownerId=david.moss&avatarId=11700",
+//             "24x24": "https://digitalrig.atlassian.net/secure/useravatar?size=small&ownerId=david.moss&avatarId=11700",
+//             "16x16": "https://digitalrig.atlassian.net/secure/useravatar?size=xsmall&ownerId=david.moss&avatarId=11700",
+//             "32x32": "https://digitalrig.atlassian.net/secure/useravatar?size=medium&ownerId=david.moss&avatarId=11700"
+//           },
+//           "displayName": "David Moss",
+//           "active": true,
+//           "timeZone": "America/Denver"
+//         },
+//         "created": "2016-04-06T06:49:37.405-0600",
+//         "items": {
+//           "field": "summary",
+//           "fieldtype": "jira",
+//           "from": null,
+//           "fromString": "Auto size nodes",
+//           "to": null,
+//           "toString": "Relative sized nodes"
+//         }
+//       },
+//       {
+//         "id": "33165",
+//         "author": {
+//           "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=david.moss",
+//           "name": "david.moss",
+//           "key": "david.moss",
+//           "emailAddress": "david.moss@wipro.com",
+//           "avatarUrls": {
+//             "48x48": "https://digitalrig.atlassian.net/secure/useravatar?ownerId=david.moss&avatarId=11700",
+//             "24x24": "https://digitalrig.atlassian.net/secure/useravatar?size=small&ownerId=david.moss&avatarId=11700",
+//             "16x16": "https://digitalrig.atlassian.net/secure/useravatar?size=xsmall&ownerId=david.moss&avatarId=11700",
+//             "32x32": "https://digitalrig.atlassian.net/secure/useravatar?size=medium&ownerId=david.moss&avatarId=11700"
+//           },
+//           "displayName": "David Moss",
+//           "active": true,
+//           "timeZone": "America/Denver"
+//         },
+//         "created": "2016-04-06T10:02:44.412-0600",
+//         "items": {
+//           "field": "project",
+//           "fieldtype": "jira",
+//           "from": "12403",
+//           "fromString": "Kaban With Cadence ",
+//           "to": "12404",
+//           "toString": "Organization Communication Network Digaram"
+//         }
+//       },
+//       {
+//         "id": "33213",
+//         "author": {
+//           "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=david.moss",
+//           "name": "david.moss",
+//           "key": "david.moss",
+//           "emailAddress": "david.moss@wipro.com",
+//           "avatarUrls": {
+//             "48x48": "https://digitalrig.atlassian.net/secure/useravatar?ownerId=david.moss&avatarId=11700",
+//             "24x24": "https://digitalrig.atlassian.net/secure/useravatar?size=small&ownerId=david.moss&avatarId=11700",
+//             "16x16": "https://digitalrig.atlassian.net/secure/useravatar?size=xsmall&ownerId=david.moss&avatarId=11700",
+//             "32x32": "https://digitalrig.atlassian.net/secure/useravatar?size=medium&ownerId=david.moss&avatarId=11700"
+//           },
+//           "displayName": "David Moss",
+//           "active": true,
+//           "timeZone": "America/Denver"
+//         },
+//         "created": "2016-04-08T08:10:01.227-0600",
+//         "items": {
+//           "field": "Rank",
+//           "fieldtype": "custom",
+//           "from": "",
+//           "fromString": "",
+//           "to": "",
+//           "toString": "Ranked higher"
+//         }
+//       },
+//       {
+//         "id": "36187",
+//         "author": {
+//           "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=david.moss",
+//           "name": "david.moss",
+//           "key": "david.moss",
+//           "emailAddress": "david.moss@wipro.com",
+//           "avatarUrls": {
+//             "48x48": "https://digitalrig.atlassian.net/secure/useravatar?ownerId=david.moss&avatarId=11700",
+//             "24x24": "https://digitalrig.atlassian.net/secure/useravatar?size=small&ownerId=david.moss&avatarId=11700",
+//             "16x16": "https://digitalrig.atlassian.net/secure/useravatar?size=xsmall&ownerId=david.moss&avatarId=11700",
+//             "32x32": "https://digitalrig.atlassian.net/secure/useravatar?size=medium&ownerId=david.moss&avatarId=11700"
+//           },
+//           "displayName": "David Moss",
+//           "active": true,
+//           "timeZone": "America/Denver"
+//         },
+//         "created": "2016-05-25T08:16:23.817-0600",
+//         "items": {
+//           "field": "Fix Version",
+//           "fieldtype": "jira",
+//           "from": null,
+//           "fromString": null,
+//           "to": "11500",
+//           "toString": "0.1"
+//         }
+//       }
+//     ]
+//   },
+//   "fields": {
+//     "summary": "Relative sized nodes",
+//     "issuetype": {
+//       "self": "https://digitalrig.atlassian.net/rest/api/2/issuetype/10001",
+//       "id": "10001",
+//       "description": "A user story. Created by JIRA Software - do not edit or delete.",
+//       "iconUrl": "https://digitalrig.atlassian.net/secure/viewavatar?size=xsmall&avatarId=10315&avatarType=issuetype",
+//       "name": "Story",
+//       "subtask": false,
+//       "avatarId": 10315
+//     },
+//     "updated": "2016-05-25T08:16:23.000-0600",
+//     "created": "2016-04-06T03:22:14.000-0600",
+//     "status": {
+//       "self": "https://digitalrig.atlassian.net/rest/api/2/status/10002",
+//       "description": "Issues can only move to done after they've been tested",
+//       "iconUrl": "https://digitalrig.atlassian.net/images/icons/subtask.gif",
+//       "name": "Done",
+//       "id": "10002",
+//       "statusCategory": {
+//         "self": "https://digitalrig.atlassian.net/rest/api/2/statuscategory/3",
+//         "id": 3,
+//         "key": "done",
+//         "colorName": "green",
+//         "name": "Done"
+//       }
 //     }
+//   }
 // }
 
 exports.loadRawData = function(demandInfo, processingInfo, sinceTime) {
@@ -264,10 +332,27 @@ exports.transformRawToCommon = function(issueData, systemInformation) {
     var historyEntry = new utils.DemandHistoryEntry(systemInformation.flow[0].name, aStory.fields.created);
 
     aStory.changelog.histories.forEach(function (history) {
-      if (history.items.field === 'status') {
+      if (history.items.field === 'status' || history.items.field === 'resolution') {
         historyEntry.changeDate = history.created;
         commonDemandEntry.history.push(historyEntry);
-        historyEntry = new utils.DemandHistoryEntry(history.items.toString, history.created);
+
+        // if this is a resolution status change where the item was moved from the resolved state
+        // there is no indication of the new state.  So this just assumes the issue is in the most
+        // recent previous state.  One hopes that there is never a case where an issue is created
+        // in a resolved state, but I think the code will work anyway.
+        if (R.isNil(history.items.toString)) {
+          var index = (commonDemandEntry.history.length < 2) ? 0 : commonDemandEntry.history.length - 2
+          historyEntry = new utils.DemandHistoryEntry(commonDemandEntry.history[index].statusValue, history.created);
+        } else {
+          historyEntry = new utils.DemandHistoryEntry(history.items.toString, history.created);
+        }
+      } else if (history.items.field === 'Fix Version') {
+        // this really isn't a status change per se, but a release event.
+        // this just gives the resolution status a valid end date.
+        // this item will be dropped at this point in the summary data.
+        historyEntry.changeDate = history.created;
+        commonDemandEntry.history.push(historyEntry);
+        historyEntry = new utils.DemandHistoryEntry(history.items.field + '-' + history.items.toString, history.created);
       }
     });
     commonDemandEntry.history.push(historyEntry);
@@ -336,7 +421,7 @@ exports.fixHistoryData = function(stories) {
   stories.forEach(function (aStory) {
     aStory['_id'] = aStory.id;
     aStory.changelog.histories.forEach(function (history) {
-      history.items = JSON.parse(JSON.stringify(history.items[0]));
+      history.items = R.clone(history.items[0]);
     });
   });
 

@@ -32,6 +32,7 @@ exportConstant('DEFAULTSTARTDATE', '2000-01-01');
 
 exportConstant('JIRADEMANDTYPE', 'Story');
 exportConstant('JIRADEFECTTYPE', 'Bug');
+exportConstant('JIRARELEASEFIELD', 'Fix Version');
 
 exportConstant('DEFAULTDEFECTINITIALSTATE', 'Created');
 exportConstant('DEFAULTDEFECTRESOLVEDSTATE', 'Closed');

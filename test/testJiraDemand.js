@@ -13,204 +13,480 @@ Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
 logger.setLevel(Config.get('log-level'));
 
-// NOTE:  I had to put an 'a' in front of the avart urls to get past compiler errors
 const RAWJIRASTORY = {
- expand: "operations,versionedRepresentations,editmeta,changelog,renderedFields",
- id: "16204",
- self: "https://digitalrig.atlassian.net/rest/api/latest/issue/16204",
- key: "CIT-1055",
- changelog:
-    {
-     startAt: 0,
-     maxResults: 4,
-     total: 4,
-     histories:
-        [
-            {
-             id: "32317",
-             author:
-                {
-                 self: "https://digitalrig.atlassian.net/rest/api/2/user?username=amit.sarkar",
-                 name: "amit.sarkar",
-                 key: "amit.sarkar",
-                 emailAddress: "amit.sarkar5@wipro.com",
-                 avatarUrls:
-                    {
-                     a48x48: "https://digitalrig.atlassian.net/secure/useravatar?avatarId=11529",
-                     a24x24: "https://digitalrig.atlassian.net/secure/useravatar?size=small&avatarId=11529",
-                     a16x16: "https://digitalrig.atlassian.net/secure/useravatar?size=xsmall&avatarId=11529",
-                     a32x32: "https://digitalrig.atlassian.net/secure/useravatar?size=medium&avatarId=11529"
-                    },
-                 displayName: "Amit Sarkar",
-                 active: true,
-                 timeZone: "Asia/Kolkata"
-                },
-             created: "2016-03-22T02:59:01.278-0600",
-             items:
-                [
-                    {
-                     field: "assignee",
-                     fieldtype: "jira",
-                     from: "amit.sarkar",
-                     fromString: "Amit Sarkar",
-                     to: "darpan.36",
-                     'toString': "Darpan"
-                    }
-                ]
-            },
-            {
-             id: "32327",
-             author:
-                {
-                 self: "https://digitalrig.atlassian.net/rest/api/2/user?username=darpan.36",
-                 name: "darpan.36",
-                 key: "darpan.36",
-                 emailAddress: "darpan.36@wipro.com",
-                 avatarUrls:
-                    {
-                     a48x48: "https://secure.gravatar.com/avatar/885cc62992c29993fa7389fb7c00ea70?d=mm&s=48",
-                     a24x24: "https://secure.gravatar.com/avatar/885cc62992c29993fa7389fb7c00ea70?d=mm&s=24",
-                     a16x16: "https://secure.gravatar.com/avatar/885cc62992c29993fa7389fb7c00ea70?d=mm&s=16",
-                     a32x32: "https://secure.gravatar.com/avatar/885cc62992c29993fa7389fb7c00ea70?d=mm&s=32"
-                    },
-                 displayName: "Darpan",
-                 active: false,
-                 timeZone: "America/Denver"
-                },
-             created: "2016-03-22T04:40:55.652-0600",
-             items:
-                [
-                    {
-                     field: "status",
-                     fieldtype: "jira",
-                     from: "10000",
-                     fromString: "Backlog",
-                     to: "10700",
-                     'toString': "UX Review"
-                    }
-                ]
-            },
-            {
-             id: "32372",
-             author:
-                {
-                 self: "https://digitalrig.atlassian.net/rest/api/2/user?username=ashok.chockalingam",
-                 name: "ashok.chockalingam",
-                 key: "ashok.chockalingam",
-                 emailAddress: "ashok.chockalingam@wipro.com",
-                 avatarUrls:
-                    {
-                     a48x48: "https://secure.gravatar.com/avatar/ca496c8ecf18d8aa471b3353c4db250b?d=mm&s=48",
-                     a24x24: "https://secure.gravatar.com/avatar/ca496c8ecf18d8aa471b3353c4db250b?d=mm&s=24",
-                     a16x16: "https://secure.gravatar.com/avatar/ca496c8ecf18d8aa471b3353c4db250b?d=mm&s=16",
-                     a32x32: "https://secure.gravatar.com/avatar/ca496c8ecf18d8aa471b3353c4db250b?d=mm&s=32"
-                    },
-                 displayName: "Ashok Bharathi Chockalingam",
-                 active: false,
-                 timeZone: "America/Denver"
-                },
-             created: "2016-03-22T23:27:04.360-0600",
-             items:
-                [
-                    {
-                     field: "status",
-                     fieldtype: "jira",
-                     from: "10700",
-                     fromString: "UX Review",
-                     to: "10501",
-                     'toString': "In Progress"
-                    }
-                ]
-            },
-            {
-             id: "32530",
-             author:
-                {
-                 self: "https://digitalrig.atlassian.net/rest/api/2/user?username=darpan.36",
-                 name: "darpan.36",
-                 key: "darpan.36",
-                 emailAddress: "darpan.36@wipro.com",
-                 avatarUrls:
-                    {
-                     a48x48: "https://secure.gravatar.com/avatar/885cc62992c29993fa7389fb7c00ea70?d=mm&s=48",
-                     a24x24: "https://secure.gravatar.com/avatar/885cc62992c29993fa7389fb7c00ea70?d=mm&s=24",
-                     a16x16: "https://secure.gravatar.com/avatar/885cc62992c29993fa7389fb7c00ea70?d=mm&s=16",
-                     a32x32: "https://secure.gravatar.com/avatar/885cc62992c29993fa7389fb7c00ea70?d=mm&s=32"
-                    },
-                 displayName: "Darpan",
-                 active: false,
-                 timeZone: "America/Denver"
-                },
-             created: "2016-03-24T03:39:03.178-0600",
-             items:
-                [
-                    {
-                     field: "status",
-                     fieldtype: "jira",
-                     from: "10501",
-                     fromString: "In Progress",
-                     to: "10700",
-                     'toString': "UX Review"
-                    }
-                ]
-            }
-        ]
-    },
- fields:
-    {
-     summary: "Select Meeting Screen Changes..",
-     issuetype:
+    "expand": "operations,versionedRepresentations,editmeta,changelog,renderedFields",
+    "id": "18020",
+    "self": "https://digitalrig.atlassian.net/rest/api/latest/issue/18020",
+    "key": "NETWRKDIAG-120",
+    "changelog": {
+      "startAt": 0,
+      "maxResults": 15,
+      "total": 15,
+      "histories": [
         {
-         self: "https://digitalrig.atlassian.net/rest/api/2/issuetype/10001",
-         id: "10001",
-         description: "A user story. Created by JIRA Software - do not edit or delete.",
-         iconUrl: "https://digitalrig.atlassian.net/secure/viewavatar?size=xsmall&avatarId=10315&avatarType=issuetype",
-         name: "Story",
-         subtask: false,
-         avatarId: 10315
+          "id": "35791",
+          "author": {
+            "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=david.moss",
+            "name": "david.moss",
+            "key": "david.moss",
+            "emailAddress": "david.moss@wipro.com",
+            "avatarUrls": {
+              "48x48": "https://digitalrig.atlassian.net/secure/useravatar?ownerId=david.moss&avatarId=11700",
+              "24x24": "https://digitalrig.atlassian.net/secure/useravatar?size=small&ownerId=david.moss&avatarId=11700",
+              "16x16": "https://digitalrig.atlassian.net/secure/useravatar?size=xsmall&ownerId=david.moss&avatarId=11700",
+              "32x32": "https://digitalrig.atlassian.net/secure/useravatar?size=medium&ownerId=david.moss&avatarId=11700"
+            },
+            "displayName": "David Moss",
+            "active": true,
+            "timeZone": "America/Denver"
+          },
+          "created": "2016-05-20T09:19:59.040-0600",
+          "items": [
+              {
+                "field": "Rank",
+                "fieldtype": "custom",
+                "from": "",
+                "fromString": "",
+                "to": "",
+                "toString": "Ranked higher"
+              }
+          ]
         },
-     created: "2016-03-22T02:46:19.000-0600",
-     reporter:
         {
-         self: "https://digitalrig.atlassian.net/rest/api/2/user?username=murugaraj.arjunamurthy",
-         name: "murugaraj.arjunamurthy",
-         key: "murugaraj.arjunamurthy",
-         emailAddress: "murugaraj.arjunamurthy@wipro.com",
-         avatarUrls:
-            {
-             a48x48: "https://secure.gravatar.com/avatar/253d32d0af4451e7c56a0914b0ca38eb?d=mm&s=48",
-             a24x24: "https://secure.gravatar.com/avatar/253d32d0af4451e7c56a0914b0ca38eb?d=mm&s=24",
-             a16x16: "https://secure.gravatar.com/avatar/253d32d0af4451e7c56a0914b0ca38eb?d=mm&s=16",
-             a32x32: "https://secure.gravatar.com/avatar/253d32d0af4451e7c56a0914b0ca38eb?d=mm&s=32"
+          "id": "35811",
+          "author": {
+            "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=digitalrig",
+            "name": "digitalrig",
+            "key": "digitalrig",
+            "emailAddress": "paul.karsten@wipro.com",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=48",
+              "24x24": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=24",
+              "16x16": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=16",
+              "32x32": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=32"
             },
-         displayName: "Murugaraj Arjunamurthy",
-         active: true,
-         timeZone: "America/Denver"
+            "displayName": "Paul Karsten [Administrator]",
+            "active": true,
+            "timeZone": "America/Denver"
+          },
+          "created": "2016-05-20T14:18:35.251-0600",
+          "items": [
+              {
+                "field": "status",
+                "fieldtype": "jira",
+                "from": "10000",
+                "fromString": "Backlog",
+                "to": "10001",
+                "toString": "Selected for development"
+              }
+          ]
         },
-     priority:
         {
-         self: "https://digitalrig.atlassian.net/rest/api/2/priority/3",
-         iconUrl: "https://digitalrig.atlassian.net/images/icons/priorities/medium.svg",
-         name: "Medium",
-         id: "3"
+          "id": "36268",
+          "author": {
+            "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=david.moss",
+            "name": "david.moss",
+            "key": "david.moss",
+            "emailAddress": "david.moss@wipro.com",
+            "avatarUrls": {
+              "48x48": "https://digitalrig.atlassian.net/secure/useravatar?ownerId=david.moss&avatarId=11700",
+              "24x24": "https://digitalrig.atlassian.net/secure/useravatar?size=small&ownerId=david.moss&avatarId=11700",
+              "16x16": "https://digitalrig.atlassian.net/secure/useravatar?size=xsmall&ownerId=david.moss&avatarId=11700",
+              "32x32": "https://digitalrig.atlassian.net/secure/useravatar?size=medium&ownerId=david.moss&avatarId=11700"
+            },
+            "displayName": "David Moss",
+            "active": true,
+            "timeZone": "America/Denver"
+          },
+          "created": "2016-05-26T07:20:52.350-0600",
+          "items": [
+              {
+                "field": "status",
+                "fieldtype": "jira",
+                "from": "10001",
+                "fromString": "Selected for development",
+                "to": "10000",
+                "toString": "Backlog"
+              }
+          ]
         },
-     updated: "2016-03-24T03:39:03.000-0600",
-     status:
         {
-         self: "https://digitalrig.atlassian.net/rest/api/2/status/10700",
-         description: "",
-         iconUrl: "https://digitalrig.atlassian.net/images/icons/statuses/generic.png",
-         name: "UX Review",
-         id: "10700",
-         statusCategory:
-            {
-             self: "https://digitalrig.atlassian.net/rest/api/2/statuscategory/4",
-             id: 4,
-             key: "indeterminate",
-             colorName: "yellow",
-             name: "In Progress"
-            }
+          "id": "39983",
+          "author": {
+            "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=digitalrig",
+            "name": "digitalrig",
+            "key": "digitalrig",
+            "emailAddress": "paul.karsten@wipro.com",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=48",
+              "24x24": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=24",
+              "16x16": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=16",
+              "32x32": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=32"
+            },
+            "displayName": "Paul Karsten [Administrator]",
+            "active": true,
+            "timeZone": "America/Denver"
+          },
+          "created": "2016-08-01T08:21:33.563-0600",
+          "items": [
+              {
+                "field": "description",
+                "fieldtype": "jira",
+                "from": null,
+                "fromString": "Ability to see a history / revisions to a twiglet and load/rollback to an older version - TBD",
+                "to": null,
+                "toString": "Ability to see a history / revisions to a twiglet.\r\n\r\nPerhaps something a simple as forcing a commit comment each time a user saves."
+              }
+          ]
+        },
+        {
+          "id": "39984",
+          "author": {
+            "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=digitalrig",
+            "name": "digitalrig",
+            "key": "digitalrig",
+            "emailAddress": "paul.karsten@wipro.com",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=48",
+              "24x24": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=24",
+              "16x16": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=16",
+              "32x32": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=32"
+            },
+            "displayName": "Paul Karsten [Administrator]",
+            "active": true,
+            "timeZone": "America/Denver"
+          },
+          "created": "2016-08-01T08:21:38.015-0600",
+          "items": [
+              {
+                "field": "Rank",
+                "fieldtype": "custom",
+                "from": "",
+                "fromString": "",
+                "to": "",
+                "toString": "Ranked higher"
+              }
+          ]
+        },
+        {
+          "id": "39985",
+          "author": {
+            "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=digitalrig",
+            "name": "digitalrig",
+            "key": "digitalrig",
+            "emailAddress": "paul.karsten@wipro.com",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=48",
+              "24x24": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=24",
+              "16x16": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=16",
+              "32x32": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=32"
+            },
+            "displayName": "Paul Karsten [Administrator]",
+            "active": true,
+            "timeZone": "America/Denver"
+          },
+          "created": "2016-08-01T08:21:43.854-0600",
+          "items": [
+              {
+                "field": "Rank",
+                "fieldtype": "custom",
+                "from": "",
+                "fromString": "",
+                "to": "",
+                "toString": "Ranked higher"
+              }
+          ]
+        },
+        {
+          "id": "39986",
+          "author": {
+            "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=digitalrig",
+            "name": "digitalrig",
+            "key": "digitalrig",
+            "emailAddress": "paul.karsten@wipro.com",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=48",
+              "24x24": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=24",
+              "16x16": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=16",
+              "32x32": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=32"
+            },
+            "displayName": "Paul Karsten [Administrator]",
+            "active": true,
+            "timeZone": "America/Denver"
+          },
+          "created": "2016-08-01T08:21:58.244-0600",
+          "items": [
+              {
+                "field": "Rank",
+                "fieldtype": "custom",
+                "from": "",
+                "fromString": "",
+                "to": "",
+                "toString": "Ranked higher"
+              }
+          ]
+        },
+        {
+          "id": "39987",
+          "author": {
+            "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=digitalrig",
+            "name": "digitalrig",
+            "key": "digitalrig",
+            "emailAddress": "paul.karsten@wipro.com",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=48",
+              "24x24": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=24",
+              "16x16": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=16",
+              "32x32": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=32"
+            },
+            "displayName": "Paul Karsten [Administrator]",
+            "active": true,
+            "timeZone": "America/Denver"
+          },
+          "created": "2016-08-01T08:22:04.715-0600",
+          "items": [
+              {
+                "field": "Rank",
+                "fieldtype": "custom",
+                "from": "",
+                "fromString": "",
+                "to": "",
+                "toString": "Ranked higher"
+              }
+          ]
+        },
+        {
+          "id": "43883",
+          "author": {
+            "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=andrew.ochsner",
+            "name": "andrew.ochsner",
+            "key": "andrew.ochsner",
+            "emailAddress": "andrew.ochsner@wipro.com",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/c2e3878c3795ee6593eb8e1441681e0b?d=mm&s=48",
+              "24x24": "https://secure.gravatar.com/avatar/c2e3878c3795ee6593eb8e1441681e0b?d=mm&s=24",
+              "16x16": "https://secure.gravatar.com/avatar/c2e3878c3795ee6593eb8e1441681e0b?d=mm&s=16",
+              "32x32": "https://secure.gravatar.com/avatar/c2e3878c3795ee6593eb8e1441681e0b?d=mm&s=32"
+            },
+            "displayName": "Andrew Ochsner",
+            "active": true,
+            "timeZone": "America/Chicago"
+          },
+          "created": "2016-09-28T13:53:21.498-0600",
+          "items": [
+              {
+                "field": "status",
+                "fieldtype": "jira",
+                "from": "10000",
+                "fromString": "Backlog",
+                "to": "10001",
+                "toString": "Selected for development"
+              }
+          ]
+        },
+        {
+          "id": "43884",
+          "author": {
+            "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=andrew.ochsner",
+            "name": "andrew.ochsner",
+            "key": "andrew.ochsner",
+            "emailAddress": "andrew.ochsner@wipro.com",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/c2e3878c3795ee6593eb8e1441681e0b?d=mm&s=48",
+              "24x24": "https://secure.gravatar.com/avatar/c2e3878c3795ee6593eb8e1441681e0b?d=mm&s=24",
+              "16x16": "https://secure.gravatar.com/avatar/c2e3878c3795ee6593eb8e1441681e0b?d=mm&s=16",
+              "32x32": "https://secure.gravatar.com/avatar/c2e3878c3795ee6593eb8e1441681e0b?d=mm&s=32"
+            },
+            "displayName": "Andrew Ochsner",
+            "active": true,
+            "timeZone": "America/Chicago"
+          },
+          "created": "2016-09-28T13:53:24.787-0600",
+          "items": [
+              {
+                "field": "status",
+                "fieldtype": "jira",
+                "from": "10001",
+                "fromString": "Selected for development",
+                "to": "10501",
+                "toString": "In Progress"
+              }
+          ]
+        },
+        {
+          "id": "43885",
+          "author": {
+            "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=andrew.ochsner",
+            "name": "andrew.ochsner",
+            "key": "andrew.ochsner",
+            "emailAddress": "andrew.ochsner@wipro.com",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/c2e3878c3795ee6593eb8e1441681e0b?d=mm&s=48",
+              "24x24": "https://secure.gravatar.com/avatar/c2e3878c3795ee6593eb8e1441681e0b?d=mm&s=24",
+              "16x16": "https://secure.gravatar.com/avatar/c2e3878c3795ee6593eb8e1441681e0b?d=mm&s=16",
+              "32x32": "https://secure.gravatar.com/avatar/c2e3878c3795ee6593eb8e1441681e0b?d=mm&s=32"
+            },
+            "displayName": "Andrew Ochsner",
+            "active": true,
+            "timeZone": "America/Chicago"
+          },
+          "created": "2016-09-28T13:53:29.019-0600",
+          "items": [
+              {
+                "field": "assignee",
+                "fieldtype": "jira",
+                "from": null,
+                "fromString": null,
+                "to": "andrew.ochsner",
+                "toString": "Andrew Ochsner"
+              }
+          ]
+        },
+        {
+          "id": "46169",
+          "author": {
+            "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=andrew.ochsner",
+            "name": "andrew.ochsner",
+            "key": "andrew.ochsner",
+            "emailAddress": "andrew.ochsner@wipro.com",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/c2e3878c3795ee6593eb8e1441681e0b?d=mm&s=48",
+              "24x24": "https://secure.gravatar.com/avatar/c2e3878c3795ee6593eb8e1441681e0b?d=mm&s=24",
+              "16x16": "https://secure.gravatar.com/avatar/c2e3878c3795ee6593eb8e1441681e0b?d=mm&s=16",
+              "32x32": "https://secure.gravatar.com/avatar/c2e3878c3795ee6593eb8e1441681e0b?d=mm&s=32"
+            },
+            "displayName": "Andrew Ochsner",
+            "active": true,
+            "timeZone": "America/Chicago"
+          },
+          "created": "2016-11-04T13:06:55.686-0600",
+          "items": [
+              {
+                "field": "resolution",
+                "fieldtype": "jira",
+                "from": null,
+                "fromString": null,
+                "to": "10000",
+                "toString": "Done"
+              }
+          ]
+        },
+        {
+          "id": "46170",
+          "author": {
+            "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=andrew.ochsner",
+            "name": "andrew.ochsner",
+            "key": "andrew.ochsner",
+            "emailAddress": "andrew.ochsner@wipro.com",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/c2e3878c3795ee6593eb8e1441681e0b?d=mm&s=48",
+              "24x24": "https://secure.gravatar.com/avatar/c2e3878c3795ee6593eb8e1441681e0b?d=mm&s=24",
+              "16x16": "https://secure.gravatar.com/avatar/c2e3878c3795ee6593eb8e1441681e0b?d=mm&s=16",
+              "32x32": "https://secure.gravatar.com/avatar/c2e3878c3795ee6593eb8e1441681e0b?d=mm&s=32"
+            },
+            "displayName": "Andrew Ochsner",
+            "active": true,
+            "timeZone": "America/Chicago"
+          },
+          "created": "2016-11-04T13:07:07.540-0600",
+          "items": [
+              {
+                "field": "resolution",
+                "fieldtype": "jira",
+                "from": "10000",
+                "fromString": "Done",
+                "to": null,
+                "toString": null
+              }
+          ]
+        },
+        {
+          "id": "46405",
+          "author": {
+            "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=andrew.ochsner",
+            "name": "andrew.ochsner",
+            "key": "andrew.ochsner",
+            "emailAddress": "andrew.ochsner@wipro.com",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/c2e3878c3795ee6593eb8e1441681e0b?d=mm&s=48",
+              "24x24": "https://secure.gravatar.com/avatar/c2e3878c3795ee6593eb8e1441681e0b?d=mm&s=24",
+              "16x16": "https://secure.gravatar.com/avatar/c2e3878c3795ee6593eb8e1441681e0b?d=mm&s=16",
+              "32x32": "https://secure.gravatar.com/avatar/c2e3878c3795ee6593eb8e1441681e0b?d=mm&s=32"
+            },
+            "displayName": "Andrew Ochsner",
+            "active": true,
+            "timeZone": "America/Chicago"
+          },
+          "created": "2016-11-09T07:49:44.193-0700",
+          "items": [
+              {
+                "field": "resolution",
+                "fieldtype": "jira",
+                "from": null,
+                "fromString": null,
+                "to": "10000",
+                "toString": "Done"
+              }
+          ]
+        },
+        {
+          "id": "48830",
+          "author": {
+            "self": "https://digitalrig.atlassian.net/rest/api/2/user?username=digitalrig",
+            "name": "digitalrig",
+            "key": "digitalrig",
+            "emailAddress": "paul.karsten@wipro.com",
+            "avatarUrls": {
+              "48x48": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=48",
+              "24x24": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=24",
+              "16x16": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=16",
+              "32x32": "https://secure.gravatar.com/avatar/886f42fb26825693a4c0fcf96ba08ed0?d=mm&s=32"
+            },
+            "displayName": "Paul Karsten [Administrator]",
+            "active": true,
+            "timeZone": "America/Denver"
+          },
+          "created": "2016-12-12T15:09:30.696-0700",
+          "items": [
+              {
+                "field": "Fix Version",
+                "fieldtype": "jira",
+                "from": null,
+                "fromString": null,
+                "to": "12100",
+                "toString": "1.5"
+              }
+          ]
         }
+      ]
+    },
+    "fields": {
+      "summary": "Show a history of changes to a twiglet",
+      "issuetype": {
+        "self": "https://digitalrig.atlassian.net/rest/api/2/issuetype/10001",
+        "id": "10001",
+        "description": "A user story. Created by JIRA Software - do not edit or delete.",
+        "iconUrl": "https://digitalrig.atlassian.net/secure/viewavatar?size=xsmall&avatarId=10315&avatarType=issuetype",
+        "name": "Story",
+        "subtask": false,
+        "avatarId": 10315
+      },
+      "updated": "2016-12-12T15:09:30.000-0700",
+      "created": "2016-05-20T09:19:51.000-0600",
+      "status": {
+        "self": "https://digitalrig.atlassian.net/rest/api/2/status/10002",
+        "description": "Issues can only move to done after they've been tested",
+        "iconUrl": "https://digitalrig.atlassian.net/images/icons/subtask.gif",
+        "name": "Done",
+        "id": "10002",
+        "statusCategory": {
+          "self": "https://digitalrig.atlassian.net/rest/api/2/statuscategory/3",
+          "id": 3,
+          "key": "done",
+          "colorName": "green",
+          "name": "Done"
+        }
+      }
     }
   };
 
@@ -237,32 +513,47 @@ const DEMANDINFO = {
   flow: [{name: 'Backlog'}]};
 
 const EXPECTEDCOMMON = [
-  { _id: '16204',
-    uri: 'https://digitalrig.atlassian.net/rest/api/latest/issue/16204',
+  { _id: '18020',
+    uri: 'https://digitalrig.atlassian.net/rest/api/latest/issue/18020',
       history:[
-        {statusValue: 'Backlog', startDate: '2016-03-22T02:46:19.000-0600', changeDate: '2016-03-22T04:40:55.652-0600'},
-        {statusValue: 'UX Review', startDate: '2016-03-22T04:40:55.652-0600', changeDate: '2016-03-22T23:27:04.360-0600'},
-        {statusValue: 'In Progress', startDate: '2016-03-22T23:27:04.360-0600', changeDate: '2016-03-24T03:39:03.178-0600'},
-        {statusValue: 'UX Review', startDate: '2016-03-24T03:39:03.178-0600', changeDate: null} ]
-  }
-];
+        {statusValue: 'Backlog', startDate: '2016-05-20T09:19:51.000-0600', changeDate: '2016-05-20T14:18:35.251-0600'},
+        {statusValue: 'Selected for development', startDate: '2016-05-20T14:18:35.251-0600', changeDate: '2016-05-26T07:20:52.350-0600'},
+        {statusValue: 'Backlog', startDate: '2016-05-26T07:20:52.350-0600', changeDate: '2016-09-28T13:53:21.498-0600'},
+        {statusValue: 'Selected for development', startDate: '2016-09-28T13:53:21.498-0600', changeDate: '2016-09-28T13:53:24.787-0600'},
+        {statusValue: 'In Progress', startDate: '2016-09-28T13:53:24.787-0600', changeDate: '2016-11-04T13:06:55.686-0600'},
+        {statusValue: 'Done', startDate: '2016-11-04T13:06:55.686-0600', changeDate: '2016-11-04T13:07:07.540-0600'},
+        {statusValue: 'In Progress', startDate: '2016-11-04T13:07:07.540-0600', changeDate: '2016-11-09T07:49:44.193-0700'},
+        {statusValue: 'Done', startDate: '2016-11-09T07:49:44.193-0700', changeDate: '2016-12-12T15:09:30.696-0700'},
+        {statusValue: 'Fix Version-1.5', startDate: '2016-12-12T15:09:30.696-0700', changeDate: null} ]
+  }];
 
 const CODENOTFOUND = 404;
 const MESSAGENOTFOUND = 'There Be Dragons';
 const ERRORRESULT = {statusCode: CODENOTFOUND, statusMessage: MESSAGENOTFOUND};
 const SINCETIME = '2000-01-01+00:00';
 
-describe('Test Fixing of Jira History', function() {
+describe('test/testJiraDemand - Test processing History Data', function() {
 
-    it('Convert Jira Object', function(done) {
+    it('remove the history array add _id', function(done) {
       var fixedStory = jira.fixHistoryData([RAWJIRASTORY]);
 
       Should(fixedStory[0].changelog.histories[0].items).not.Array();
+      Should(fixedStory[0]).have.property('_id');
+      done();
+    });
+
+    it('convert Jira issue to common format', function(done) {
+      var commonDataFormat = jira.transformRawToCommon([RAWJIRASTORY], DEMANDINFO);
+      Should(commonDataFormat).match(EXPECTEDCOMMON);
       done();
     });
 });
 
-describe('Empty result from Jira test', function() {
+describe('test/testJiraDemand - Test creating common demand format from a Jira issue', function() {
+
+});
+
+describe('test/testJiraDemand - Correclty process an empty response from Jira', function() {
   var jiraResponse = {};
 
   beforeEach(function() {
@@ -286,7 +577,7 @@ describe('Empty result from Jira test', function() {
   });
 });
 
-describe('Test getting all of the stories in a single request. ', function() {
+describe('test/testJiraDemand - Test getting all of the stories in a single request. ', function() {
   var jiraResponse = {};
 
   beforeEach(function() {
@@ -298,7 +589,7 @@ describe('Test getting all of the stories in a single request. ', function() {
     Rest.get.restore();
   })
 
-  it('Test Getting an empty set of Jira Issues', function() {
+  it('Test Getting an single set of Jira Issues', function() {
     Rest.get.returns({
       on:Sinon.stub().yields(SINGLEJIRARESPOSE, jiraResponse)
     });
@@ -310,18 +601,7 @@ describe('Test getting all of the stories in a single request. ', function() {
   });
 });
 
-
-describe('Test creating common demand format from Jira issues ', function() {
-
-  it('Convert Jira Object', function(done) {
-    var commonDataFormat = jira.transformRawToCommon([RAWJIRASTORY], DEMANDINFO);
-
-    Should(commonDataFormat).match(EXPECTEDCOMMON);
-    done();
-  });
-});
-
-describe('Jira GetRawData - fail getting stories', function() {
+describe('test/testJiraDemand - Jira GetRawData - Test error paths retriving issues', function() {
   var aSetOfInfo = {};
 
   beforeEach(function() {

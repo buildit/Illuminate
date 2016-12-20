@@ -69,12 +69,9 @@ const isOverrideEvent = (queryParm) => R.not(R.isNil(queryParm)) && R.equals(R.t
 
 exports.createNewEvent = function (req, res) {
   var projectName = decodeURIComponent(req.params.name);
-  logger.info(`createNewEvent for ${projectName}`);
+  logger.info(`createNewEvent for ${projectName} params:[${req.query}]`);
   var aNewEvent = {};
   var overrideOpenEvent = false;
-
-  logger.debug('req.query');
-  logger.debug(req.query);
 
   if (isOverrideEvent(req.query.override)) {
     logger.debug(`Forced override of event creation request.`);

@@ -54,20 +54,28 @@ exports.transformCommonToSummary = function(commonData, processingInstructions) 
 
   var datedData = [];
 
-  commonData.forEach(function (storySummary) {
-    storySummary.history.forEach(function (aStatusChange) {
-      var endDate = (R.isNil(aStatusChange.changeDate)) ? processingInstructions.endDate : aStatusChange.changeDate;
-      var daysDifference = utils.createDayArray(aStatusChange.startDate, endDate);
-      for (var i = 0; i < daysDifference.length; i++) {
-        if (!(daysDifference[i] in datedData)) {
-          datedData.push(daysDifference[i]);
-          datedData[daysDifference[i]] = {};
+  commonData.forEach(function (aHistoryItem) {
+    aHistoryItem.history.forEach(function (aStatusChange) {
+      if (!aStatusChange.statusValue.startsWith(constants.JIRARELEASEFIELD)) {
+        var endDate = (R.isNil(aStatusChange.changeDate)) ? processingInstructions.endDate : aStatusChange.changeDate;
+        var daysDifference = utils.createDayArray(aStatusChange.startDate, endDate);
+
+        logger.debug('*****');
+        logger.debug(`A Status Change ${JSON.stringify(aStatusChange)}`);
+        logger.debug(`daysDifference ${JSON.stringify(daysDifference)}`);
+        logger.debug('*****');
+
+        for (var i = 0; i < daysDifference.length; i++) {
+          if (!(daysDifference[i] in datedData)) {
+            datedData.push(daysDifference[i]);
+            datedData[daysDifference[i]] = {};
+          }
+          var temp = datedData[daysDifference[i]];
+          if (!(aStatusChange.statusValue in temp)) {
+            temp[aStatusChange.statusValue] = 0;
+          }
+          temp[aStatusChange.statusValue]++;
         }
-        var temp = datedData[daysDifference[i]];
-        if (!(aStatusChange.statusValue in temp)) {
-          temp[aStatusChange.statusValue] = 0;
-        }
-        temp[aStatusChange.statusValue]++;
       }
     });
   });
