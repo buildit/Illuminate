@@ -28,7 +28,6 @@ exports.configureProcessingInstructions = function(processingInfo) {
   updatedInfo.commonLocation = constants.COMMONEFFORT;
   updatedInfo.summaryLocation = constants.SUMMARYEFFORT;
   updatedInfo.eventSection = constants.EFFORTSECTION;
-  logger.debug(`configured effort proceessing info ${JSON.stringify(updatedInfo)}`);
   return updatedInfo;
 }
 

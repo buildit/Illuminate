@@ -6,19 +6,20 @@ const constants = require('../../util/constants');
 const Log4js = require('log4js');
 const Moment = require('moment');
 const MongoClient = require('mongodb');
+const R = require('ramda');
 
 Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
 logger.setLevel(Config.get('log-level'));
 
-exportConstant('COMMONEFFORT', 'commonEffort');
-exportConstant('SUMMARYEFFORT', 'dailyEffortSummary');
+var connectionPool = [];
 
-function exportConstant (name, value) {
-    Object.defineProperty(exports, name, {
-        value:      value,
-        enumerable: true
-    });
+function getDBConnection(path) {
+  return connectionPool[path];
+}
+
+function setDBConnection(path, db) {
+  return connectionPool[path] = db;
 }
 
 /* eslint-disable no-unused-vars */
@@ -58,14 +59,18 @@ exports.upsertData = function (projectPath, collectionName, documentToStore) {
 
   return new Promise(function (resolve, reject) {
     CO(function*() {
-      var db = yield MongoClient.connect(projectPath);
+      var db = getDBConnection(projectPath);
+      if (R.isNil(db)) {
+        db = yield MongoClient.connect(projectPath);
+        setDBConnection(projectPath, db);
+      }
       var col = db.collection(collectionName);
 
       documentToStore.forEach(function(anEntry) {
         col.findOneAndReplace({_id: anEntry._id}, anEntry, {upsert: true});
       });
       var result = yield col.find().toArray();
-      db.close();
+      // db.close();
       resolve (result);
     }).catch(function(err) {
       logger.error(err);
@@ -79,10 +84,14 @@ exports.insertData = function (projectPath, collectionName, documentToStore) {
 
   return new Promise(function (resolve, reject) {
     CO(function*() {
-      var db = yield MongoClient.connect(projectPath);
+      var db = getDBConnection(projectPath);
+      if (R.isNil(db)) {
+        db = yield MongoClient.connect(projectPath);
+        setDBConnection(projectPath, db);
+      }
       var col = db.collection(collectionName);
       var response = col.insertMany(documentToStore);
-      db.close();
+      // db.close();
       resolve (response);
     }).catch(function(err) {
       logger.error(err);
@@ -96,10 +105,14 @@ exports.getAllData = function (projectPath, collectionName) {
 
   return new Promise(function (resolve, reject) {
     CO(function*() {
-      var db = yield MongoClient.connect(projectPath);
+      var db = getDBConnection(projectPath);
+      if (R.isNil(db)) {
+        db = yield MongoClient.connect(projectPath);
+        setDBConnection(projectPath, db);
+      }
       var col = db.collection(collectionName);
       var result = yield col.find().toArray();
-      db.close();
+      // db.close();
       resolve (result);
     }).catch(function(err) {
       logger.error(err);
@@ -113,10 +126,14 @@ exports.getDocumentByName = function (projectPath, collectionName, aName) {
 
   return new Promise(function (resolve, reject) {
     CO(function*() {
-      var db = yield MongoClient.connect(projectPath);
+      var db = getDBConnection(projectPath);
+      if (R.isNil(db)) {
+        db = yield MongoClient.connect(projectPath);
+        setDBConnection(projectPath, db);
+      }
       var col = db.collection(collectionName);
       var result = yield col.find({name: aName}).toArray();
-      db.close();
+      // db.close();
       resolve (result[0]);
     }).catch(function(err) {
       logger.error(err);
@@ -130,10 +147,14 @@ exports.getDocumentByID = function (projectPath, collectionName, anID) {
 
   return new Promise(function (resolve, reject) {
     CO(function*() {
-      var db = yield MongoClient.connect(projectPath);
+      var db = getDBConnection(projectPath);
+      if (R.isNil(db)) {
+        db = yield MongoClient.connect(projectPath);
+        setDBConnection(projectPath, db);
+      }
       var col = db.collection(collectionName);
       var result = yield col.find({_id: anID}).toArray();
-      db.close();
+      // db.close();
       resolve (result[0]);
     }).catch(function(err) {
       logger.error(err);
@@ -147,10 +168,14 @@ exports.clearData = function (projectPath, collectionName) {
 
   return new Promise(function (resolve, reject) {
     CO(function*() {
-      var db = yield MongoClient.connect(projectPath);
+      var db = getDBConnection(projectPath);
+      if (R.isNil(db)) {
+        db = yield MongoClient.connect(projectPath);
+        setDBConnection(projectPath, db);
+      }
       var col = db.collection(collectionName);
       var result = yield col.deleteMany();
-      db.close();
+      // db.close();
       resolve (result);
     }).catch(function(err) {
       reject (err);
@@ -167,9 +192,10 @@ exports.wipeAndStoreData = function (projectPath, aCollection, documentToStore) 
         module.exports.insertData(projectPath, aCollection, documentToStore)
         .then(function (response2) {
           resolve(response2);
-        })
-      })
-      .catch(function (reason) {
+        }).catch(function (reason) {
+          reject(reason);
+        });
+      }).catch(function (reason) {
         reject(reason);
       });
   });
@@ -192,7 +218,8 @@ exports.processEventData = function (projectPath, collectionName, eventInfo, sec
     CO(function*() {
       var result = null;
 
-      var db = yield MongoClient.connect(projectPath);
+      // var db = yield MongoClient.connect(projectPath);
+      var db = getDBConnection(projectPath);
       var col = db.collection(collectionName);
       var options = {returnOriginal: false, upsert: true};
       if (sectionName === undefined || sectionName === null) {
@@ -219,7 +246,7 @@ exports.processEventData = function (projectPath, collectionName, eventInfo, sec
             options);
         }
       }
-      db.close();
+      // db.close();
       resolve ();
     }).catch(function(err) {
       logger.error(err);

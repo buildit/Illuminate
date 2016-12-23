@@ -29,7 +29,6 @@ exports.configureProcessingInstructions = function(processingInfo) {
   updatedInfo.commonLocation = constants.COMMONDEMAND;
   updatedInfo.summaryLocation = constants.SUMMARYDEMAND;
   updatedInfo.eventSection = constants.DEMANDSECTION;
-  logger.debug(`configured demand proceessing info ${JSON.stringify(updatedInfo)}`);
   return updatedInfo;
 }
 
@@ -59,11 +58,6 @@ exports.transformCommonToSummary = function(commonData, processingInstructions) 
       if (!aStatusChange.statusValue.startsWith(constants.JIRARELEASEFIELD)) {
         var endDate = (R.isNil(aStatusChange.changeDate)) ? processingInstructions.endDate : aStatusChange.changeDate;
         var daysDifference = utils.createDayArray(aStatusChange.startDate, endDate);
-
-        logger.debug('*****');
-        logger.debug(`A Status Change ${JSON.stringify(aStatusChange)}`);
-        logger.debug(`daysDifference ${JSON.stringify(daysDifference)}`);
-        logger.debug('*****');
 
         for (var i = 0; i < daysDifference.length; i++) {
           if (!(daysDifference[i] in datedData)) {

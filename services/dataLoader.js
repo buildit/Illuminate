@@ -90,10 +90,8 @@ function determineProjectEndDate(aProject) {
 
 function getMeRawData(aProjectSystem, anEvent, processingInstructions) {
   if (anEvent.type === constants.REPROCESSEVENT) {
-    logger.debug('*****');
     return dataStore.getAllData(processingInstructions.dbUrl, processingInstructions.rawLocation)
   } else {
-    logger.debug('@@@@@');
     return processingInstructions.sourceSystem.loadRawData(aProjectSystem, processingInstructions, anEvent.since)
   }
 }
@@ -133,6 +131,7 @@ exports.processProjectSystem = function (loaderClass, aProjectSystem, anEvent, p
                 });
             }).catch(function(err) {
               logger.debug('processProjectSystem -> ERROR Common Data');
+              logger.debug(err);
               resolve (new utils.SystemEvent(constants.FAILEDEVENT, JSON.stringify(err)));
             });
         }
