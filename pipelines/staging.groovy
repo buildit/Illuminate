@@ -82,15 +82,15 @@ node {
         writeFile(file: tmpFile, text: ymlData)
 
         sh "convox login ${env.CONVOX_RACKNAME} --password ${env.CONVOX_PASSWORD}"
-        convoxInst.ensureApplicationCreated("${appName}-stage")
-        sh "convox env set NODE_ENV=staging --app ${appName}-stage"
-        sh "convox deploy --app ${appName}-stage --description '${tag}' --file ${tmpFile} --wait"
+        convoxInst.ensureApplicationCreated("${appName}-stag")
+        sh "convox env set NODE_ENV=staging --app ${appName}-stag"
+        sh "convox deploy --app ${appName}-stag --description '${tag}' --file ${tmpFile} --wait"
       }
 
       stage ('Run Functional Acceptance Tests') {
         // wait until the app is deployed
-        convoxInst.waitUntilDeployed("${appName}-stage")
-        convoxInst.ensureSecurityGroupSet("${appName}-stage", env.CONVOX_SECURITYGROUP)
+        convoxInst.waitUntilDeployed("${appName}-stag")
+        convoxInst.ensureSecurityGroupSet("${appName}-stag", env.CONVOX_SECURITYGROUP)
         sh "DB_URL='${mongoUrl}' CONTEXT='acceptance' SERVER_URL='${serverUrl}' SERVER_PORT='${serverPort}' LOG_LEVEL='DEBUG' npm run genConfig"
         sh "NODE_ENV='acceptance' npm run accept"
       }
