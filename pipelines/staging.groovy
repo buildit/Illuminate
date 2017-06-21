@@ -33,7 +33,7 @@ node {
 
         // global for exception handling
         slackChannel = "synapse"
-        gitUrl = "https://bitbucket.org/digitalrigbitbucketteam/${appName}"
+        gitUrl = "https://github.com/buildit/${appName}"
         appUrl = "http://${appName}.staging.${domainName}"
       }
 

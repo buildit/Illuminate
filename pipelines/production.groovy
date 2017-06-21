@@ -27,7 +27,7 @@ node {
 
       // global for exception handling
       slackChannel = "synapse"
-      gitUrl = "https://bitbucket.org/digitalrigbitbucketteam/${appName}"
+      gitUrl = "https://github.com/buildit/${appName}"
       appUrl = "http://${appName}.${domainName}"
     }
 
@@ -42,6 +42,7 @@ node {
 
     stage ('Deploy to production') {
       sh "convox login ${env.CONVOX_RACKNAME} --password ${env.CONVOX_PASSWORD}"
+      convoxInst.ensureApplicationCreated("${appName}")
       sh "convox env set NODE_ENV=production --app ${appName}"
       sh "convox deploy --app ${appName} --description '${tag}' --file ${tmpFile} --wait"
       sh "rm ${tmpFile}"
