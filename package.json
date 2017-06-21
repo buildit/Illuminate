@@ -11,7 +11,7 @@
     "package": "echo '=> packaging for deployment' && gulp package",
     "security": "echo '=> nsp testing' && nsp check --output summary",
     "test": "echo '=> testing' && nyc mocha test -R spec",
-    "validate": "echo '=> validating Eolas' && npm run lint && npm run test && npm run security",
+    "validate": "echo '=> validating Illuminate' && npm run lint && npm run test && npm run security",
     "preversion": "npm run validate",
     "version": "git add -A",
     "postversion": "git push && git push --tags"
