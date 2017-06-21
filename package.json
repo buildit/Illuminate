@@ -1,6 +1,6 @@
 {
   "name": "illuminate",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "REST Services in support of the Buildit MI data tools",
   "main": "index.js",
   "scripts": {
