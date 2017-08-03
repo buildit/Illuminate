@@ -1,7 +1,11 @@
 const demandVsProjected = require('./demandVsProjected');
 
-module.exports = (project, projectPath) => {
+module.exports = {
+  getStatuses(project, projectPath) {
     const ragStatusIndicators = [];
     ragStatusIndicators.push(demandVsProjected(project, projectPath));
-    return Promise.all(ragStatusIndicators);
-}
+    return Promise.all(ragStatusIndicators).then(ragStatuses => {
+      return ragStatuses.filter(ragStatus => ragStatus);
+    });
+  },
+};

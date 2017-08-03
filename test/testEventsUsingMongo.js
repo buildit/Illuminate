@@ -46,6 +46,7 @@ describe('Create an Event and then update the event and make sure the event is c
   var url = '';
   var anEvent = {};
   var aSystemEvent = {};
+  const aProject = { _id: 'some project id' };
 
   before('setup', function () {
       url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
@@ -69,7 +70,7 @@ describe('Create an Event and then update the event and make sure the event is c
   });
 
   it('Update Event', function() {
-    return mongoDB.processEventData(url, constants.EVENTCOLLECTION, anEvent, constants.EFFORTSECTION, aSystemEvent)
+    return mongoDB.processEventData(url, constants.EVENTCOLLECTION, anEvent, constants.EFFORTSECTION, aSystemEvent, aProject)
     .then ( function() {
       return mongoDB.getDocumentByID(url, constants.EVENTCOLLECTION, anEvent._id)
       .then ( function(readData) {
@@ -86,11 +87,11 @@ describe('Create an Event and then update the event and make sure the event is c
   });
 });
 
-
 describe('Create an Event and then update the event and make sure the event is completed as failure', function() {
   var url = '';
   var anEvent = {};
   var aSystemEvent = {};
+  const aProject = {};
 
   before('setup', function () {
       url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
@@ -114,7 +115,7 @@ describe('Create an Event and then update the event and make sure the event is c
   });
 
   it('Update Event', function() {
-    return mongoDB.processEventData(url, constants.EVENTCOLLECTION, anEvent, constants.EFFORTSECTION, aSystemEvent)
+    return mongoDB.processEventData(url, constants.EVENTCOLLECTION, anEvent, constants.EFFORTSECTION, aSystemEvent, aProject)
     .then ( function() {
       return mongoDB.getDocumentByID(url, constants.EVENTCOLLECTION, anEvent._id)
       .then ( function(readData) {
@@ -136,6 +137,7 @@ describe('Create an Event with multiple updates and  make sure the event is comp
   var url = '';
   var anEvent = {};
   var aSystemEvent = {};
+  const aProject = {};
 
   before('setup', function () {
       url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
@@ -160,7 +162,7 @@ describe('Create an Event with multiple updates and  make sure the event is comp
   });
 
   it('Update Effort - should not be complete', function() {
-    return mongoDB.processEventData(url, constants.EVENTCOLLECTION, anEvent, constants.EFFORTSECTION, aSystemEvent)
+    return mongoDB.processEventData(url, constants.EVENTCOLLECTION, anEvent, constants.EFFORTSECTION, aSystemEvent, aProject)
     .then ( function() {
       return mongoDB.getDocumentByID(url, constants.EVENTCOLLECTION, anEvent._id)
       .then ( function(readData) {
@@ -173,7 +175,7 @@ describe('Create an Event with multiple updates and  make sure the event is comp
   });
 
   it('Update Demand - should now be complete', function() {
-    return mongoDB.processEventData(url, constants.EVENTCOLLECTION, anEvent, constants.DEMANDSECTION, aSystemEvent)
+    return mongoDB.processEventData(url, constants.EVENTCOLLECTION, anEvent, constants.DEMANDSECTION, aSystemEvent, aProject)
     .then ( function() {
       return mongoDB.getDocumentByID(url, constants.EVENTCOLLECTION, anEvent._id)
       .then ( function(readData) {

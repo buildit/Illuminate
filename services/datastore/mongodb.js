@@ -236,7 +236,7 @@ exports.processEventData = function (projectPath, collectionName, eventInfo, sec
           logger.debug('EVENT COMPLETE');
           tmpObj.endTime = Moment.utc().format();
           if (wasCompletedSuccessfully(tmpObj)) {
-            const ragStatuses = yield ragStatusIndicators(project, projectPath);
+            const ragStatuses = yield ragStatusIndicators.getStatuses(project, projectPath);
             try {
               yield updateRagStatus(project, projectPath, ragStatuses);
               logger.debug('EVENT COMPLETE SUCCESSFULLY');
@@ -267,13 +267,19 @@ function updateRagStatus(project, projectPath, ragStatuses) {
   function checkStatus(status) {
     return (ragStatus) => ragStatus.ragStatus === status;
   }
-  let color = constants.RAGOK;
-  if (ragStatuses.some(checkStatus(constants.RAGERROR))) {
-    color = constants.RAGERROR
-  } else if (ragStatuses.some(checkStatus(constants.RAGWARNING))) {
-    color = constants.RAGWARNING;
+  if (ragStatuses.length > 0) {
+    let color = constants.RAGOK;
+    if (ragStatuses.some(checkStatus(constants.RAGERROR))) {
+      color = constants.RAGERROR
+    } else if (ragStatuses.some(checkStatus(constants.RAGWARNING))) {
+      color = constants.RAGWARNING;
+    }
+    project.ragStatus = color;
+    return module.exports.upsertData(utils.dbCorePath(), constants.PROJECTCOLLECTION, [project])
+    .then(() => module.exports.wipeAndStoreData(projectPath, constants.RAGCOLLECTION, ragStatuses))
+    .catch(error => logger.error(error));
+  } else {
+    return Promise.resolve();
   }
-  project.ragStatus = color;
-  return module.exports.upsertData(utils.dbCorePath(), constants.PROJECTCOLLECTION, [project])
-  .then(() => module.exports.wipeAndStoreData(projectPath, constants.RAGCOLLECTION, ragStatuses));
+
 }

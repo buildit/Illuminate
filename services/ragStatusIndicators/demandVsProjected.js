@@ -5,9 +5,14 @@ const constants = require('../../util/constants');
 module.exports = (project, projectPath) => {
   return dataStore.getAllData(projectPath, constants.SUMMARYDEMAND)
   .then(demand => {
+    if (demand.length === 0) {
+      return undefined;
+    }
     const value = demand
     .sort((a, b) => a.projectDate < b.projectDate ? -1 : 1)
-    .reduce((finalDone, summary) => summary.status.Done);
+    .reduce((finalDone, summary) => summary.status.Done, undefined);
+
+    const safeValue = value ? value : 0;
 
     const target = getTodaysStoryTarget(project);
     const returner = {
@@ -15,15 +20,15 @@ module.exports = (project, projectPath) => {
       target,
       value,
     };
-    if (value < target) {
+    if (safeValue < target) {
       returner.ragStatus = constants.RAGERROR;
-    } else if (value > target) {
+    } else if (safeValue > target) {
       returner.ragStatus = constants.RAGOK;
     } else {
       returner.ragStatus = constants.RAGWARNING;
     }
     return returner;
-  })
+  });
 }
 
 function getTodaysStoryTarget ({ projection }) {
@@ -74,7 +79,6 @@ function getTodaysStoryTarget ({ projection }) {
     const b = y - m * x;
     return Math.floor(m * day + b);
   }
-
   if (dayNumber <= dailyStartLength) {
     return startPiece(dayNumber);
   }
