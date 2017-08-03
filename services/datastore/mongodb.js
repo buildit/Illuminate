@@ -3,10 +3,12 @@
 const CO = require('co');
 const Config = require('config');
 const constants = require('../../util/constants');
+const utils = require('../../util/utils');
 const Log4js = require('log4js');
 const Moment = require('moment');
 const MongoClient = require('mongodb');
 const R = require('ramda');
+const ragStatusIndicators = require('../ragStatusIndicators');
 
 Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
@@ -211,9 +213,8 @@ const wasCompletedSuccessfully = anEvent =>
   && (anEvent.defect === null || anEvent.defect.status === constants.SUCCESSEVENT)
   && (anEvent.effort === null || anEvent.effort.status === constants.SUCCESSEVENT));
 
-exports.processEventData = function (projectPath, collectionName, eventInfo, sectionName, documentToStore) {
+exports.processEventData = function (projectPath, collectionName, eventInfo, sectionName, documentToStore, project) {
   logger.info(`PROCESS EVENT ${eventInfo} for section ${sectionName} in [${collectionName}] at URL ${projectPath}`);
-
   return new Promise(function (resolve, reject) {
     CO(function*() {
       var result = null;
@@ -235,8 +236,15 @@ exports.processEventData = function (projectPath, collectionName, eventInfo, sec
           logger.debug('EVENT COMPLETE');
           tmpObj.endTime = Moment.utc().format();
           if (wasCompletedSuccessfully(tmpObj)) {
-            logger.debug('EVENT COMPLETE SUCCESSFULLY');
-            tmpObj.status = constants.SUCCESSEVENT;
+            const ragStatuses = yield ragStatusIndicators(project, projectPath);
+            try {
+              yield updateRagStatus(project, projectPath, ragStatuses);
+              logger.debug('EVENT COMPLETE SUCCESSFULLY');
+              tmpObj.status = constants.SUCCESSEVENT;
+            } catch (error) {
+              logger.debug('EVENT COMPLETE in ERROR');
+              tmpObj.status = constants.FAILEDEVENT;
+            }
           } else {
             logger.debug('EVENT COMPLETE in ERROR');
             tmpObj.status = constants.FAILEDEVENT;
@@ -253,4 +261,19 @@ exports.processEventData = function (projectPath, collectionName, eventInfo, sec
       reject (err);
     });
   });
+}
+
+function updateRagStatus(project, projectPath, ragStatuses) {
+  function checkStatus(status) {
+    return (ragStatus) => ragStatus.ragStatus === status;
+  }
+  let color = constants.RAGOK;
+  if (ragStatuses.some(checkStatus(constants.RAGERROR))) {
+    color = constants.RAGERROR
+  } else if (ragStatuses.some(checkStatus(constants.RAGWARNING))) {
+    color = constants.RAGWARNING;
+  }
+  project.ragStatus = color;
+  return module.exports.upsertData(utils.dbCorePath(), constants.PROJECTCOLLECTION, [project])
+  .then(() => module.exports.wipeAndStoreData(projectPath, constants.RAGCOLLECTION, ragStatuses));
 }

@@ -38,7 +38,8 @@ exports.processProjectData = function (aProject, anEvent) {
         constants.EVENTCOLLECTION,
         anEvent,
         demandInstructions.eventSection,
-        aDemandEvent);
+        aDemandEvent,
+        aProject);
     });
   }
 
@@ -53,7 +54,8 @@ exports.processProjectData = function (aProject, anEvent) {
         constants.EVENTCOLLECTION,
         anEvent,
         defectInstructions.eventSection,
-        aDefectEvent);
+        aDefectEvent,
+        aProject);
     });
   }
 
@@ -67,7 +69,8 @@ exports.processProjectData = function (aProject, anEvent) {
         constants.EVENTCOLLECTION,
         anEvent,
         effortInstructions.eventSection,
-        anEffortEvent);
+        anEffortEvent,
+        aProject);
     });
   }
 }
@@ -141,3 +144,4 @@ exports.processProjectSystem = function (loaderClass, aProjectSystem, anEvent, p
       });
   });
 };
+

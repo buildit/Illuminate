@@ -2,6 +2,7 @@
 
 exportConstant('PROJECTCOLLECTION', 'project');
 exportConstant('EVENTCOLLECTION', 'loadEvents');
+exportConstant('RAGCOLLECTION', 'ragStatuses');
 
 exportConstant('SUCCESSEVENT', 'COMPLETED SUCCESSFULLY');
 exportConstant('FAILEDEVENT', 'FAILED');
@@ -33,6 +34,10 @@ exportConstant('DEFAULTSTARTDATE', '2000-01-01');
 exportConstant('JIRADEMANDTYPE', 'Story');
 exportConstant('JIRADEFECTTYPE', 'Bug');
 exportConstant('JIRARELEASEFIELD', 'Fix Version');
+
+exportConstant('RAGOK', 'green');
+exportConstant('RAGWARNING', 'amber');
+exportConstant('RAGERROR', 'red');
 
 exportConstant('DEFAULTDEFECTINITIALSTATE', 'Created');
 exportConstant('DEFAULTDEFECTRESOLVEDSTATE', 'Closed');
