@@ -1,12 +1,12 @@
 {
    "datastore": {
       "dbUrl": "mongodb://localhost:27017",
-      "context": "production",
+      "context": "development",
       "rootDB": "buildit"
    },
    "server": {
       "url": "localhost",
       "port": 7565
    },
-   "log-level": "WARN"
+   "log-level": "DEBUG"
 }
