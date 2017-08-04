@@ -236,7 +236,6 @@ exports.processEventData = function (projectPath, collectionName, eventInfo, sec
         result = yield col.findOneAndUpdate({_id: eventInfo._id}, setModifier, options);
         var tmpObj = result.value;
 
-
         if (eventIsComplete(tmpObj)) {
           logger.debug('EVENT COMPLETE');
           tmpObj.endTime = Moment.utc().format();
