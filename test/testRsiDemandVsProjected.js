@@ -7,7 +7,7 @@ const utils = require('../util/utils');
 const CO = require('co');
 const Should = require('should');
 
-describe('Rag Status Indicators', () => {
+describe('Rag Status Indicators - Demand Vs Projected', () => {
   const url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
   const name = 'Demand vs. Projected';
 
@@ -17,7 +17,7 @@ describe('Rag Status Indicators', () => {
     it('returns red when under the curve', () => {
       return CO(function* foo() {
         yield insertDemandSpecificDoneCountOf(expectedComplete  - 1);
-        const result = yield demandVsProjected(createProjectStartingWeeksAgo(week), url);
+        const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week), url);
         Should(result).match(expected(name, expectedComplete, expectedComplete - 1, constants.RAGERROR));
       });
     });
@@ -25,7 +25,7 @@ describe('Rag Status Indicators', () => {
     it('returns amber when right on the curve', () => {
       return CO(function* foo() {
         yield insertDemandSpecificDoneCountOf(expectedComplete);
-        const result = yield demandVsProjected(createProjectStartingWeeksAgo(week), url);
+        const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week), url);
         Should(result).match(expected(name, expectedComplete, expectedComplete, constants.RAGWARNING));
       });
     });
@@ -33,7 +33,7 @@ describe('Rag Status Indicators', () => {
     it('returns green when above the curve', () => {
       return CO(function* foo() {
         yield insertDemandSpecificDoneCountOf(expectedComplete + 1);
-        const result = yield demandVsProjected(createProjectStartingWeeksAgo(week), url);
+        const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week), url);
         Should(result).match(expected(name, expectedComplete, expectedComplete + 1, constants.RAGOK));
       });
     });
@@ -45,7 +45,7 @@ describe('Rag Status Indicators', () => {
     it('returns red when under the curve', () => {
       return CO(function* foo() {
         yield insertDemandSpecificDoneCountOf(expectedComplete  - 1);
-        const result = yield demandVsProjected(createProjectStartingWeeksAgo(week), url);
+        const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week), url);
         Should(result).match(expected(name, expectedComplete, expectedComplete - 1, constants.RAGERROR));
       });
     });
@@ -53,7 +53,7 @@ describe('Rag Status Indicators', () => {
     it('returns amber when right on the curve', () => {
       return CO(function* foo() {
         yield insertDemandSpecificDoneCountOf(expectedComplete);
-        const result = yield demandVsProjected(createProjectStartingWeeksAgo(week), url);
+        const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week), url);
         Should(result).match(expected(name, expectedComplete, expectedComplete, constants.RAGWARNING));
       });
     });
@@ -61,7 +61,7 @@ describe('Rag Status Indicators', () => {
     it('returns green when above the curve', () => {
       return CO(function* foo() {
         yield insertDemandSpecificDoneCountOf(expectedComplete + 1);
-        const result = yield demandVsProjected(createProjectStartingWeeksAgo(week), url);
+        const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week), url);
         Should(result).match(expected(name, expectedComplete, expectedComplete + 1, constants.RAGOK));
       });
     });
@@ -73,7 +73,7 @@ describe('Rag Status Indicators', () => {
     it('returns red when under the curve', () => {
       return CO(function* foo() {
         yield insertDemandSpecificDoneCountOf(expectedComplete  - 1);
-        const result = yield demandVsProjected(createProjectStartingWeeksAgo(week), url);
+        const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week), url);
         Should(result).match(expected(name, expectedComplete, expectedComplete - 1, constants.RAGERROR));
       });
     });
@@ -81,7 +81,7 @@ describe('Rag Status Indicators', () => {
     it('returns amber when right on the curve', () => {
       return CO(function* foo() {
         yield insertDemandSpecificDoneCountOf(expectedComplete);
-        const result = yield demandVsProjected(createProjectStartingWeeksAgo(week), url);
+        const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week), url);
         Should(result).match(expected(name, expectedComplete, expectedComplete, constants.RAGWARNING));
       });
     });
@@ -89,7 +89,7 @@ describe('Rag Status Indicators', () => {
     it('returns green when above the curve', () => {
       return CO(function* foo() {
         yield insertDemandSpecificDoneCountOf(expectedComplete + 1);
-        const result = yield demandVsProjected(createProjectStartingWeeksAgo(week), url);
+        const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week), url);
         Should(result).match(expected(name, expectedComplete, expectedComplete + 1, constants.RAGOK));
       });
     });

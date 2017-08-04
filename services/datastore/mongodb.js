@@ -221,6 +221,10 @@ exports.processEventData = function (projectPath, collectionName, eventInfo, sec
 
       // var db = yield MongoClient.connect(projectPath);
       var db = getDBConnection(projectPath);
+      if (R.isNil(db)) {
+        db = yield MongoClient.connect(projectPath);
+        setDBConnection(projectPath, db);
+      }
       var col = db.collection(collectionName);
       var options = {returnOriginal: false, upsert: true};
       if (sectionName === undefined || sectionName === null) {
@@ -231,6 +235,7 @@ exports.processEventData = function (projectPath, collectionName, eventInfo, sec
 
         result = yield col.findOneAndUpdate({_id: eventInfo._id}, setModifier, options);
         var tmpObj = result.value;
+
 
         if (eventIsComplete(tmpObj)) {
           logger.debug('EVENT COMPLETE');

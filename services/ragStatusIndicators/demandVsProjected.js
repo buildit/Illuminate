@@ -2,34 +2,36 @@ const moment = require('moment');
 const dataStore = require('../datastore/mongodb');
 const constants = require('../../util/constants');
 
-module.exports = (project, projectPath) => {
-  return dataStore.getAllData(projectPath, constants.SUMMARYDEMAND)
-  .then(demand => {
-    if (demand.length === 0) {
-      return undefined;
-    }
-    const value = demand
-    .sort((a, b) => a.projectDate < b.projectDate ? -1 : 1)
-    .reduce((finalDone, summary) => summary.status.Done, undefined);
+module.exports = {
+  evaluate(project, projectPath) {
+    return dataStore.getAllData(projectPath, constants.SUMMARYDEMAND)
+    .then(demand => {
+      if (demand.length === 0) {
+        return undefined;
+      }
+      const value = demand
+      .sort((a, b) => a.projectDate < b.projectDate ? -1 : 1)
+      .reduce((finalDone, summary) => summary.status.Done, undefined);
 
-    const safeValue = value ? value : 0;
+      const safeValue = value ? value : 0;
 
-    const target = getTodaysStoryTarget(project);
-    const returner = {
-      name: 'Demand vs. Projected',
-      target,
-      value,
-    };
-    if (safeValue < target) {
-      returner.ragStatus = constants.RAGERROR;
-    } else if (safeValue > target) {
-      returner.ragStatus = constants.RAGOK;
-    } else {
-      returner.ragStatus = constants.RAGWARNING;
-    }
-    return returner;
-  });
-}
+      const target = getTodaysStoryTarget(project);
+      const returner = {
+        name: 'Demand vs. Projected',
+        target,
+        value,
+      };
+      if (safeValue < target) {
+        returner.ragStatus = constants.RAGERROR;
+      } else if (safeValue > target) {
+        returner.ragStatus = constants.RAGOK;
+      } else {
+        returner.ragStatus = constants.RAGWARNING;
+      }
+      return returner;
+    });
+  }
+};
 
 function getTodaysStoryTarget ({ projection }) {
   const {

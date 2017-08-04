@@ -5,7 +5,9 @@ const mongoDB = require('../services/datastore/mongodb');
 const Should = require('should');
 const testConstants = require('./testConstants');
 const utils = require('../util/utils');
+const demandVsProjected = require('../services/ragStatusIndicators/demandVsProjected');
 
+const CO = require('co');
 const Config = require('config');
 const Log4js = require('log4js');
 
@@ -44,16 +46,16 @@ describe('Test Creation of Event', function() {
 
 describe('Create an Event and then update the event and make sure the event is completed as success', function() {
   var url = '';
-  var anEvent = {};
+  var anEvent = { };
   var aSystemEvent = {};
   const aProject = { _id: 'some project id' };
 
   before('setup', function () {
-      url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
-      anEvent = new utils.DataEvent(constants.LOADEVENT);
-      anEvent.status = constants.PENDINGEVENT;
-      anEvent.effort = {};
-      aSystemEvent = new utils.SystemEvent(constants.SUCCESSEVENT, "Message");
+    url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
+    anEvent = new utils.DataEvent(constants.LOADEVENT);
+    anEvent.status = constants.PENDINGEVENT;
+    anEvent.effort = {};
+    aSystemEvent = new utils.SystemEvent(constants.SUCCESSEVENT, "Message");
   });
 
   it('Create Event', function() {
@@ -87,9 +89,64 @@ describe('Create an Event and then update the event and make sure the event is c
   });
 });
 
+describe('Create an Event and make sure ragStatuses are updated', function() {
+  var url = '';
+  var anEvent = { demand: null, effect: null, effort: null };
+  var aSystemEvent = {};
+  const aProject = { _id: 'some project id' };
+  const expectedResult = [];
+
+  before('setup', function () {
+    return CO(function* foo() {
+      url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
+      anEvent = new utils.DataEvent(constants.LOADEVENT);
+      anEvent.status = constants.PENDINGEVENT;
+      anEvent.demand = null,
+      anEvent.effect = null,
+      anEvent.effort = {};
+      aSystemEvent = new utils.SystemEvent(constants.SUCCESSEVENT, "Message");
+      expectedResult.push(stubRsiResult(demandVsProjected, 'Demand vs. Projected', 100, 200, constants.RAGOK));
+      yield mongoDB.processEventData(url, constants.EVENTCOLLECTION, anEvent);
+      yield mongoDB.processEventData(url, constants.EVENTCOLLECTION, anEvent, constants.EFFORTSECTION, aSystemEvent, aProject); 
+    });
+  });
+
+  it('correctly stores the individual rsi results in the database', () => {
+    return CO(function* foo() {
+      const storedRsi = yield mongoDB.getAllData(url, constants.RAGCOLLECTION);
+      Should(storedRsi).match(expectedResult);
+    });
+  }) 
+
+  after('Delete the stuff you created', function() {
+    return CO(function* foo() {
+      restoreRsiStub(demandVsProjected);
+      yield mongoDB.clearData(url, constants.RAGCOLLECTION);
+      yield mongoDB.clearData(url, constants.EVENTCOLLECTION);
+    });
+  });
+
+  function stubRsiResult(rsiObject, name, target, value, ragStatus) {
+    const expected = {
+      name,
+      target,
+      value,
+      ragStatus,
+    }; 
+    rsiObject._evaluate = rsiObject.evaluate;
+    rsiObject.evaluate = () => Promise.resolve(expected);
+    return expected;
+  }
+
+  function restoreRsiStub(rsiObject) {
+    rsiObject.evaluate = rsiObject._evaluate;
+    delete rsiObject._evaluate;  
+  }
+});
+
 describe('Create an Event and then update the event and make sure the event is completed as failure', function() {
   var url = '';
-  var anEvent = {};
+  var anEvent = { demand: null, effect: null, effort: null };
   var aSystemEvent = {};
   const aProject = {};
 
@@ -135,7 +192,7 @@ describe('Create an Event and then update the event and make sure the event is c
 
 describe('Create an Event with multiple updates and  make sure the event is completed as success', function() {
   var url = '';
-  var anEvent = {};
+  var anEvent = { demand: null, effect: null, effort: null };
   var aSystemEvent = {};
   const aProject = {};
 
