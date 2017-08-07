@@ -2,6 +2,8 @@ const moment = require('moment');
 const dataStore = require('../datastore/mongodb');
 const constants = require('../../util/constants');
 
+const name = 'Demand vs Projected';
+
 module.exports = {
   evaluate(project, projectPath) {
     return dataStore.getAllData(projectPath, constants.SUMMARYDEMAND)
@@ -17,7 +19,7 @@ module.exports = {
 
       const target = getTodaysStoryTarget(project);
       const returner = {
-        name: 'Demand vs. Projected',
+        name,
         target,
         value,
       };

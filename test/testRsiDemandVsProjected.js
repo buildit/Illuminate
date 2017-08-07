@@ -9,7 +9,7 @@ const Should = require('should');
 
 describe('Rag Status Indicators - Demand Vs Projected', () => {
   const url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
-  const name = 'Demand vs. Projected';
+  const name = 'Demand vs Projected';
 
   describe('First Piece of S curve', () => {
     const week = 1;
