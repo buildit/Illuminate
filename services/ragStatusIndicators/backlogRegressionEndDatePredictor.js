@@ -39,8 +39,8 @@ module.exports = {
 
       const returner = {
         name,
-        target: project.endDate,
-        value: estimatedCompletionDate.format(dbDateFormat),
+        expected: project.endDate,
+        actual: estimatedCompletionDate.format(dbDateFormat),
       };
 
       if (estimatedCompletionDate.isAfter(targetDate) || xZero < 0) {

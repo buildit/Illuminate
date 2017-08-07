@@ -11,21 +11,21 @@ module.exports = {
       if (demand.length === 0) {
         return undefined;
       }
-      const value = demand
+      const actual = demand
       .sort((a, b) => a.projectDate < b.projectDate ? -1 : 1)
       .reduce((finalDone, summary) => summary.status.Done, undefined);
 
-      const safeValue = value ? value : 0;
+      const safeValue = actual ? actual : 0;
 
-      const target = getTodaysStoryTarget(project);
+      const expected = getTodaysStoryTarget(project);
       const returner = {
         name,
-        target,
-        value,
+        expected,
+        actual,
       };
-      if (safeValue < target) {
+      if (safeValue < expected) {
         returner.ragStatus = constants.RAGERROR;
-      } else if (safeValue > target) {
+      } else if (safeValue > expected) {
         returner.ragStatus = constants.RAGOK;
       } else {
         returner.ragStatus = constants.RAGWARNING;
