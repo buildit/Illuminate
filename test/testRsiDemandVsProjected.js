@@ -137,6 +137,6 @@ function createProjectStartingWeeksAgo(numberOfWeeksAgo) {
   };
 }
 
-function expected(name, target, value, ragStatus) {
-  return { name, target, value, ragStatus}
+function expected(name, expected, actual, ragStatus) {
+  return { name, expected, actual, ragStatus}
 }

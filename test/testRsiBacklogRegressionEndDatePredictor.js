@@ -80,8 +80,8 @@ function createProjectWithDates(startDate, endDate) {
   };
 }
 
-function expected(name, target, value, ragStatus) {
-  return { name, target, value, ragStatus}
+function expected(name, expected, actual, ragStatus) {
+  return { name, expected, actual, ragStatus}
 }
 
 function distributeIncompleteTasks(count) {
