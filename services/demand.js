@@ -51,35 +51,49 @@ exports.rawDataProcessor = function(demandData) {
 exports.transformCommonToSummary = function(commonData, processingInstructions) {
   logger.info(`mapCommonDataToSummary for ${commonData.length} records`);
 
-  var datedData = [];
+  var datedData = {};
 
   commonData.forEach(function (aHistoryItem) {
+    let previousKey;
     aHistoryItem.history.forEach(function (aStatusChange) {
       if (!aStatusChange.statusValue.startsWith(constants.JIRARELEASEFIELD)) {
-        var endDate = (R.isNil(aStatusChange.changeDate)) ? processingInstructions.endDate : aStatusChange.changeDate;
-        var daysDifference = utils.createDayArray(aStatusChange.startDate, endDate);
+        previousKey = aStatusChange.statusValue;
+        const endDate = R.isNil(aStatusChange.changeDate)
+                            ? processingInstructions.endDate : aStatusChange.changeDate;
+        const daysDifference = utils.createDayArray(aStatusChange.startDate, endDate);
 
-        for (var i = 0; i < daysDifference.length; i++) {
-          if (!(daysDifference[i] in datedData)) {
-            datedData.push(daysDifference[i]);
-            datedData[daysDifference[i]] = {};
+        daysDifference.forEach(date => {
+          if (!datedData[date]) {
+            datedData[date] = {};
           }
-          var temp = datedData[daysDifference[i]];
-          if (!(aStatusChange.statusValue in temp)) {
+          const temp = datedData[date];
+          if (!temp[aStatusChange.statusValue]) {
             temp[aStatusChange.statusValue] = 0;
           }
           temp[aStatusChange.statusValue]++;
+        });
+      } else {
+        if (previousKey) {
+          const endDate = processingInstructions.endDate;
+          const daysDifference = utils.createDayArray(aStatusChange.startDate, endDate);
+
+          daysDifference.forEach(date => {
+            if (!datedData[date]) {
+              datedData[date] = {};
+            }
+            const temp = datedData[date];
+            if (!temp[previousKey]) {
+              temp[previousKey] = 0;
+            }
+            temp[previousKey]++;
+          });
         }
       }
     });
   });
 
-  var demandStatusByDay = [];
-  datedData.forEach(function (aDayInTime) {
-    var statusSummary = datedData[aDayInTime];
-    var datedStatus = {projectDate: aDayInTime, status: statusSummary};
-    demandStatusByDay.push(datedStatus);
-  });
+  var demandStatusByDay = Reflect.ownKeys(datedData)
+  .map(aDayInTime => ({ projectDate: aDayInTime, status: datedData[aDayInTime] }));
 
   return demandStatusByDay;
 }

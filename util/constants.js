@@ -34,6 +34,7 @@ exportConstant('DEFAULTSTARTDATE', '2000-01-01');
 exportConstant('JIRADEMANDTYPE', 'Story');
 exportConstant('JIRADEFECTTYPE', 'Bug');
 exportConstant('JIRARELEASEFIELD', 'Fix Version');
+exportConstant('JIRACOMPLETE', 'Done');
 
 exportConstant('RAGOK', 'green');
 exportConstant('RAGWARNING', 'amber');

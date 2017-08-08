@@ -2,7 +2,7 @@ const { linearRegression } = require('simple-statistics');
 const moment = require('moment');
 const dataStore = require('../datastore/mongodb');
 const constants = require('../../util/constants');
-const { omit, toPairs } = require('ramda');
+const { omit, toPairs, merge } = require('ramda');
 
 const dbDateFormat = 'YYYY-MM-DD';
 const name = 'Backlog Regression End Date Predictor';
@@ -17,25 +17,28 @@ module.exports = {
 
       const notDonePoints = [];
 
-      const startDate = moment(project.startDate, dbDateFormat);
       const targetDate = moment(project.endDate, dbDateFormat);
 
-      const doneKey = 'Done';
+      const [ doneStartDate, doneEndDate ] = getDataRange(demand, constants.JIRACOMPLETE);
+
       demand
+      .map(summary => merge(summary, { projectDate: moment(summary.projectDate, dbDateFormat)}))
+      .filter(summary => summary.projectDate.isSameOrAfter(doneStartDate) && summary.projectDate.isSameOrBefore(doneEndDate))
       .forEach(summary => {
-        const summaryDate = moment(summary.projectDate, dbDateFormat);
-        const x = summaryDate.diff(startDate, 'days');
-        const yNotDone = toPairs(omit([doneKey], summary.status))
+        const x = summary.projectDate.unix();
+        const yNotDone = toPairs(omit([constants.JIRACOMPLETE], summary.status))
         .reduce((count, pair) => count + pair[1], 0) || 0;
         if (yNotDone) {
           notDonePoints.push([x, yNotDone]);
         }
       });
 
+      notDonePoints.sort((a, b) => a[0] < b[0] ? -1 : 1)
+
       const notDoneMB = linearRegression(notDonePoints);
       const xZero = - notDoneMB.b / notDoneMB.m;
 
-      const estimatedCompletionDate = startDate.add(xZero, 'days');
+      const estimatedCompletionDate = moment.unix(xZero);
 
       const returner = {
         name,
@@ -54,3 +57,15 @@ module.exports = {
     });
   }
 };
+
+function getDataRange(statusData, category) {
+  const datesInCategory = statusData.filter(datapoint => datapoint.status[category])
+    .map(datapoint => moment(datapoint.projectDate));
+  const tomorrow = moment.utc().add(1, 'days').hours(0).minutes(0).seconds(0);
+  const max = moment.max(datesInCategory);
+  const returnedMax = max.isAfter(tomorrow) ? tomorrow : max;
+  return [
+    moment.min(datesInCategory),
+    returnedMax,
+  ];
+}

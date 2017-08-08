@@ -17,7 +17,7 @@ describe('Rag Status Indicators - Backlog Regression End Date Predictor', () => 
     return CO(function* foo() {
       const startDate = moment().subtract(10, 'weeks').format(dbDateFormat);
       const endDate = moment().add(5, 'weeks').format(dbDateFormat);
-      const target = moment().add(15, 'weeks').format(dbDateFormat);
+      const target = moment().add(15, 'weeks').subtract(1, 'days').format(dbDateFormat);
       const entryData = [
         { weeksAgo: 5, count: 100 },
         { weeksAgo: 0, count: 75 },
