@@ -11,49 +11,50 @@ const Should = require('should');
 const url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
 const name = 'Backlog Regression End Date Predictor';
 const dbDateFormat = 'YYYY-MM-DD';
+const expectedDateFormat = 'MMM DD, YYYY';
 
 describe('Rag Status Indicators - Backlog Regression End Date Predictor', () => {
   it('returns red when the projected end date is after the project end date', () => {
     return CO(function* foo() {
       const startDate = moment().subtract(10, 'weeks').format(dbDateFormat);
-      const endDate = moment().add(5, 'weeks').format(dbDateFormat);
-      const target = moment().add(15, 'weeks').subtract(1, 'days').format(dbDateFormat);
+      const endDate = moment().add(5, 'weeks');
+      const target = moment().add(15, 'weeks').subtract(1, 'days').format(expectedDateFormat);
       const entryData = [
         { weeksAgo: 5, count: 100 },
         { weeksAgo: 0, count: 75 },
       ];
       yield insertDemand(entryData);
-      const result = yield backlogRegression.evaluate(createProjectWithDates(startDate, endDate), url);
-      Should(result).match(expected(name, endDate, target, constants.RAGERROR));
+      const result = yield backlogRegression.evaluate(createProjectWithDates(startDate, endDate.format(dbDateFormat)), url);
+      Should(result).match(expected(name, endDate.format(expectedDateFormat), target, constants.RAGERROR));
     });
   });
 
   it('returns amber when the projected end date is on the project end date', () => {
     return CO(function* foo() {
       const startDate = moment().subtract(10, 'weeks').format(dbDateFormat);
-      const endDate = moment().add(5, 'weeks').format(dbDateFormat);
+      const endDate = moment().add(5, 'weeks');
       const entryData = [
         { weeksAgo: 5, count: 100 },
         { weeksAgo: 0, count: 50 },
       ];
       yield insertDemand(entryData);
-      const result = yield backlogRegression.evaluate(createProjectWithDates(startDate, endDate), url);
-      Should(result).match(expected(name, endDate, endDate, constants.RAGWARNING));
+      const result = yield backlogRegression.evaluate(createProjectWithDates(startDate, endDate.format(dbDateFormat)), url);
+      Should(result).match(expected(name, endDate.format(expectedDateFormat), endDate.format(expectedDateFormat), constants.RAGWARNING));
     });
   });
 
   it('returns green when the projected end date is before the project end date', () => {
     return CO(function* foo() {
       const startDate = moment().subtract(4, 'weeks').format(dbDateFormat);
-      const endDate = moment().add(1, 'weeks').format(dbDateFormat);
-      const targetDate = moment().subtract(1, 'weeks').format(dbDateFormat);
+      const endDate = moment().add(1, 'weeks');
+      const targetDate = moment().subtract(1, 'weeks').format(expectedDateFormat);
       const entryData = [
         { weeksAgo: 4, count: 75 },
         { weeksAgo: 3, count: 50 },
       ];
       yield insertDemand(entryData);
-      const result = yield backlogRegression.evaluate(createProjectWithDates(startDate, endDate), url);
-      Should(result).match(expected(name, endDate, targetDate, constants.RAGOK));
+      const result = yield backlogRegression.evaluate(createProjectWithDates(startDate, endDate.format(dbDateFormat)), url);
+      Should(result).match(expected(name, endDate.format(expectedDateFormat), targetDate, constants.RAGOK));
     });
   });
 });

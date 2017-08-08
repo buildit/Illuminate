@@ -1,5 +1,7 @@
 'use strict'
 
+exportConstant('DBDATEFORMAT', 'YYYY-MM-DD');
+
 exportConstant('PROJECTCOLLECTION', 'project');
 exportConstant('EVENTCOLLECTION', 'loadEvents');
 exportConstant('RAGCOLLECTION', 'ragStatuses');
@@ -34,6 +36,11 @@ exportConstant('DEFAULTSTARTDATE', '2000-01-01');
 exportConstant('JIRADEMANDTYPE', 'Story');
 exportConstant('JIRADEFECTTYPE', 'Bug');
 exportConstant('JIRARELEASEFIELD', 'Fix Version');
+exportConstant('JIRACOMPLETE', 'Done');
+
+exportConstant('TRELLODEMANDTYPE', 'Story');
+exportConstant('TRELLODEFECTTYPE', 'Bug');
+exportConstant('TRELLORELEASEFIELD', 'Fix Version');
 exportConstant('JIRACOMPLETE', 'Done');
 
 exportConstant('RAGOK', 'green');

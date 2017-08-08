@@ -108,7 +108,7 @@ exports.processProjectSystem = function (loaderClass, aProjectSystem, anEvent, p
       resolve(new utils.SystemEvent(constants.FAILEDEVENT, `unknown source system [${aProjectSystem.source}]`));
     }
 
-    if (!(ValidUrl.isUri(aProjectSystem.url))) {
+    if (!aProjectSystem.boardId && !(ValidUrl.isUri(aProjectSystem.url))) {
       logger.debug(`processProjectSystem -> invalid source system url [${aProjectSystem.url}]`);
       resolve(new utils.SystemEvent(constants.FAILEDEVENT, `invalid source system url [${aProjectSystem.url}]`));
     }

@@ -3,8 +3,6 @@ const moment = require('moment');
 const dataStore = require('../datastore/mongodb');
 const constants = require('../../util/constants');
 const { omit, toPairs, merge } = require('ramda');
-
-const dbDateFormat = 'YYYY-MM-DD';
 const name = 'Backlog Regression End Date Predictor';
 
 module.exports = {
@@ -17,12 +15,12 @@ module.exports = {
 
       const notDonePoints = [];
 
-      const targetDate = moment(project.endDate, dbDateFormat);
+      const targetDate = moment(project.endDate, constants.DBDATEFORMAT);
 
       const [ doneStartDate, doneEndDate ] = getDataRange(demand, constants.JIRACOMPLETE);
 
       demand
-      .map(summary => merge(summary, { projectDate: moment(summary.projectDate, dbDateFormat)}))
+      .map(summary => merge(summary, { projectDate: moment(summary.projectDate, constants.DBDATEFORMAT)}))
       .filter(summary => summary.projectDate.isSameOrAfter(doneStartDate) && summary.projectDate.isSameOrBefore(doneEndDate))
       .forEach(summary => {
         const x = summary.projectDate.unix();
@@ -33,17 +31,17 @@ module.exports = {
         }
       });
 
-      notDonePoints.sort((a, b) => a[0] < b[0] ? -1 : 1)
-
       const notDoneMB = linearRegression(notDonePoints);
       const xZero = - notDoneMB.b / notDoneMB.m;
 
       const estimatedCompletionDate = moment.unix(xZero);
 
+      const dateFormat = 'MMM DD, YYYY';
+
       const returner = {
         name,
-        expected: project.endDate,
-        actual: estimatedCompletionDate.format(dbDateFormat),
+        expected: moment(project.endDate, constants.DBDATEFORMAT).format(dateFormat),
+        actual: estimatedCompletionDate.format(dateFormat),
       };
 
       if (estimatedCompletionDate.isAfter(targetDate) || xZero < 0) {
