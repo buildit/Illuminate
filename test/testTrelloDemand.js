@@ -425,7 +425,7 @@ const DEMANDINFO = {
   project: 'a project',
   url: 'http://some.url',
   storyLabel: 'Story',
-  key: 'key:token',
+  authPolicy: 'key:token',
   userData: 'token:secretToken',
 };
 

@@ -88,7 +88,7 @@ function transformRawToCommon(issueData) {
 }
 
 function appendAuth(url, demandInfo) {
-  const keys = demandInfo.key.split(':');
+  const keys = demandInfo.authPolicy.split(':');
   const values = demandInfo.userData.split(':');
   const divider = url.includes('?') ? '&' : '?';
   return `${url}${divider}${keys[0]}=${values[0]}&${keys[1]}=${values[1]}`;
