@@ -57,10 +57,8 @@ exports.transformCommonToSummary = function(commonData, processingInstructions) 
   var datedData = {};
 
   commonData.forEach(function (aHistoryItem) {
-    let previousKey;
     aHistoryItem.history.forEach(function (aStatusChange) {
       if (!aStatusChange.statusValue.startsWith(constants.JIRARELEASEFIELD)) {
-        previousKey = aStatusChange.statusValue;
         const endDate = R.isNil(aStatusChange.changeDate)
                             ? processingInstructions.endDate : aStatusChange.changeDate;
         const daysDifference = utils.createDayArray(aStatusChange.startDate, endDate);
@@ -75,22 +73,6 @@ exports.transformCommonToSummary = function(commonData, processingInstructions) 
           }
           temp[aStatusChange.statusValue]++;
         });
-      } else {
-        if (previousKey) {
-          const endDate = processingInstructions.endDate;
-          const daysDifference = utils.createDayArray(aStatusChange.startDate, endDate);
-
-          daysDifference.forEach(date => {
-            if (!datedData[date]) {
-              datedData[date] = {};
-            }
-            const temp = datedData[date];
-            if (!temp[previousKey]) {
-              temp[previousKey] = 0;
-            }
-            temp[previousKey]++;
-          });
-        }
       }
     });
   });

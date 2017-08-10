@@ -133,3 +133,12 @@ exports.CommonDemandEntry = function (id) {
   this.uri = null;
   this.history = [];
 }
+
+exports.CommonProjectStatusResult = function (name, actual, projected, status) {
+  return {
+    name,
+    actual,
+    projected,
+    status,
+  }
+}

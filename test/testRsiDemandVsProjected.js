@@ -1,7 +1,8 @@
-const demandVsProjected = require('../services/ragStatusIndicators/demandVsProjected');
+const demandVsProjected = require('../services/statusIndicators/demandVsProjected');
 const dataStore = require('../services/datastore/mongodb');
 const testConstants = require('./testConstants');
 const constants = require('../util/constants');
+const { CommonProjectStatusResult } = require('../util/utils');
 const moment = require('moment');
 const utils = require('../util/utils');
 const CO = require('co');
@@ -18,7 +19,7 @@ describe('Rag Status Indicators - Demand Vs Projected', () => {
       return CO(function* foo() {
         yield insertDemandSpecificDoneCountOf(expectedComplete  - 1);
         const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week), url);
-        Should(result).match(expected(name, expectedComplete, expectedComplete - 1, constants.RAGERROR));
+        Should(result).match(CommonProjectStatusResult(name, expectedComplete - 1, expectedComplete, constants.STATUSERROR));
       });
     });
 
@@ -26,7 +27,7 @@ describe('Rag Status Indicators - Demand Vs Projected', () => {
       return CO(function* foo() {
         yield insertDemandSpecificDoneCountOf(expectedComplete);
         const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week), url);
-        Should(result).match(expected(name, expectedComplete, expectedComplete, constants.RAGWARNING));
+        Should(result).match(CommonProjectStatusResult(name, expectedComplete, expectedComplete, constants.STATUSWARNING));
       });
     });
     
@@ -34,7 +35,7 @@ describe('Rag Status Indicators - Demand Vs Projected', () => {
       return CO(function* foo() {
         yield insertDemandSpecificDoneCountOf(expectedComplete + 1);
         const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week), url);
-        Should(result).match(expected(name, expectedComplete, expectedComplete + 1, constants.RAGOK));
+        Should(result).match(CommonProjectStatusResult(name, expectedComplete + 1, expectedComplete, constants.STATUSOK));
       });
     });
   });
@@ -46,7 +47,7 @@ describe('Rag Status Indicators - Demand Vs Projected', () => {
       return CO(function* foo() {
         yield insertDemandSpecificDoneCountOf(expectedComplete  - 1);
         const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week), url);
-        Should(result).match(expected(name, expectedComplete, expectedComplete - 1, constants.RAGERROR));
+        Should(result).match(CommonProjectStatusResult(name, expectedComplete - 1, expectedComplete, constants.STATUSERROR));
       });
     });
 
@@ -54,7 +55,7 @@ describe('Rag Status Indicators - Demand Vs Projected', () => {
       return CO(function* foo() {
         yield insertDemandSpecificDoneCountOf(expectedComplete);
         const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week), url);
-        Should(result).match(expected(name, expectedComplete, expectedComplete, constants.RAGWARNING));
+        Should(result).match(CommonProjectStatusResult(name, expectedComplete, expectedComplete, constants.STATUSWARNING));
       });
     });
     
@@ -62,7 +63,7 @@ describe('Rag Status Indicators - Demand Vs Projected', () => {
       return CO(function* foo() {
         yield insertDemandSpecificDoneCountOf(expectedComplete + 1);
         const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week), url);
-        Should(result).match(expected(name, expectedComplete, expectedComplete + 1, constants.RAGOK));
+        Should(result).match(CommonProjectStatusResult(name, expectedComplete + 1, expectedComplete, constants.STATUSOK));
       });
     });
   });
@@ -74,7 +75,7 @@ describe('Rag Status Indicators - Demand Vs Projected', () => {
       return CO(function* foo() {
         yield insertDemandSpecificDoneCountOf(expectedComplete  - 1);
         const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week), url);
-        Should(result).match(expected(name, expectedComplete, expectedComplete - 1, constants.RAGERROR));
+        Should(result).match(CommonProjectStatusResult(name, expectedComplete - 1, expectedComplete, constants.STATUSERROR));
       });
     });
 
@@ -82,7 +83,7 @@ describe('Rag Status Indicators - Demand Vs Projected', () => {
       return CO(function* foo() {
         yield insertDemandSpecificDoneCountOf(expectedComplete);
         const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week), url);
-        Should(result).match(expected(name, expectedComplete, expectedComplete, constants.RAGWARNING));
+        Should(result).match(CommonProjectStatusResult(name, expectedComplete, expectedComplete, constants.STATUSWARNING));
       });
     });
     
@@ -90,7 +91,7 @@ describe('Rag Status Indicators - Demand Vs Projected', () => {
       return CO(function* foo() {
         yield insertDemandSpecificDoneCountOf(expectedComplete + 1);
         const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week), url);
-        Should(result).match(expected(name, expectedComplete, expectedComplete + 1, constants.RAGOK));
+        Should(result).match(CommonProjectStatusResult(name, expectedComplete + 1, expectedComplete, constants.STATUSOK));
       });
     });
   });
@@ -121,7 +122,7 @@ function insertDemandSpecificDoneCountOf(desiredDoneCount) {
   return dataStore.wipeAndStoreData(url, constants.SUMMARYDEMAND, entries);
 }
 
-function createProjectStartingWeeksAgo(numberOfWeeksAgo) {
+function createProjectStartingWeeksAgo(numberOfWeeksAgo, startIterations = 5) {
   return {
     projection: {
       backlogSize: 100,
@@ -130,13 +131,9 @@ function createProjectStartingWeeksAgo(numberOfWeeksAgo) {
       endVelocity: 5,
       iterationLength: 1,
       startDate: moment().subtract(numberOfWeeksAgo, 'weeks').format('YYYY-MM-DD'),
-      startIterations: 5,
+      startIterations,
       startVelocity: 5,
       targetVelocity: 10,
     },
   };
-}
-
-function expected(name, expected, actual, ragStatus) {
-  return { name, expected, actual, ragStatus}
 }

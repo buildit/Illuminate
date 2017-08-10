@@ -1,8 +1,9 @@
-const backlogRegression = require('../services/ragStatusIndicators/backlogRegressionEndDatePredictor');
+const backlogRegression = require('../services/statusIndicators/backlogRegressionEndDatePredictor');
 const dataStore = require('../services/datastore/mongodb');
 const testConstants = require('./testConstants');
 const constants = require('../util/constants');
 const moment = require('moment');
+const { CommonProjectStatusResult } = require('../util/utils');
 const utils = require('../util/utils');
 const { range } = require('ramda');
 const CO = require('co');
@@ -25,7 +26,7 @@ describe('Rag Status Indicators - Backlog Regression End Date Predictor', () => 
       ];
       yield insertDemand(entryData);
       const result = yield backlogRegression.evaluate(createProjectWithDates(startDate, endDate.format(dbDateFormat)), url);
-      Should(result).match(expected(name, endDate.format(expectedDateFormat), target, constants.RAGERROR));
+      Should(result).match(CommonProjectStatusResult(name, target, endDate.format(expectedDateFormat), constants.STATUSERROR));
     });
   });
 
@@ -39,7 +40,7 @@ describe('Rag Status Indicators - Backlog Regression End Date Predictor', () => 
       ];
       yield insertDemand(entryData);
       const result = yield backlogRegression.evaluate(createProjectWithDates(startDate, endDate.format(dbDateFormat)), url);
-      Should(result).match(expected(name, endDate.format(expectedDateFormat), endDate.format(expectedDateFormat), constants.RAGWARNING));
+      Should(result).match(CommonProjectStatusResult(name, endDate.format(expectedDateFormat), endDate.format(expectedDateFormat), constants.STATUSWARNING));
     });
   });
 
@@ -54,7 +55,7 @@ describe('Rag Status Indicators - Backlog Regression End Date Predictor', () => 
       ];
       yield insertDemand(entryData);
       const result = yield backlogRegression.evaluate(createProjectWithDates(startDate, endDate.format(dbDateFormat)), url);
-      Should(result).match(expected(name, endDate.format(expectedDateFormat), targetDate, constants.RAGOK));
+      Should(result).match(CommonProjectStatusResult(name, targetDate, endDate.format(expectedDateFormat), constants.STATUSOK));
     });
   });
 });
@@ -79,10 +80,6 @@ function createProjectWithDates(startDate, endDate) {
     startDate,
     endDate,
   };
-}
-
-function expected(name, expected, actual, ragStatus) {
-  return { name, expected, actual, ragStatus}
 }
 
 function distributeIncompleteTasks(count) {

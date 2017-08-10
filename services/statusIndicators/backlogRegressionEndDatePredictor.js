@@ -2,6 +2,7 @@ const { linearRegression } = require('simple-statistics');
 const moment = require('moment');
 const dataStore = require('../datastore/mongodb');
 const constants = require('../../util/constants');
+const { CommonProjectStatusResult } = require('../../util/utils');
 const { omit, toPairs, merge } = require('ramda');
 const name = 'Backlog Regression End Date Predictor';
 
@@ -37,21 +38,18 @@ module.exports = {
       const estimatedCompletionDate = moment.unix(xZero);
 
       const dateFormat = 'MMM DD, YYYY';
+      
+      const projected = moment(project.endDate, constants.DBDATEFORMAT).format(dateFormat);
+      const actual = estimatedCompletionDate.format(dateFormat);
+      let status = constants.STATUSWARNING;
 
-      const returner = {
-        name,
-        expected: moment(project.endDate, constants.DBDATEFORMAT).format(dateFormat),
-        actual: estimatedCompletionDate.format(dateFormat),
-      };
 
       if (estimatedCompletionDate.isAfter(targetDate) || xZero < 0) {
-        returner.ragStatus = constants.RAGERROR;
+        status = constants.STATUSERROR;
       } else if (estimatedCompletionDate.isBefore(targetDate)) {
-        returner.ragStatus = constants.RAGOK;
-      } else {
-        returner.ragStatus = constants.RAGWARNING;
+        status = constants.STATUSOK;
       }
-      return returner;
+      return CommonProjectStatusResult(name, actual, projected, status);
     });
   }
 };

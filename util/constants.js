@@ -4,7 +4,7 @@ exportConstant('DBDATEFORMAT', 'YYYY-MM-DD');
 
 exportConstant('PROJECTCOLLECTION', 'project');
 exportConstant('EVENTCOLLECTION', 'loadEvents');
-exportConstant('RAGCOLLECTION', 'ragStatuses');
+exportConstant('STATUSCOLLECTION', 'statuses');
 
 exportConstant('SUCCESSEVENT', 'COMPLETED SUCCESSFULLY');
 exportConstant('FAILEDEVENT', 'FAILED');
@@ -38,14 +38,9 @@ exportConstant('JIRADEFECTTYPE', 'Bug');
 exportConstant('JIRARELEASEFIELD', 'Fix Version');
 exportConstant('JIRACOMPLETE', 'Done');
 
-exportConstant('TRELLODEMANDTYPE', 'Story');
-exportConstant('TRELLODEFECTTYPE', 'Bug');
-exportConstant('TRELLORELEASEFIELD', 'Fix Version');
-exportConstant('JIRACOMPLETE', 'Done');
-
-exportConstant('RAGOK', 'green');
-exportConstant('RAGWARNING', 'amber');
-exportConstant('RAGERROR', 'red');
+exportConstant('STATUSOK', 'green');
+exportConstant('STATUSWARNING', 'amber');
+exportConstant('STATUSERROR', 'red');
 
 exportConstant('DEFAULTDEFECTINITIALSTATE', 'Created');
 exportConstant('DEFAULTDEFECTRESOLVEDSTATE', 'Closed');

@@ -8,7 +8,7 @@ const Log4js = require('log4js');
 const Moment = require('moment');
 const MongoClient = require('mongodb');
 const R = require('ramda');
-const ragStatusIndicators = require('../ragStatusIndicators');
+const statusIndicators = require('../statusIndicators');
 
 Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
@@ -240,13 +240,13 @@ exports.processEventData = function (projectPath, collectionName, eventInfo, sec
           logger.debug('EVENT COMPLETE');
           tmpObj.endTime = Moment.utc().format();
           if (wasCompletedSuccessfully(tmpObj)) {
-            const ragStatuses = yield ragStatusIndicators.getStatuses(project, projectPath);
+            const statuses = yield statusIndicators.getStatuses(project, projectPath);
             try {
-              yield updateRagStatus(project, projectPath, ragStatuses);
+              yield updateProjectStatus(project, projectPath, statuses);
               logger.debug('EVENT COMPLETE SUCCESSFULLY');
               tmpObj.status = constants.SUCCESSEVENT;
             } catch (error) {
-              logger.debug('EVENT COMPLETE in ERROR');
+              logger.debug('EVENT COMPLETE BUT ERROR POSTING STATUS');
               tmpObj.status = constants.FAILEDEVENT;
             }
           } else {
@@ -267,20 +267,20 @@ exports.processEventData = function (projectPath, collectionName, eventInfo, sec
   });
 }
 
-function updateRagStatus(project, projectPath, ragStatuses) {
-  function checkStatus(status) {
-    return (ragStatus) => ragStatus.ragStatus === status;
+function updateProjectStatus(project, projectPath, statuses) {
+  function checkStatus(desiredStatus) {
+    return (status) => status.status === desiredStatus;
   }
-  if (ragStatuses.length > 0) {
-    let color = constants.RAGOK;
-    if (ragStatuses.some(checkStatus(constants.RAGERROR))) {
-      color = constants.RAGERROR
-    } else if (ragStatuses.some(checkStatus(constants.RAGWARNING))) {
-      color = constants.RAGWARNING;
+  if (statuses.length > 0) {
+    let color = constants.STATUSOK;
+    if (statuses.some(checkStatus(constants.STATUSERROR))) {
+      color = constants.STATUSERROR
+    } else if (statuses.some(checkStatus(constants.STATUSWARNING))) {
+      color = constants.STATUSWARNING;
     }
-    project.ragStatus = color;
+    project.status = color;
     return module.exports.upsertData(utils.dbCorePath(), constants.PROJECTCOLLECTION, [project])
-    .then(() => module.exports.wipeAndStoreData(projectPath, constants.RAGCOLLECTION, ragStatuses))
+    .then(() => module.exports.wipeAndStoreData(projectPath, constants.STATUSCOLLECTION, statuses))
     .catch(error => logger.error(error));
   } else {
     return Promise.resolve();

@@ -5,7 +5,8 @@ const mongoDB = require('../services/datastore/mongodb');
 const Should = require('should');
 const testConstants = require('./testConstants');
 const utils = require('../util/utils');
-const demandVsProjected = require('../services/ragStatusIndicators/demandVsProjected');
+const { CommonProjectStatusResult } = require('../util/utils');
+const demandVsProjected = require('../services/statusIndicators/demandVsProjected');
 
 const CO = require('co');
 const Config = require('config');
@@ -89,7 +90,7 @@ describe('Create an Event and then update the event and make sure the event is c
   });
 });
 
-describe('Create an Event and make sure ragStatuses are updated', function() {
+describe('Create an Event and make sure statuses are updated', function() {
   var url = '';
   var anEvent = { demand: null, effect: null, effort: null };
   var aSystemEvent = {};
@@ -105,7 +106,7 @@ describe('Create an Event and make sure ragStatuses are updated', function() {
       anEvent.effect = null,
       anEvent.effort = {};
       aSystemEvent = new utils.SystemEvent(constants.SUCCESSEVENT, "Message");
-      expectedResult.push(stubRsiResult(demandVsProjected, 'Demand vs. Projected', 100, 200, constants.RAGOK));
+      expectedResult.push(stubRsiResult(demandVsProjected, 'Demand vs. Projected', 100, 200, constants.STATUSOK));
       yield mongoDB.processEventData(url, constants.EVENTCOLLECTION, anEvent);
       yield mongoDB.processEventData(url, constants.EVENTCOLLECTION, anEvent, constants.EFFORTSECTION, aSystemEvent, aProject); 
     });
@@ -113,7 +114,7 @@ describe('Create an Event and make sure ragStatuses are updated', function() {
 
   it('correctly stores the individual rsi results in the database', () => {
     return CO(function* foo() {
-      const storedRsi = yield mongoDB.getAllData(url, constants.RAGCOLLECTION);
+      const storedRsi = yield mongoDB.getAllData(url, constants.STATUSCOLLECTION);
       Should(storedRsi).match(expectedResult);
     });
   }) 
@@ -121,18 +122,13 @@ describe('Create an Event and make sure ragStatuses are updated', function() {
   after('Delete the stuff you created', function() {
     return CO(function* foo() {
       restoreRsiStub(demandVsProjected);
-      yield mongoDB.clearData(url, constants.RAGCOLLECTION);
+      yield mongoDB.clearData(url, constants.STATUSCOLLECTION);
       yield mongoDB.clearData(url, constants.EVENTCOLLECTION);
     });
   });
 
-  function stubRsiResult(rsiObject, name, target, value, ragStatus) {
-    const expected = {
-      name,
-      target,
-      value,
-      ragStatus,
-    }; 
+  function stubRsiResult(rsiObject, name, actual, projected, status) {
+    const expected = CommonProjectStatusResult(name, actual, projected, status);
     rsiObject._evaluate = rsiObject.evaluate;
     rsiObject.evaluate = () => Promise.resolve(expected);
     return expected;

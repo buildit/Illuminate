@@ -1,6 +1,7 @@
 const moment = require('moment');
 const dataStore = require('../datastore/mongodb');
 const constants = require('../../util/constants');
+const { CommonProjectStatusResult } = require('../../util/utils');
 
 const name = 'Demand vs Projected';
 
@@ -18,19 +19,13 @@ module.exports = {
       const safeValue = actual ? actual : 0;
 
       const expected = getTodaysStoryTarget(project);
-      const returner = {
-        name,
-        expected,
-        actual,
-      };
+      let status = constants.STATUSWARNING;
       if (safeValue < expected) {
-        returner.ragStatus = constants.RAGERROR;
+        status = constants.STATUSERROR;
       } else if (safeValue > expected) {
-        returner.ragStatus = constants.RAGOK;
-      } else {
-        returner.ragStatus = constants.RAGWARNING;
+        status = constants.STATUSOK;
       }
-      return returner;
+      return CommonProjectStatusResult(name, actual, expected, status);
     });
   }
 };
