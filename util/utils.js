@@ -24,7 +24,7 @@ exports.dbCorePath = function () {
 function generateRootServiceUrl () {
   var url = `http://${Config.get('server.url')}:${Config.get('server.port')}/v1/project`;
   return url;
-};
+}
 
 exports.generateServiceUrl = function (projectName) {
   var url = `${generateRootServiceUrl()}/${encodeURIComponent(projectName)}`;
@@ -43,9 +43,9 @@ exports.generatePortlessServiceUrl = function (projectName) {
 
 exports.createBasicAuthHeader = function(encodedUser) {
   var headers = {
-  	'Authorization': 'Basic ' +  encodedUser,
-  	'Accept':'application/json',
-  	'Content-Type':'application/json'};
+    'Authorization': 'Basic ' +  encodedUser,
+    'Accept':'application/json',
+    'Content-Type':'application/json'};
   return headers;
 }
 
@@ -83,8 +83,9 @@ exports.createDayArray = function (start, end) {
   return daysArray;
 };
 
-exports.ProcessingInfo = function (dbUrl) {
-  this.dbUrl = dbUrl;
+exports.ProcessingInfo = function (name) {
+  this.projectName = name;
+  this.dbUrl = module.exports.dbProjectPath(this.projectName);
   this.rawLocation = null;
   this.commonLocation = null;
   this.summaryLocation = null;
@@ -96,7 +97,7 @@ exports.ProcessingInfo = function (dbUrl) {
 exports.SystemEvent = function (status, message) {
   this.completion = Moment.utc().format();
   this.status = status;
-  this.message;
+  this.message = message;
 }
 
 exports.DataEvent = function (type) {

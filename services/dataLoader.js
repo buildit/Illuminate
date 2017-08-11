@@ -24,9 +24,11 @@ const systemDefinitionExists = (aSystemDeffiniton) =>
 // there is an event for a project, so go get data for it
 // check if it is configured for demand, defect, and / or effort
 exports.processProjectData = function (aProject, anEvent) {
-  var processingInstructions = new utils.ProcessingInfo(utils.dbProjectPath(aProject.name));
+  var processingInstructions = new utils.ProcessingInfo(aProject.name);
   processingInstructions.endDate = utils.dateFormatIWant(determineProjectEndDate(aProject));
   processingInstructions.storageFunction = dataStore.upsertData;
+
+
 
   if (systemDefinitionExists(aProject.demand)) {
     var demandInstructions = demandLoader.configureProcessingInstructions(processingInstructions);

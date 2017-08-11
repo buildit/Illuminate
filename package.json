@@ -7,7 +7,7 @@
     "start": "node index.js",
     "accept": "echo '=> accept' && mocha test_accept -R spec",
     "genConfig": "echo '=> generating local config file' && gulp gen_config",
-    "lint": "echo '=> linting' && eslint api_doc/ routes/ services/ test/ test_accept/ *.js",
+    "lint": "echo '=> linting' && eslint api_doc/ routes/ services/ test/ test_accept/ util/ *.js",
     "package": "echo '=> packaging for deployment' && gulp package",
     "security": "echo '=> nsp testing' && nsp check --output summary",
     "test": "echo '=> testing' && nyc mocha test -R spec",
