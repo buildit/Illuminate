@@ -60,15 +60,18 @@ exports.dateFormatIWant = function (incomming) {
 exports.createDayArray = function (start, end) {
 
   var daysArray = [];
-  var startDate = Moment.utc(Moment.utc(start).format('YYYY-MM-DD'));
-  var endDate = Moment.utc(Moment.utc(end).format('YYYY-MM-DD'));
+  
 
   if (R.isNil(start)) {
     return daysArray;
-  };
+  }
   if (R.isNil(end)) {
     return daysArray;
   }
+
+  var startDate = Moment.utc(Moment.utc(start).format('YYYY-MM-DD'));
+  var endDate = Moment.utc(Moment.utc(end).format('YYYY-MM-DD'));
+
   if (startDate.dayOfYear() === endDate.dayOfYear()) {
     return daysArray;
   }

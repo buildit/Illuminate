@@ -99,140 +99,168 @@ const EXPECTEDAFTERUPDATE = [
   }
 ];
 
-describe('Test of Insert and Update function. (well and the getall and clear too)', function() {
-  var url = '';
+describe('mongo', () => {
 
-  before('setup', function () {
-      url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
+  describe('Test of insert on existing document', () => {
+    var url = '';
+
+    before('setup', () => {
+        url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
+    });
+
+    it('Insert 2 things', () =>
+      mongoDB.insertData(url, constants.RAWEFFORT, EFFORTDATAFIRST)
+      .then(() => mongoDB.insertData(url, constants.RAWEFFORT, EFFORTDATAFIRST))
+      .then(() => Should.fail())
+      .catch(() => Should.ok(true))
+    );
+
+    after('Delete the stuff you created', () => mongoDB.clearData(url, constants.RAWEFFORT));
+  })
+
+  describe('Test of Insert and Update function. (well and the getall and clear too)', () => {
+    var url = '';
+
+    before('setup', () => {
+        url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
+    });
+
+    it('Insert 2 things', () => {
+      return mongoDB.insertData(url, constants.RAWEFFORT, EFFORTDATAFIRST)
+      .then (() => mongoDB.getAllData(url, constants.RAWEFFORT))
+      .then ((readData) => {
+        readData.sort((a, b) => a._id < b._id ? -1 : 1);
+        Should(EFFORTDATAFIRST).deepEqual(readData)
+      });
+    });
+
+    it('Now provide data that updates 1, inserts another, and does not contain the third', function() {
+      return mongoDB.upsertData(url, constants.RAWEFFORT, EFFORTDATASECOND)
+      .then (() => mongoDB.getAllData(url, constants.RAWEFFORT))
+      .then ((readData) => Should(EXPECTEDAFTERUPDATE).deepEqual(readData));
+    });
+
+    after('Delete the stuff you created', function() {
+      return mongoDB.clearData(url, constants.RAWEFFORT);
+    });
+
   });
 
-  it('Insert 2 things', function() {
-    return mongoDB.upsertData(url, constants.RAWEFFORT, EFFORTDATAFIRST)
-    .then ( function() {
-      process.nextTick(function() {
+  describe('Test that an upsert inserts', () => {
+    let url = '';
+    before('setup', () => {
+      url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
+    });
+
+    it('Insert 2 things', () =>
+      mongoDB.upsertData(url, constants.RAWEFFORT, EFFORTDATAFIRST)
+      .then (() => mongoDB.getAllData(url, constants.RAWEFFORT))
+      .then ((readData) => {
+        readData.sort((a, b) => a._id < b._id ? -1 : 1);
+        Should(EFFORTDATAFIRST).deepEqual(readData)
+      })
+    );
+
+    after('Delete the stuff you created', function() {
+      return mongoDB.clearData(url, constants.RAWEFFORT);
+    });
+  });
+
+  describe('Test of Wipe and Insert', function() {
+    var url = '';
+
+    before('setup', function () {
+        url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
+    });
+
+    it('Insert 2 things', function() {
+      return mongoDB.insertData(url, constants.RAWEFFORT, EFFORTDATAFIRST)
+      .then ( function() {
         return mongoDB.getAllData(url, constants.RAWEFFORT)
         .then ( function(readData) {
           Should(EFFORTDATAFIRST).deepEqual(readData);
         })
-      });
-    }).catch ( function() {
-      Should.ok(false);
-    });
-  });
-
-  it('Now provide data that updates 1, inserts another, and does not contain the third', function() {
-    return mongoDB.upsertData(url, constants.RAWEFFORT, EFFORTDATASECOND)
-    .then ( function() {
-      process.nextTick(function() {
-        return mongoDB.getAllData(url, constants.RAWEFFORT)
-        .then ( function(readData) {
-          Should(EXPECTEDAFTERUPDATE).deepEqual(readData);
-        })
-      });
-    }).catch ( function() {
-      Should.ok(false);
-    });
-  });
-
-  after('Delete the stuff you created', function() {
-    return mongoDB.clearData(url, constants.RAWEFFORT);
-  });
-
-});
-
-describe('Test of Wipe and Insert', function() {
-  var url = '';
-
-  before('setup', function () {
-      url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
-  });
-
-  it('Insert 2 things', function() {
-    return mongoDB.insertData(url, constants.RAWEFFORT, EFFORTDATAFIRST)
-    .then ( function() {
-      return mongoDB.getAllData(url, constants.RAWEFFORT)
-      .then ( function(readData) {
-        Should(EFFORTDATAFIRST).deepEqual(readData);
-      })
-    }).catch ( function() {
-      Should.ok(false);
-    });
-  });
-
-  it('Now provide differnt data, should wipe the first data out', function() {
-    return mongoDB.wipeAndStoreData(url, constants.RAWEFFORT, EFFORTDATASECOND)
-    .then ( function() {
-      return mongoDB.getAllData(url, constants.RAWEFFORT)
-      .then ( function(readData) {
-        Should(EFFORTDATASECOND).deepEqual(readData);
-      })
-    }).catch ( function() {
-      Should.ok(false);
-    });
-  });
-
-  after('Delete the stuff you created', function() {
-    return mongoDB.clearData(url, constants.RAWEFFORT);
-  });
-});
-
-describe('Test of Get by ID and by Name', function() {
-  var url = '';
-
-  before('setup', function () {
-      url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
-  });
-
-  it('Insert a thing', function() {
-    return mongoDB.insertData(url, constants.RAWEFFORT, GETTESTDATA)
-    .then ( function() {
-      return mongoDB.getAllData(url, constants.RAWEFFORT)
-      .then ( function(readData) {
-        Should(GETTESTDATA).deepEqual(readData);
-      })
-    }).catch ( function() {
-      Should.ok(false);
-    });
-  });
-
-  it('Get by name', function() {
-    return mongoDB.getDocumentByName(url, constants.RAWEFFORT, VALIDNAME)
-      .then ( function(readData) {
-        Should(GETTESTDATA[0]).deepEqual(readData);
       }).catch ( function() {
         Should.ok(false);
       });
+    });
+
+    it('Now provide differnt data, should wipe the first data out', function() {
+      return mongoDB.wipeAndStoreData(url, constants.RAWEFFORT, EFFORTDATASECOND)
+      .then ( function() {
+        return mongoDB.getAllData(url, constants.RAWEFFORT)
+        .then ( function(readData) {
+          Should(EFFORTDATASECOND).deepEqual(readData);
+        })
+      }).catch ( function() {
+        Should.ok(false);
+      });
+    });
+
+    after('Delete the stuff you created', function() {
+      return mongoDB.clearData(url, constants.RAWEFFORT);
+    });
   });
 
-  it('Get by name - Not Found', function() {
-    return mongoDB.getDocumentByName(url, constants.RAWEFFORT, INVALIDNAME)
+  describe('Test of Get by ID and by Name', function() {
+    var url = '';
+
+    before('setup', function () {
+        url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
+    });
+
+    it('Insert a thing', function() {
+      return mongoDB.insertData(url, constants.RAWEFFORT, GETTESTDATA)
+      .then ( function() {
+        return mongoDB.getAllData(url, constants.RAWEFFORT)
+        .then ( function(readData) {
+          Should(GETTESTDATA).deepEqual(readData);
+        })
+      }).catch ( function() {
+        Should.ok(false);
+      });
+    });
+
+    it('Get by name', function() {
+      return mongoDB.getDocumentByName(url, constants.RAWEFFORT, VALIDNAME)
+        .then ( function(readData) {
+          Should(GETTESTDATA[0]).deepEqual(readData);
+        }).catch ( function() {
+          Should.ok(false);
+        });
+    });
+
+    it('Get by name - Not Found', function() {
+      return mongoDB.getDocumentByName(url, constants.RAWEFFORT, INVALIDNAME)
+        .then ( function() {
+          Should.ok(false);
+        }).catch ( function() {
+          Should.ok(true);
+        });
+    });
+
+    it('Get by _ID', function() {
+      return mongoDB.getDocumentByID(url, constants.RAWEFFORT, VALIDID)
+        .then ( function(readData) {
+          Should(GETTESTDATA[0]).deepEqual(readData);
+        }).catch ( function() {
+          Should.ok(false);
+        });
+    });
+
+    it('Get by _ID - Not Found', function() {
+      return mongoDB.getDocumentByID(url, constants.RAWEFFORT, INVALIDID)
       .then ( function() {
         Should.ok(false);
       }).catch ( function() {
         Should.ok(true);
       });
-  });
-
-  it('Get by _ID', function() {
-    return mongoDB.getDocumentByID(url, constants.RAWEFFORT, VALIDID)
-      .then ( function(readData) {
-        Should(GETTESTDATA[0]).deepEqual(readData);
-      }).catch ( function() {
-        Should.ok(false);
-      });
-  });
-
-  it('Get by _ID - Not Found', function() {
-    return mongoDB.getDocumentByID(url, constants.RAWEFFORT, INVALIDID)
-    .then ( function() {
-      Should.ok(false);
-    }).catch ( function() {
-      Should.ok(true);
     });
-  });
 
-  after('Delete the stuff you created', function() {
-    return mongoDB.clearData(url, constants.RAWEFFORT);
-  });
+    after('Delete the stuff you created', function() {
+      return mongoDB.clearData(url, constants.RAWEFFORT);
+    });
 
-});
+  });
+})
+

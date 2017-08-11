@@ -57,147 +57,124 @@ function generateConnectionInformation(url, version) {
 exports.upsertData = function (projectPath, collectionName, documentToStore) {
   logger.info(`UPSERT ${documentToStore.length} documents in [${collectionName}] at URL ${projectPath}`);
 
-  return new Promise(function (resolve, reject) {
-    CO(function*() {
-      var db = getDBConnection(projectPath);
-      if (R.isNil(db)) {
-        db = yield MongoClient.connect(projectPath);
-        setDBConnection(projectPath, db);
-      }
-      var col = db.collection(collectionName);
+  return CO(function*() {
+    var db = getDBConnection(projectPath);
+    if (R.isNil(db)) {
+      db = yield MongoClient.connect(projectPath);
+      setDBConnection(projectPath, db);
+    }
+    var col = db.collection(collectionName);
 
-      documentToStore.forEach(function(anEntry) {
-        col.findOneAndReplace({_id: anEntry._id}, anEntry, {upsert: true});
-      });
-      var result = yield col.find().toArray();
-      // db.close();
-      resolve (result);
-    }).catch(function(err) {
-      logger.error(err);
-      reject (err);
+    documentToStore.forEach(function(anEntry) {
+      col.findOneAndReplace({_id: anEntry._id}, anEntry, {upsert: true});
     });
+    var result = yield col.find().toArray();
+    return result;
+  }).catch((err) => {
+    logger.error('upsertData', err);
+    throw err;
   });
 }
 
 exports.insertData = function (projectPath, collectionName, documentToStore) {
   logger.info(`INSERT ${documentToStore.length} documents in [${collectionName}] at URL ${projectPath}`);
 
-  return new Promise(function (resolve, reject) {
-    CO(function*() {
-      var db = getDBConnection(projectPath);
-      if (R.isNil(db)) {
-        db = yield MongoClient.connect(projectPath);
-        setDBConnection(projectPath, db);
-      }
-      var col = db.collection(collectionName);
-      var response = col.insertMany(documentToStore);
-      // db.close();
-      resolve (response);
-    }).catch(function(err) {
-      logger.error(err);
-      reject (err);
-    });
+  return CO(function*() {
+    var db = getDBConnection(projectPath);
+    if (R.isNil(db)) {
+      db = yield MongoClient.connect(projectPath);
+      setDBConnection(projectPath, db);
+    }
+    var col = db.collection(collectionName);
+    var response = col.insertMany(documentToStore);
+    return response;
+  })
+  .catch(error => {
+    logger.error('insertData', error);
+    throw error;
   });
 }
 
 exports.getAllData = function (projectPath, collectionName) {
   logger.info(`GET ALL [${collectionName}] Entries at URL ${projectPath}`);
 
-  return new Promise(function (resolve, reject) {
-    CO(function*() {
-      var db = getDBConnection(projectPath);
-      if (R.isNil(db)) {
-        db = yield MongoClient.connect(projectPath);
-        setDBConnection(projectPath, db);
-      }
-      var col = db.collection(collectionName);
-      var result = yield col.find().toArray();
-      // db.close();
-      resolve (result);
-    }).catch(function(err) {
-      logger.error(err);
-      reject (err);
-    });
+  return CO(function*() {
+    var db = getDBConnection(projectPath);
+    if (R.isNil(db)) {
+      db = yield MongoClient.connect(projectPath);
+      setDBConnection(projectPath, db);
+    }
+    var col = db.collection(collectionName);
+    var result = yield col.find().toArray();
+    return result;
+  }).catch(err => {
+    logger.error('getAllData', err);
+    throw err;
   });
 }
 
 exports.getDocumentByName = function (projectPath, collectionName, aName) {
   logger.info(`GET By Name [${aName}] from [${collectionName}] at URL ${projectPath}`);
 
-  return new Promise(function (resolve, reject) {
-    CO(function*() {
-      var db = getDBConnection(projectPath);
-      if (R.isNil(db)) {
-        db = yield MongoClient.connect(projectPath);
-        setDBConnection(projectPath, db);
-      }
-      var col = db.collection(collectionName);
-      var result = yield col.find({name: aName}).toArray();
-      // db.close();
-      resolve (result[0]);
-    }).catch(function(err) {
-      logger.error(err);
-      reject (err);
-    });
+  return CO(function*() {
+    var db = getDBConnection(projectPath);
+    if (R.isNil(db)) {
+      db = yield MongoClient.connect(projectPath);
+      setDBConnection(projectPath, db);
+    }
+    var col = db.collection(collectionName);
+    var result = yield col.find({name: aName}).toArray();
+    return result[0];
+  }).catch(err => {
+    logger.error('getDocumentByName', err);
+    throw err;
   });
 }
 
 exports.getDocumentByID = function (projectPath, collectionName, anID) {
   logger.info(`GET By ID [${anID}] from [${collectionName}] at URL ${projectPath}`);
 
-  return new Promise(function (resolve, reject) {
-    CO(function*() {
-      var db = getDBConnection(projectPath);
-      if (R.isNil(db)) {
-        db = yield MongoClient.connect(projectPath);
-        setDBConnection(projectPath, db);
-      }
-      var col = db.collection(collectionName);
-      var result = yield col.find({_id: anID}).toArray();
-      // db.close();
-      resolve (result[0]);
-    }).catch(function(err) {
-      logger.error(err);
-      reject (err);
-    });
+  return CO(function*() {
+    var db = getDBConnection(projectPath);
+    if (R.isNil(db)) {
+      db = yield MongoClient.connect(projectPath);
+      setDBConnection(projectPath, db);
+    }
+    var col = db.collection(collectionName);
+    var result = yield col.find({_id: anID}).toArray();
+    return result[0];
+  }).catch(err => {
+    logger.error('getDocumentByID', err);
+    throw err;
   });
 }
 
 exports.clearData = function (projectPath, collectionName) {
   logger.info(`DELETE [${collectionName}] Entries at URL ${projectPath}`);
 
-  return new Promise(function (resolve, reject) {
-    CO(function*() {
-      var db = getDBConnection(projectPath);
-      if (R.isNil(db)) {
-        db = yield MongoClient.connect(projectPath);
-        setDBConnection(projectPath, db);
-      }
-      var col = db.collection(collectionName);
-      var result = yield col.deleteMany();
-      // db.close();
-      resolve (result);
-    }).catch(function(err) {
-      reject (err);
-    });
+  return CO(function*() {
+    var db = getDBConnection(projectPath);
+    if (R.isNil(db)) {
+      db = yield MongoClient.connect(projectPath);
+      setDBConnection(projectPath, db);
+    }
+    var col = db.collection(collectionName);
+    var result = yield col.deleteMany();
+    return result;
+  }).catch(err => {
+    logger.error('clearData', err);
+    throw err;
   });
 }
 
 exports.wipeAndStoreData = function (projectPath, aCollection, documentToStore) {
   logger.info(`WIPE and STORE ${documentToStore.length} documents in [${aCollection}] at URL ${projectPath}`);
 
-  return new Promise(function (resolve, reject) {
-    module.exports.clearData(projectPath, aCollection)
-      .then(function () {
-        module.exports.insertData(projectPath, aCollection, documentToStore)
-        .then(function (response2) {
-          resolve(response2);
-        }).catch(function (reason) {
-          reject(reason);
-        });
-      }).catch(function (reason) {
-        reject(reason);
-      });
+  return module.exports.clearData(projectPath, aCollection)
+  .then(() => module.exports.insertData(projectPath, aCollection, documentToStore))
+  .catch(err => {
+    logger.error('wipeAndStoreData', err);
+    throw err;
   });
 }
 
