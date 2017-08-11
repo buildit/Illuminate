@@ -3,10 +3,12 @@
 const CO = require('co');
 const Config = require('config');
 const constants = require('../../util/constants');
+const utils = require('../../util/utils');
 const Log4js = require('log4js');
 const Moment = require('moment');
 const MongoClient = require('mongodb');
 const R = require('ramda');
+const statusIndicators = require('../statusIndicators');
 
 Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
@@ -211,15 +213,18 @@ const wasCompletedSuccessfully = anEvent =>
   && (anEvent.defect === null || anEvent.defect.status === constants.SUCCESSEVENT)
   && (anEvent.effort === null || anEvent.effort.status === constants.SUCCESSEVENT));
 
-exports.processEventData = function (projectPath, collectionName, eventInfo, sectionName, documentToStore) {
+exports.processEventData = function (projectPath, collectionName, eventInfo, sectionName, documentToStore, project) {
   logger.info(`PROCESS EVENT ${eventInfo} for section ${sectionName} in [${collectionName}] at URL ${projectPath}`);
-
   return new Promise(function (resolve, reject) {
     CO(function*() {
       var result = null;
 
       // var db = yield MongoClient.connect(projectPath);
       var db = getDBConnection(projectPath);
+      if (R.isNil(db)) {
+        db = yield MongoClient.connect(projectPath);
+        setDBConnection(projectPath, db);
+      }
       var col = db.collection(collectionName);
       var options = {returnOriginal: false, upsert: true};
       if (sectionName === undefined || sectionName === null) {
@@ -235,8 +240,15 @@ exports.processEventData = function (projectPath, collectionName, eventInfo, sec
           logger.debug('EVENT COMPLETE');
           tmpObj.endTime = Moment.utc().format();
           if (wasCompletedSuccessfully(tmpObj)) {
-            logger.debug('EVENT COMPLETE SUCCESSFULLY');
-            tmpObj.status = constants.SUCCESSEVENT;
+            const statuses = yield statusIndicators.getStatuses(project, projectPath);
+            try {
+              yield updateProjectStatus(project, projectPath, statuses);
+              logger.debug('EVENT COMPLETE SUCCESSFULLY');
+              tmpObj.status = constants.SUCCESSEVENT;
+            } catch (error) {
+              logger.debug('EVENT COMPLETE BUT ERROR POSTING STATUS');
+              tmpObj.status = constants.FAILEDEVENT;
+            }
           } else {
             logger.debug('EVENT COMPLETE in ERROR');
             tmpObj.status = constants.FAILEDEVENT;
@@ -253,4 +265,25 @@ exports.processEventData = function (projectPath, collectionName, eventInfo, sec
       reject (err);
     });
   });
+}
+
+function updateProjectStatus(project, projectPath, statuses) {
+  function checkStatus(desiredStatus) {
+    return (status) => status.status === desiredStatus;
+  }
+  if (statuses.length > 0) {
+    let color = constants.STATUSOK;
+    if (statuses.some(checkStatus(constants.STATUSERROR))) {
+      color = constants.STATUSERROR
+    } else if (statuses.some(checkStatus(constants.STATUSWARNING))) {
+      color = constants.STATUSWARNING;
+    }
+    project.status = color;
+    return module.exports.upsertData(utils.dbCorePath(), constants.PROJECTCOLLECTION, [project])
+    .then(() => module.exports.wipeAndStoreData(projectPath, constants.STATUSCOLLECTION, statuses))
+    .catch(error => logger.error(error));
+  } else {
+    return Promise.resolve();
+  }
+
 }

@@ -1,7 +1,10 @@
 'use strict'
 
+exportConstant('DBDATEFORMAT', 'YYYY-MM-DD');
+
 exportConstant('PROJECTCOLLECTION', 'project');
 exportConstant('EVENTCOLLECTION', 'loadEvents');
+exportConstant('STATUSCOLLECTION', 'statuses');
 
 exportConstant('SUCCESSEVENT', 'COMPLETED SUCCESSFULLY');
 exportConstant('FAILEDEVENT', 'FAILED');
@@ -33,6 +36,11 @@ exportConstant('DEFAULTSTARTDATE', '2000-01-01');
 exportConstant('JIRADEMANDTYPE', 'Story');
 exportConstant('JIRADEFECTTYPE', 'Bug');
 exportConstant('JIRARELEASEFIELD', 'Fix Version');
+exportConstant('JIRACOMPLETE', 'Done');
+
+exportConstant('STATUSOK', 'green');
+exportConstant('STATUSWARNING', 'amber');
+exportConstant('STATUSERROR', 'red');
 
 exportConstant('DEFAULTDEFECTINITIALSTATE', 'Created');
 exportConstant('DEFAULTDEFECTRESOLVEDSTATE', 'Closed');

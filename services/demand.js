@@ -3,6 +3,7 @@
 const Config = require('config');
 const constants = require('../util/constants');
 const jira = require('./demandSystem/jira');
+const trello = require('./demandSystem/trello');
 const Log4js = require('log4js');
 const utils = require('../util/utils');
 const R = require('ramda');
@@ -41,6 +42,8 @@ exports.rawDataProcessor = function(demandData) {
     switch(demandData.source.toUpperCase()) {
         case 'JIRA':
           return jira;
+        case 'TRELLO':
+          return trello;
         default:
           return null;
     }
@@ -51,35 +54,31 @@ exports.rawDataProcessor = function(demandData) {
 exports.transformCommonToSummary = function(commonData, processingInstructions) {
   logger.info(`mapCommonDataToSummary for ${commonData.length} records`);
 
-  var datedData = [];
+  var datedData = {};
 
   commonData.forEach(function (aHistoryItem) {
     aHistoryItem.history.forEach(function (aStatusChange) {
       if (!aStatusChange.statusValue.startsWith(constants.JIRARELEASEFIELD)) {
-        var endDate = (R.isNil(aStatusChange.changeDate)) ? processingInstructions.endDate : aStatusChange.changeDate;
-        var daysDifference = utils.createDayArray(aStatusChange.startDate, endDate);
+        const endDate = R.isNil(aStatusChange.changeDate)
+                            ? processingInstructions.endDate : aStatusChange.changeDate;
+        const daysDifference = utils.createDayArray(aStatusChange.startDate, endDate);
 
-        for (var i = 0; i < daysDifference.length; i++) {
-          if (!(daysDifference[i] in datedData)) {
-            datedData.push(daysDifference[i]);
-            datedData[daysDifference[i]] = {};
+        daysDifference.forEach(date => {
+          if (!datedData[date]) {
+            datedData[date] = {};
           }
-          var temp = datedData[daysDifference[i]];
-          if (!(aStatusChange.statusValue in temp)) {
+          const temp = datedData[date];
+          if (!temp[aStatusChange.statusValue]) {
             temp[aStatusChange.statusValue] = 0;
           }
           temp[aStatusChange.statusValue]++;
-        }
+        });
       }
     });
   });
 
-  var demandStatusByDay = [];
-  datedData.forEach(function (aDayInTime) {
-    var statusSummary = datedData[aDayInTime];
-    var datedStatus = {projectDate: aDayInTime, status: statusSummary};
-    demandStatusByDay.push(datedStatus);
-  });
+  var demandStatusByDay = Reflect.ownKeys(datedData)
+  .map(aDayInTime => ({ projectDate: aDayInTime, status: datedData[aDayInTime] }));
 
   return demandStatusByDay;
 }
