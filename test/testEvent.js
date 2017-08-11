@@ -6,6 +6,7 @@ const utils = require('../util/utils');
 const dataStore = require('../services/datastore/mongodb');
 const event = require('../services/event');
 
+const R = require('ramda');
 const CO = require('co');
 const Should = require('should');
 const Config = require('config');
@@ -16,29 +17,153 @@ const logger = Log4js.getLogger();
 logger.setLevel(Config.get('log-level'));
 
 describe.only('Event', () => {
-  let processingInstructions;
-  let anEvent;
-  let aSystemEvent;
-  let insertedDocument;
+  describe('single system', () => {
+    let processingInstructions;
+    let anEvent;
+    let aSystemEvent;
+    let insertedDocument;
 
-  before('setup', function () {
-    processingInstructions = new utils.ProcessingInfo(testConstants.UNITTESTPROJECT);
-    processingInstructions.eventSection = constants.EFFORTSECTION;
-    anEvent = new utils.DataEvent(constants.LOADEVENT);
-    anEvent.effort = {};
-    aSystemEvent = new utils.SystemEvent(constants.PENDINGEVENT, '');
-    return dataStore.insertData(processingInstructions.dbUrl, constants.EVENTCOLLECTION, [anEvent])
-    .then(document => {
-      insertedDocument = document.ops[0];
+    beforeEach('setup', function () {
+      processingInstructions = new utils.ProcessingInfo(testConstants.UNITTESTPROJECT);
+      processingInstructions.eventSection = constants.EFFORTSECTION;
+      anEvent = new utils.DataEvent(constants.LOADEVENT);
+      anEvent.effort = {};
+      aSystemEvent = new utils.SystemEvent(constants.PENDINGEVENT, '');
+      return dataStore.insertData(processingInstructions.dbUrl, constants.EVENTCOLLECTION, [anEvent])
+      .then(document => {
+        insertedDocument = document.ops[0];
+      });
+    });
+
+    it('updates the effort in the event', () => {
+      return CO(function* () {
+        yield event.processEventData(aSystemEvent, processingInstructions, insertedDocument._id)
+        const updatedEvent = yield dataStore.getDocumentByID(processingInstructions.dbUrl, constants.EVENTCOLLECTION, insertedDocument._id);
+        Should(aSystemEvent).match(updatedEvent.effort);
+      });
+    });
+
+    it('sets an end time on the event is complete', () => {
+      return CO(function* () {
+        yield event.processEventData(aSystemEvent, processingInstructions, insertedDocument._id)
+        const updatedEvent = yield dataStore.getDocumentByID(processingInstructions.dbUrl, constants.EVENTCOLLECTION, insertedDocument._id);
+        Should(updatedEvent.endTime).not.null();
+      });
+    });
+
+    it('does not set an end time on the event is incomplete', () => {
+      return CO(function* () {
+        // Setting demand as not null so the event is incomplete
+        yield dataStore.updateDocumentPart(processingInstructions.dbUrl, constants.EVENTCOLLECTION, insertedDocument._id, constants.DEMANDSECTION, {});
+
+        yield event.processEventData(aSystemEvent, processingInstructions, insertedDocument._id)
+        const updatedEvent = yield dataStore.getDocumentByID(processingInstructions.dbUrl, constants.EVENTCOLLECTION, insertedDocument._id);
+        Should(updatedEvent.endTime).is.null();
+      });
+    });
+
+    it('sets an event as complete', () => {
+      return CO(function* () {
+        const successfulSystemEvent = R.merge(aSystemEvent, { status: constants.SUCCESSEVENT });
+        yield event.processEventData(successfulSystemEvent, processingInstructions, insertedDocument._id)
+        let updatedEvent;
+        yield new Promise((resolve) => {
+          process.nextTick(() => {
+            dataStore.getDocumentByID(processingInstructions.dbUrl, constants.EVENTCOLLECTION, insertedDocument._id)
+            .then(result => {
+              updatedEvent = result;
+              resolve();
+            });
+          });
+        });
+        Should(updatedEvent.status).equal(constants.SUCCESSEVENT);
+      });
+    });
+
+    it('sets an event as failure', () => {
+      return CO(function* () {
+        const successfulSystemEvent = R.merge(aSystemEvent, { status: constants.FAILEDEVENT });
+        yield event.processEventData(successfulSystemEvent, processingInstructions, insertedDocument._id)
+        let updatedEvent;
+        yield new Promise((resolve) => {
+          process.nextTick(() => {
+            dataStore.getDocumentByID(processingInstructions.dbUrl, constants.EVENTCOLLECTION, insertedDocument._id)
+            .then(result => {
+              updatedEvent = result;
+              resolve();
+            });
+          });
+        });
+        Should(updatedEvent.status).equal(constants.FAILEDEVENT);
+      });
     });
   });
 
-  it('updates the effort in the event', () => {
+  describe('multiple systems', () => {
+    let processingInstructions;
+    let anEvent;
+    let anEffortSystemEvent;
+    beforeEach('setup', function () {
+      processingInstructions = new utils.ProcessingInfo(testConstants.UNITTESTPROJECT);
+      processingInstructions.eventSection = constants.EFFORTSECTION;
+      anEvent = new utils.DataEvent(constants.LOADEVENT);
+    });
+
+    it('does not mark the event as complete if all systems are not complete', () => {
+      return CO(function* () {
+        anEvent.effort = {};
+        anEvent.demand = {};
+        anEffortSystemEvent = new utils.SystemEvent(constants.SUCCESSEVENT, '');
+        const insertedDocument = (yield dataStore.insertData(processingInstructions.dbUrl, constants.EVENTCOLLECTION, [anEvent])).ops[0]
+        yield event.processEventData(anEffortSystemEvent, processingInstructions, insertedDocument._id)
+        const updatedEvent = yield dataStore.getDocumentByID(processingInstructions.dbUrl, constants.EVENTCOLLECTION, insertedDocument._id);
+        Should(updatedEvent.endTime).is.null();
+      });
+    });
+
+    it('marks event.status as success when all systems are completed successfully', () => {
+      return CO(function* () {
+        anEvent.effort = {};
+        anEvent.demand = new utils.SystemEvent(constants.SUCCESSEVENT, '');
+        anEffortSystemEvent = new utils.SystemEvent(constants.SUCCESSEVENT, '');
+        const insertedDocument = (yield dataStore.insertData(processingInstructions.dbUrl, constants.EVENTCOLLECTION, [anEvent])).ops[0]
+        yield event.processEventData(anEffortSystemEvent, processingInstructions, insertedDocument._id)
+        const updatedEvent = yield dataStore.getDocumentByID(processingInstructions.dbUrl, constants.EVENTCOLLECTION, insertedDocument._id);
+        Should(updatedEvent.status).match(constants.SUCCESSEVENT);
+      });
+    });
+
+    it('marks event.status as failed when at least one systems fail', () => {
+      return CO(function* () {
+        anEvent.effort = {};
+        anEvent.demand = new utils.SystemEvent(constants.SUCCESSEVENT, '');
+        anEffortSystemEvent = new utils.SystemEvent(constants.FAILEDEVENT, '');
+        const insertedDocument = (yield dataStore.insertData(processingInstructions.dbUrl, constants.EVENTCOLLECTION, [anEvent])).ops[0]
+        yield event.processEventData(anEffortSystemEvent, processingInstructions, insertedDocument._id)
+        const updatedEvent = yield dataStore.getDocumentByID(processingInstructions.dbUrl, constants.EVENTCOLLECTION, insertedDocument._id);
+        Should(updatedEvent.status).match(constants.FAILEDEVENT);
+      });
+    });
+
+    it('marks event.status as failed when all systems fail', () => {
+      return CO(function* () {
+        anEvent.effort = {};
+        anEvent.demand = new utils.SystemEvent(constants.FAILEDEVENT, '');
+        anEffortSystemEvent = new utils.SystemEvent(constants.FAILEDEVENT, '');
+        const insertedDocument = (yield dataStore.insertData(processingInstructions.dbUrl, constants.EVENTCOLLECTION, [anEvent])).ops[0]
+        yield event.processEventData(anEffortSystemEvent, processingInstructions, insertedDocument._id)
+        const updatedEvent = yield dataStore.getDocumentByID(processingInstructions.dbUrl, constants.EVENTCOLLECTION, insertedDocument._id);
+        Should(updatedEvent.status).match(constants.FAILEDEVENT);
+      });
+    });
+
+  })  
+  afterEach(() => {
     return CO(function* () {
-      yield event.processEventData(aSystemEvent, processingInstructions, insertedDocument._id)
-      const updatedEvent = yield dataStore.getDocumentByID(processingInstructions.dbUrl, constants.EVENTCOLLECTION, insertedDocument._id);
-      Should(aSystemEvent).match(updatedEvent.effort);
-    })
-  })
+      yield dataStore.clearData(utils.dbProjectPath(testConstants.UNITTESTPROJECT), constants.EVENTCOLLECTION);
+    });
+  });
 });
+
+
 
