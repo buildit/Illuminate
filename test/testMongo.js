@@ -8,6 +8,7 @@ const utils = require('../util/utils');
 
 const Config = require('config');
 const Log4js = require('log4js');
+const R = require('ramda');
 
 Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
@@ -143,7 +144,6 @@ describe('mongo', () => {
     after('Delete the stuff you created', function() {
       return mongoDB.clearData(url, constants.RAWEFFORT);
     });
-
   });
 
   describe('Test that an upsert inserts', () => {
@@ -164,6 +164,41 @@ describe('mongo', () => {
     after('Delete the stuff you created', function() {
       return mongoDB.clearData(url, constants.RAWEFFORT);
     });
+  });
+
+  describe('Update part of a document', () => {
+    var url = '';
+    let event;
+    let insertedDocument;
+
+    before('setup', function () {
+      url = utils.dbProjectPath(testConstants.UNITTESTPROJECT);
+
+      event = new utils.DataEvent(constants.LOADEVENT);
+      return mongoDB.insertData(url, constants.EVENTCOLLECTION, [event])
+      .then(document => {
+        insertedDocument = document.ops[0];
+      });
+    });
+
+    it('should update the demand secion', () => {
+      const demand = new utils.DemandHistoryEntry(constants.SUCCESSEVENT, '2017-08-11');
+      const expected = R.merge(event, { demand });
+      return mongoDB.updateDocumentPart(url, constants.EVENTCOLLECTION, insertedDocument._id, constants.DEMANDSECTION, demand)
+      .then((updatedDocument) => Should(expected).match(updatedDocument));
+    });
+
+    it('should update the demand secion', () => {
+      const demand = new utils.DemandHistoryEntry(constants.FAILUREEVENT, '2017-08-11');
+      return mongoDB.updateDocumentPart(url, constants.EVENTCOLLECTION, 'document does not exist', constants.DEMANDSECTION, demand)
+      .then(() => Should.ok(false))
+      .catch(() => Should.ok(true));
+    });
+
+    after('Delete the stuff you created', function() {
+      return mongoDB.clearData(url, constants.EVENTCOLLECTION);
+    });
+
   });
 
   describe('Test of Wipe and Insert', function() {

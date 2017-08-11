@@ -55,7 +55,7 @@ function generateConnectionInformation(url, version) {
 }
 
 exports.upsertData = function (projectPath, collectionName, documentToStore) {
-  logger.info(`UPSERT ${documentToStore.length} documents in [${collectionName}] at URL ${projectPath}`);
+  logger.debug(`UPSERT ${documentToStore.length} documents in [${collectionName}] at URL ${projectPath}`);
 
   return CO(function*() {
     var db = getDBConnection(projectPath);
@@ -77,7 +77,7 @@ exports.upsertData = function (projectPath, collectionName, documentToStore) {
 }
 
 exports.insertData = function (projectPath, collectionName, documentToStore) {
-  logger.info(`INSERT ${documentToStore.length} documents in [${collectionName}] at URL ${projectPath}`);
+  logger.debug(`INSERT ${documentToStore.length} documents in [${collectionName}] at URL [${projectPath}]`);
 
   return CO(function*() {
     var db = getDBConnection(projectPath);
@@ -95,8 +95,30 @@ exports.insertData = function (projectPath, collectionName, documentToStore) {
   });
 }
 
+exports.updateDocumentPart = function (projectPath, collectionName, _id, key, value) {
+  logger.debug(`UPDATE PART OF DOCUMENT with _id [${_id}] in [${collectionName}] at URL [${projectPath}]`);
+
+  return CO(function* () {
+    const options = { returnOriginal: false };
+    const setModifier = { $set: {} };
+    setModifier.$set[key] = value;
+    const db = getDBConnection(projectPath);
+    const col = db.collection(collectionName);
+
+    const result = yield col.findOneAndUpdate({ _id }, setModifier, options);
+    if (result.lastErrorObject.updatedExisting) {
+      return result.value
+    } 
+    throw new Error(`No document found with id [${_id}]`);
+  })
+  .catch(error => {
+    logger.error('updateDocumentPart', error);
+    throw error;
+  });
+}
+
 exports.getAllData = function (projectPath, collectionName) {
-  logger.info(`GET ALL [${collectionName}] Entries at URL ${projectPath}`);
+  logger.debug(`GET ALL [${collectionName}] Entries at URL ${projectPath}`);
 
   return CO(function*() {
     var db = getDBConnection(projectPath);
@@ -114,7 +136,7 @@ exports.getAllData = function (projectPath, collectionName) {
 }
 
 exports.getDocumentByName = function (projectPath, collectionName, aName) {
-  logger.info(`GET By Name [${aName}] from [${collectionName}] at URL ${projectPath}`);
+  logger.debug(`GET By Name [${aName}] from [${collectionName}] at URL ${projectPath}`);
 
   return CO(function*() {
     var db = getDBConnection(projectPath);
@@ -132,7 +154,7 @@ exports.getDocumentByName = function (projectPath, collectionName, aName) {
 }
 
 exports.getDocumentByID = function (projectPath, collectionName, anID) {
-  logger.info(`GET By ID [${anID}] from [${collectionName}] at URL ${projectPath}`);
+  logger.debug(`GET By ID [${anID}] from [${collectionName}] at URL ${projectPath}`);
 
   return CO(function*() {
     var db = getDBConnection(projectPath);
@@ -150,7 +172,7 @@ exports.getDocumentByID = function (projectPath, collectionName, anID) {
 }
 
 exports.clearData = function (projectPath, collectionName) {
-  logger.info(`DELETE [${collectionName}] Entries at URL ${projectPath}`);
+  logger.debug(`DELETE [${collectionName}] Entries at URL ${projectPath}`);
 
   return CO(function*() {
     var db = getDBConnection(projectPath);
@@ -168,7 +190,7 @@ exports.clearData = function (projectPath, collectionName) {
 }
 
 exports.wipeAndStoreData = function (projectPath, aCollection, documentToStore) {
-  logger.info(`WIPE and STORE ${documentToStore.length} documents in [${aCollection}] at URL ${projectPath}`);
+  logger.debug(`WIPE and STORE ${documentToStore.length} documents in [${aCollection}] at URL ${projectPath}`);
 
   return module.exports.clearData(projectPath, aCollection)
   .then(() => module.exports.insertData(projectPath, aCollection, documentToStore))
@@ -189,13 +211,12 @@ const wasCompletedSuccessfully = anEvent =>
   && (anEvent.effort === null || anEvent.effort.status === constants.SUCCESSEVENT));
 
 exports.processEventData = function (projectPath, collectionName, eventInfo, sectionName, documentToStore) {
-  logger.info(`PROCESS EVENT ${eventInfo} for section ${sectionName} in [${collectionName}] at URL ${projectPath}`);
+  logger.debug(`PROCESS EVENT ${eventInfo} for section ${sectionName} in [${collectionName}] at URL ${projectPath}`);
 
   return new Promise(function (resolve, reject) {
     CO(function*() {
       var result = null;
 
-      // var db = yield MongoClient.connect(projectPath);
       var db = getDBConnection(projectPath);
       var col = db.collection(collectionName);
       var options = {returnOriginal: false, upsert: true};
