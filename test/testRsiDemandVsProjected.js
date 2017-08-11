@@ -15,6 +15,7 @@ describe('Rag Status Indicators - Demand Vs Projected', () => {
   describe('First Piece of S curve', () => {
     const week = 1;
     const expectedComplete = 5;
+    
     it('returns red when under the curve', () => {
       return CO(function* foo() {
         yield insertDemandSpecificDoneCountOf(expectedComplete  - 1);
@@ -92,6 +93,65 @@ describe('Rag Status Indicators - Demand Vs Projected', () => {
         yield insertDemandSpecificDoneCountOf(expectedComplete + 1);
         const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week), url);
         Should(result).match(CommonProjectStatusResult(name, expectedComplete + 1, expectedComplete, constants.STATUSOK));
+      });
+    });
+  });
+
+  describe('No ramp up (0 start iterations)', () => {
+
+    describe('First piece of S curve', () => {
+      const week = 2;
+      const expectedComplete = 20;
+      it('returns red when under the curve', () => {
+        return CO(function* foo() {
+          yield insertDemandSpecificDoneCountOf(expectedComplete  - 1);
+          const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week, 0), url);
+          Should(result).match(CommonProjectStatusResult(name, expectedComplete - 1, expectedComplete, constants.STATUSERROR));
+        });
+      });
+
+      it('returns amber when right on the curve', () => {
+        return CO(function* foo() {
+          yield insertDemandSpecificDoneCountOf(expectedComplete);
+          const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week, 0), url);
+          Should(result).match(CommonProjectStatusResult(name, expectedComplete, expectedComplete, constants.STATUSWARNING));
+        });
+      });
+      
+      it('returns green when above the curve', () => {
+        return CO(function* foo() {
+          yield insertDemandSpecificDoneCountOf(expectedComplete + 1);
+          const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week, 0), url);
+          Should(result).match(CommonProjectStatusResult(name, expectedComplete + 1, expectedComplete, constants.STATUSOK));
+        });
+      });
+    });
+
+    describe('Second piece of S curve', () => {
+      const week = 11;
+      const expectedComplete = 110;
+      it('returns red when under the curve', () => {
+        return CO(function* foo() {
+          yield insertDemandSpecificDoneCountOf(expectedComplete  - 1);
+          const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week, 0), url);
+          Should(result).match(CommonProjectStatusResult(name, expectedComplete - 1, expectedComplete, constants.STATUSERROR));
+        });
+      });
+
+      it('returns amber when right on the curve', () => {
+        return CO(function* foo() {
+          yield insertDemandSpecificDoneCountOf(expectedComplete);
+          const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week, 0), url);
+          Should(result).match(CommonProjectStatusResult(name, expectedComplete, expectedComplete, constants.STATUSWARNING));
+        });
+      });
+      
+      it('returns green when above the curve', () => {
+        return CO(function* foo() {
+          yield insertDemandSpecificDoneCountOf(expectedComplete + 1);
+          const result = yield demandVsProjected.evaluate(createProjectStartingWeeksAgo(week, 0), url);
+          Should(result).match(CommonProjectStatusResult(name, expectedComplete + 1, expectedComplete, constants.STATUSOK));
+        });
       });
     });
   });
