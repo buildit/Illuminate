@@ -7,15 +7,15 @@ class DatedEffortArray {
 
   constructor() {
     this.timeEntries = [];
-  };
+  }
 
   asJSON() {
     return JSON.parse(JSON.stringify(this.timeEntries));
-  };
+  }
 
   size() {
     return this.timeEntries.length
-  };
+  }
 
   addTimeEntry(day, role, effort) {
     var anEntry = {};
@@ -28,7 +28,7 @@ class DatedEffortArray {
 
   addTimeArray(arrayOfEffort) {
     this.timeEntries = R.union(this.timeEntries, arrayOfEffort);
-  };
+  }
 
   typeOf() {
     return 'DatedEffortArray';
