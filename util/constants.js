@@ -2,6 +2,7 @@
 
 exportConstant('PROJECTCOLLECTION', 'project');
 exportConstant('EVENTCOLLECTION', 'loadEvents');
+exportConstant('STATUSCOLLECTION', 'statuses');
 
 exportConstant('SUCCESSEVENT', 'COMPLETED SUCCESSFULLY');
 exportConstant('FAILEDEVENT', 'FAILED');
@@ -34,8 +35,14 @@ exportConstant('JIRADEMANDTYPE', 'Story');
 exportConstant('JIRADEFECTTYPE', 'Bug');
 exportConstant('JIRARELEASEFIELD', 'Fix Version');
 
+exportConstant('STATUSOK', 'green');
+exportConstant('STATUSWARNING', 'amber');
+exportConstant('STATUSERROR', 'red');
+
 exportConstant('DEFAULTDEFECTINITIALSTATE', 'Created');
 exportConstant('DEFAULTDEFECTRESOLVEDSTATE', 'Closed');
+
+exportConstant('PROJECTSTATUSKEY', 'status');
 
 function exportConstant (name, value) {
     Object.defineProperty(exports, name, {

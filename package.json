@@ -54,6 +54,7 @@
     "ramda": "^0.22.1",
     "response-time": "^2.3.1",
     "restler": "^3.4.0",
+    "simple-statistics": "^4.1.0",
     "try": "^0.13.3",
     "uuid": "^2.0.3",
     "valid-url": "^1.0.9"

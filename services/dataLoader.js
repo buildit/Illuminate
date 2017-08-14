@@ -28,6 +28,7 @@ exports.processProjectData = function (aProject, anEvent) {
   var processingInstructions = new utils.ProcessingInfo(aProject.name);
   processingInstructions.endDate = utils.dateFormatIWant(determineProjectEndDate(aProject));
   processingInstructions.storageFunction = dataStore.upsertData;
+  const eventProcessor = event.processEventData(aProject);
 
 
   if (systemDefinitionExists(aProject.demand)) {
@@ -36,7 +37,7 @@ exports.processProjectData = function (aProject, anEvent) {
     logger.debug(`*** DEMAND processing Info ${JSON.stringify(demandInstructions)}`);
     module.exports.processProjectSystem(demandLoader, aProject.demand, anEvent, demandInstructions)
     .then (function (aDemandEvent) {
-      event.processEventData(aDemandEvent, demandInstructions, anEvent._id);
+      eventProcessor(aDemandEvent, demandInstructions, anEvent._id);
     });
   }
 
@@ -47,7 +48,7 @@ exports.processProjectData = function (aProject, anEvent) {
     logger.debug(`*** DEFECT processing Info ${JSON.stringify(defectInstructions)}`);
     module.exports.processProjectSystem(defectLoader, aProject.defect, anEvent, defectInstructions)
     .then (function (aDefectEvent) {
-      event.processEventData(aDefectEvent, defectInstructions, anEvent._id);
+      eventProcessor(aDefectEvent, defectInstructions, anEvent._id);
     });
   }
 
@@ -57,7 +58,7 @@ exports.processProjectData = function (aProject, anEvent) {
     logger.debug(`*** EFFORT processing Info ${JSON.stringify(effortInstructions)}`);
     module.exports.processProjectSystem(effortLoader, aProject.effort, anEvent, effortInstructions)
     .then(function(anEffortEvent) {
-      event.processEventData(anEffortEvent, effortInstructions, anEvent._id);
+      eventProcessor(anEffortEvent, effortInstructions, anEvent._id);
     });
   }
 }

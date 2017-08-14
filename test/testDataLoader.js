@@ -257,19 +257,20 @@ describe('testDataLoader', () => {
       // demand is null and effort is an empty objects - these are ways that projects have been structured in the plfu-feasability
       // defect is how Synpase creates a default empty project
       aProject = {
-          name: 'COLLECTION-FOR-UNITESTING', // warning - I can't figure out how to use runtime constants for defineing other constants - change at your own risk
-          program: "Projection Test Data",
-          portfolio: "Unit Test Data",
-          description: "A set of basic test data to be used to validate behavior of client systems.",
-          startDate: null,
-          endDate: null,
-          demand: null,
-          defect: { severity:[] },
-          effort: {},
-          projection: {}};
+        name: 'COLLECTION-FOR-UNITESTING', // warning - I can't figure out how to use runtime constants for defineing other constants - change at your own risk
+        program: "Projection Test Data",
+        portfolio: "Unit Test Data",
+        description: "A set of basic test data to be used to validate behavior of client systems.",
+        startDate: null,
+        endDate: null,
+        demand: null,
+        defect: { severity:[] },
+        effort: {},
+        projection: {}
+      };
 
-          effortSpy = Sinon.spy(effortLoader, 'configureProcessingInstructions');
-          demandSpy = Sinon.spy(demandLoader, 'configureProcessingInstructions');
+      effortSpy = Sinon.spy(effortLoader, 'configureProcessingInstructions');
+      demandSpy = Sinon.spy(demandLoader, 'configureProcessingInstructions');
     });
 
     after('Cleanup', function() {
@@ -332,10 +333,16 @@ describe('testDataLoader', () => {
       projection: {}
     };
     const dataEvent = new utils.DataEvent(constants.LOADEVENT);
-
+    let stub = sandbox.stub();
     beforeEach(() => {
-      sandbox.stub(event ,'processEventData');
+      stub = sandbox.stub();
+      sandbox.stub(event ,'processEventData').returns(stub);
     });
+
+    it('sets up the processEventData', () => {
+      dataLoader.processProjectData(aProject, dataEvent);
+      Should(event.processEventData.getCall(0).args[0]).equal(aProject);
+    })
 
     it('processes demand data', () => {
       sandbox.stub(dataLoader, 'processProjectSystem').resolves({ a: 'demandEvent'});
@@ -345,8 +352,8 @@ describe('testDataLoader', () => {
       .then(() =>
         new Promise(resolve => {
           process.nextTick(() => {
-            Should(event.processEventData.getCall(0).args[0]).match({ a: 'demandEvent'});
-            Should(event.processEventData.getCall(0).args[2]).match(dataEvent._id);
+            Should(stub.getCall(0).args[0]).match({ a: 'demandEvent'});
+            Should(stub.getCall(0).args[2]).match(dataEvent._id);
             resolve();
           });
         })
@@ -361,8 +368,8 @@ describe('testDataLoader', () => {
       .then(() =>
         new Promise(resolve => {
           process.nextTick(() => {
-            Should(event.processEventData.getCall(0).args[0]).match({ a: 'defectEvent'});
-            Should(event.processEventData.getCall(0).args[2]).match(dataEvent._id);
+            Should(stub.getCall(0).args[0]).match({ a: 'defectEvent'});
+            Should(stub.getCall(0).args[2]).match(dataEvent._id);
             resolve();
           });
         })
@@ -377,8 +384,8 @@ describe('testDataLoader', () => {
       .then(() =>
         new Promise(resolve => {
           process.nextTick(() => {
-            Should(event.processEventData.getCall(0).args[0]).match({ an: 'effortEvent'});
-            Should(event.processEventData.getCall(0).args[2]).match(dataEvent._id);
+            Should(stub.getCall(0).args[0]).match({ an: 'effortEvent'});
+            Should(stub.getCall(0).args[2]).match(dataEvent._id);
             resolve();
           });
         })

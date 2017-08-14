@@ -84,8 +84,8 @@ exports.createDayArray = function (start, end) {
 };
 
 exports.ProcessingInfo = function (name) {
-  this.projectName = name;
-  this.dbUrl = module.exports.dbProjectPath(this.projectName);
+  this.name = name;
+  this.dbUrl = module.exports.dbProjectPath(name);
   this.rawLocation = null;
   this.commonLocation = null;
   this.summaryLocation = null;
@@ -136,4 +136,14 @@ exports.CommonDemandEntry = function (id) {
   this._id = id;
   this.uri = null;
   this.history = [];
+}
+
+exports.CommonProjectStatusResult = function (name, actual, projected, status, type) {
+  return {
+    name,
+    actual,
+    projected,
+    status,
+    type,
+  }
 }
