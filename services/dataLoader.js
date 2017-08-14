@@ -6,6 +6,7 @@ const dataStore = require('./datastore/mongodb');
 const defectLoader = require('./defect');
 const demandLoader = require('./demand');
 const effortLoader = require('./effort');
+const event = require('./event');
 const Log4js = require('log4js');
 const R = require('ramda');
 const utils = require('../util/utils');
@@ -29,47 +30,34 @@ exports.processProjectData = function (aProject, anEvent) {
   processingInstructions.storageFunction = dataStore.upsertData;
 
 
-
   if (systemDefinitionExists(aProject.demand)) {
-    var demandInstructions = demandLoader.configureProcessingInstructions(processingInstructions);
+    const demandInstructions = demandLoader.configureProcessingInstructions(processingInstructions);
     demandInstructions.sourceSystem = demandLoader.rawDataProcessor(aProject.demand);
     logger.debug(`*** DEMAND processing Info ${JSON.stringify(demandInstructions)}`);
     module.exports.processProjectSystem(demandLoader, aProject.demand, anEvent, demandInstructions)
     .then (function (aDemandEvent) {
-      dataStore.processEventData(demandInstructions.dbUrl,
-        constants.EVENTCOLLECTION,
-        anEvent,
-        demandInstructions.eventSection,
-        aDemandEvent);
+      event.processEventData(aDemandEvent, demandInstructions, anEvent._id);
     });
   }
 
   if (systemDefinitionExists(aProject.defect)) {
-    var defectInstructions = defectLoader.configureProcessingInstructions(processingInstructions);
+    const defectInstructions = defectLoader.configureProcessingInstructions(processingInstructions);
     defectInstructions.sourceSystem = defectLoader.rawDataProcessor(aProject.defect);
     defectInstructions.resolvedStatus = aProject.defect.resolvedStatus;
     logger.debug(`*** DEFECT processing Info ${JSON.stringify(defectInstructions)}`);
     module.exports.processProjectSystem(defectLoader, aProject.defect, anEvent, defectInstructions)
     .then (function (aDefectEvent) {
-      dataStore.processEventData(defectInstructions.dbUrl,
-        constants.EVENTCOLLECTION,
-        anEvent,
-        defectInstructions.eventSection,
-        aDefectEvent);
+      event.processEventData(aDefectEvent, defectInstructions, anEvent._id);
     });
   }
 
   if (systemDefinitionExists(aProject.effort)) {
-    var effortInstructions = effortLoader.configureProcessingInstructions(processingInstructions);
+    const effortInstructions = effortLoader.configureProcessingInstructions(processingInstructions);
     effortInstructions.sourceSystem = effortLoader.rawDataProcessor(aProject.effort);
     logger.debug(`*** EFFORT processing Info ${JSON.stringify(effortInstructions)}`);
     module.exports.processProjectSystem(effortLoader, aProject.effort, anEvent, effortInstructions)
     .then(function(anEffortEvent) {
-      dataStore.processEventData(effortInstructions.dbUrl,
-        constants.EVENTCOLLECTION,
-        anEvent,
-        effortInstructions.eventSection,
-        anEffortEvent);
+      event.processEventData(anEffortEvent, effortInstructions, anEvent._id);
     });
   }
 }
