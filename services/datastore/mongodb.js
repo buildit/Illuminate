@@ -63,9 +63,10 @@ exports.upsertData = function (projectPath, collectionName, documentToStore) {
     }
     var col = db.collection(collectionName);
 
-    documentToStore.forEach(function(anEntry) {
-      col.findOneAndReplace({_id: anEntry._id}, anEntry, {upsert: true});
+    const promises = documentToStore.map(anEntry => {
+      return col.findOneAndReplace({_id: anEntry._id}, anEntry, {upsert: true});
     });
+    yield Promise.all(promises);
     var result = yield col.find().toArray();
     return result;
   }).catch((err) => {
