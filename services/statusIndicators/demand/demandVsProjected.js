@@ -62,8 +62,8 @@ function getTodaysStoryTarget ({ projection }) {
   const dailyMiddleLength = Math.ceil(middleStories / targetVelocity) * dailyIterationLength;
   const totalLength = dailyStartLength + dailyMiddleLength + dailyEndLength;
 
-  const today = moment();
-  const momentStartDate = moment(startDate, 'YYYY-MM-DD');
+  const today = moment().utc();
+  const momentStartDate = moment(startDate, 'YYYY-MM-DD').utc();
   const dayNumber = today.diff(momentStartDate, 'days');
 
   function startPiece(day) {

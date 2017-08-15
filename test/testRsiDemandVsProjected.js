@@ -166,13 +166,13 @@ describe('Rag Status Indicators - Demand Vs Projected', () => {
 function insertDemandSpecificDoneCountOf(desiredDoneCount) {
   const entries = [
     {
-      projectDate: moment().format('YYYY-MM-DD'), 
+      projectDate: moment().utc().format('YYYY-MM-DD'), 
       status: {
         Done: desiredDoneCount,
       },
     },
     {
-     projectDate: moment().subtract(1, "days").format('YYYY-MM-DD'), 
+     projectDate: moment().utc().subtract(1, "days").format('YYYY-MM-DD'), 
       status: {
         Done: desiredDoneCount - 1,
       }, 
@@ -190,7 +190,7 @@ function createProjectStartingWeeksAgo(numberOfWeeksAgo, startIterations = 5) {
       endIterations: 3,
       endVelocity: 5,
       iterationLength: 1,
-      startDate: moment().subtract(numberOfWeeksAgo, 'weeks').format('YYYY-MM-DD'),
+      startDate: moment().utc().subtract(numberOfWeeksAgo, 'weeks').format('YYYY-MM-DD'),
       startIterations,
       startVelocity: 5,
       targetVelocity: 10,

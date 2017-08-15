@@ -24,12 +24,12 @@ module.exports = {
 
       const notDonePoints = [];
 
-      const targetDate = moment(project.endDate, constants.DBDATEFORMAT);
+      const targetDate = moment(project.endDate, constants.DBDATEFORMAT).utc();
 
       const [ doneStartDate, doneEndDate ] = getDataRange(demand, constants.JIRACOMPLETE);
 
       demand
-      .map(summary => R.merge(summary, { projectDate: moment(summary.projectDate, constants.DBDATEFORMAT)}))
+      .map(summary => R.merge(summary, { projectDate: moment(summary.projectDate, constants.DBDATEFORMAT).utc() }))
       .filter(summary => summary.projectDate.isSameOrAfter(doneStartDate) && summary.projectDate.isSameOrBefore(doneEndDate))
       .forEach(summary => {
         const x = summary.projectDate.unix();
@@ -43,11 +43,11 @@ module.exports = {
       const notDoneMB = linearRegression(notDonePoints);
       const xZero = - notDoneMB.b / notDoneMB.m;
 
-      const estimatedCompletionDate = moment.unix(xZero);
+      const estimatedCompletionDate = moment.unix(xZero).utc();
 
       const dateFormat = 'MMM DD, YYYY';
       
-      const projected = moment(project.endDate, constants.DBDATEFORMAT).format(dateFormat);
+      const projected = moment(project.endDate, constants.DBDATEFORMAT).utc().format(dateFormat);
       const actual = estimatedCompletionDate.format(dateFormat);
       let status = constants.STATUSWARNING;
 
@@ -64,12 +64,12 @@ module.exports = {
 
 function getDataRange(statusData, category) {
   const datesInCategory = statusData.filter(datapoint => datapoint.status[category])
-    .map(datapoint => moment(datapoint.projectDate));
-  const tomorrow = moment.utc().add(1, 'days').hours(0).minutes(0).seconds(0);
+    .map(datapoint => moment(datapoint.projectDate).utc());
+  const tomorrow = moment().utc().add(1, 'days').hours(0).minutes(0).seconds(0);
   const max = moment.max(datesInCategory);
   const returnedMax = max.isAfter(tomorrow) ? tomorrow : max;
   return [
-    moment.min(datesInCategory),
+    moment.min(datesInCategory).utc(),
     returnedMax,
   ];
 }

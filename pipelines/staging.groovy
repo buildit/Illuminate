@@ -104,7 +104,7 @@ node {
     }
     catch (err) {
       currentBuild.result = "FAILURE"
-      slackInst.notify("Error while deploying to Staging", "Commit <${gitUrl}/commits/${shortCommitHash}|${shortCommitHash}> failed to deploy to <${appUrl}|${appUrl}>", "danger", "http://i3.kym-cdn.com/entries/icons/original/000/004/240/CandleCove.jpg", slackChannel)
+      // slackInst.notify("Error while deploying to Staging", "Commit <${gitUrl}/commits/${shortCommitHash}|${shortCommitHash}> failed to deploy to <${appUrl}|${appUrl}>", "danger", "http://i3.kym-cdn.com/entries/icons/original/000/004/240/CandleCove.jpg", slackChannel)
       throw err
     }
   }
