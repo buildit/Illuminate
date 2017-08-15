@@ -31,6 +31,7 @@ exports.processProjectData = function (aProject, anEvent) {
   const eventProcessor = event.processEventData(aProject);
 
 
+
   if (systemDefinitionExists(aProject.demand)) {
     const demandInstructions = demandLoader.configureProcessingInstructions(processingInstructions);
     demandInstructions.sourceSystem = demandLoader.rawDataProcessor(aProject.demand);

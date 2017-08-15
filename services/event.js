@@ -13,7 +13,7 @@ Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
 logger.setLevel(Config.get('log-level'));
 
-exports.processEventData = function(project) {
+exports.processEventData = function(aProject) {
   return function (aSystemEvent, processingInstructions, eventId) {
     logger.debug(`PROCESS EVENT for section ${processingInstructions.eventSection}`);
 
@@ -31,8 +31,8 @@ exports.processEventData = function(project) {
         if (wasCompletedSuccessfully(updatedEvent)) {
           updatedEvent.status = constants.SUCCESSEVENT;
           try {
-            const statuses = yield statusIndicators.getStatuses(processingInstructions);
-            yield module.exports.updateProjectStatus(project, processingInstructions.dbUrl, statuses);
+            const statuses = yield statusIndicators.getStatuses(aProject, processingInstructions.dbUrl);
+            yield module.exports.updateProjectStatus(aProject, processingInstructions.dbUrl, statuses);
             logger.debug('EVENT COMPLETE SUCCESSFULLY');
           } catch (error) {
             logger.debug('EVENT COMPLETE BUT ERROR POSTING STATUS');

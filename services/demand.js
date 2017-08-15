@@ -3,6 +3,7 @@
 const Config = require('config');
 const constants = require('../util/constants');
 const jira = require('./demandSystem/jira');
+const trello = require('./demandSystem/trello');
 const Log4js = require('log4js');
 const utils = require('../util/utils');
 const R = require('ramda');
@@ -41,6 +42,8 @@ exports.rawDataProcessor = function(demandData) {
     switch(demandData.source.toUpperCase()) {
         case 'JIRA':
           return jira;
+        case 'TRELLO':
+          return trello;
         default:
           return null;
     }
