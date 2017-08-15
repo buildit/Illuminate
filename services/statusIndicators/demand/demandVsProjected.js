@@ -1,12 +1,19 @@
-const moment = require('moment');
 const dataStore = require('../../datastore/mongodb');
 const constants = require('../../../util/constants');
 const { CommonProjectStatusResult } = require('../../../util/utils');
+const Log4js = require('log4js');
+const Config = require('config');
+const moment = require('moment');
+
+Log4js.configure('config/log4js_config.json', {});
+const logger = Log4js.getLogger();
+logger.setLevel(Config.get('log-level'));
 
 const name = 'Demand vs Projected';
 
 module.exports = {
   evaluate(project, projectPath) {
+    logger.debug(`starting backlogRegressionEndDatePredictor calculation for [${project.name}]`)
     return dataStore.getAllData(projectPath, constants.SUMMARYDEMAND)
     .then(demand => {
       if (demand.length === 0) {

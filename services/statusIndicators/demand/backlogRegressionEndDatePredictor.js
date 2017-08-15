@@ -1,13 +1,21 @@
-const { linearRegression } = require('simple-statistics');
-const moment = require('moment');
 const dataStore = require('../../datastore/mongodb');
 const constants = require('../../../util/constants');
 const { CommonProjectStatusResult } = require('../../../util/utils');
-const { omit, toPairs, merge } = require('ramda');
+const Log4js = require('log4js');
+const moment = require('moment');
+const { linearRegression } = require('simple-statistics');
+const Config = require('config');
+const R = require('ramda');
+
 const name = 'Backlog Regression End Date Predictor';
+
+Log4js.configure('config/log4js_config.json', {});
+const logger = Log4js.getLogger();
+logger.setLevel(Config.get('log-level'));
 
 module.exports = {
   evaluate(project, projectPath) {
+    logger.debug(`starting backlogRegressionEndDatePredictor calculation for [${project.name}]`)
     return dataStore.getAllData(projectPath, constants.SUMMARYDEMAND)
     .then(demand => {
       if (demand.length === 0) {
@@ -21,11 +29,11 @@ module.exports = {
       const [ doneStartDate, doneEndDate ] = getDataRange(demand, constants.JIRACOMPLETE);
 
       demand
-      .map(summary => merge(summary, { projectDate: moment(summary.projectDate, constants.DBDATEFORMAT)}))
+      .map(summary => R.merge(summary, { projectDate: moment(summary.projectDate, constants.DBDATEFORMAT)}))
       .filter(summary => summary.projectDate.isSameOrAfter(doneStartDate) && summary.projectDate.isSameOrBefore(doneEndDate))
       .forEach(summary => {
         const x = summary.projectDate.unix();
-        const yNotDone = toPairs(omit([constants.JIRACOMPLETE], summary.status))
+        const yNotDone = R.toPairs(R.omit([constants.JIRACOMPLETE], summary.status))
         .reduce((count, pair) => count + pair[1], 0) || 0;
         if (yNotDone) {
           notDonePoints.push([x, yNotDone]);

@@ -30,10 +30,12 @@ exportConstant('COMMONDEFECT', 'commonDefect');
 exportConstant('SUMMARYDEFECT', 'dailyDefectSummary');
 
 exportConstant('DEFAULTSTARTDATE', '2000-01-01');
+exportConstant('DBDATEFORMAT', 'YYYY-MM-DD');
 
 exportConstant('JIRADEMANDTYPE', 'Story');
 exportConstant('JIRADEFECTTYPE', 'Bug');
 exportConstant('JIRARELEASEFIELD', 'Fix Version');
+exportConstant('JIRACOMPLETE', 'Done');
 
 exportConstant('STATUSOK', 'green');
 exportConstant('STATUSWARNING', 'amber');

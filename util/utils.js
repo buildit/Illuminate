@@ -138,12 +138,12 @@ exports.CommonDemandEntry = function (id) {
   this.history = [];
 }
 
-exports.CommonProjectStatusResult = function (name, actual, projected, status, type) {
+exports.CommonProjectStatusResult = function (name, actual, projected, status, source) {
   return {
     name,
     actual,
     projected,
     status,
-    type,
+    source,
   }
 }
