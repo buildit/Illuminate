@@ -2,7 +2,7 @@ const checkForAnySev1DefectsToday = require('./checkForAnySev1DefectsToday');
 const constants = require('../../../util/constants');
 const dataStore = require('../../datastore/mongodb');
 const R = require('ramda');
-const CO = require('CO');
+const CO = require('co');
 
 module.exports = {
   getStatuses(project, projectPath) {
