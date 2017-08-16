@@ -31,13 +31,12 @@ function loadTrelloDemand (demandInfo, sinceTime) {
   logger.info(`loadTrelloDemand() for ${type} project ${demandInfo.project}`);
 
   return new Promise((resolve, reject) => {
-    Rest.get(appendAuth(`${demandInfo.url}/cards?fields=id,labels,dateLastActivity,shortUrl&actions=updateCard`, demandInfo))
+    Rest.get(appendAuth(`${demandInfo.url}/cards?fields=id,labels,dateLastActivity,shortUrl&actions=updateCard,createCard`, demandInfo))
       .on('complete', (data, response) => {
         if (response.statusCode === HttpStatus.OK) {
           logger.info(`Success reading demand: count [${data.length}]`);
           const returner = data
           .filter(card => card.actions.length > 0)
-          .filter(card => card.labels.some(label => label.name === demandInfo.storyLabel))
           .filter(card => sinceMoment.isSameOrBefore(moment(card.dateLastActivity)))
           .map(card => R.merge(card, { creationDate: getCardCreationDate(card.id), _id: card.id }))
 
@@ -59,6 +58,7 @@ function loadTrelloDemand (demandInfo, sinceTime) {
 }
 
 function transformRawToCommon(issueData) {
+
   logger.info('mapTrelloDemand into a common format');
 
   const commonDataFormat = [];

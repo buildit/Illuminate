@@ -1,8 +1,9 @@
 'use strict'
 
+const trello = require('../services/demandSystem/trello');
+const utils = require('../util/utils');
 const Config = require('config');
 const HttpStatus = require('http-status-codes');
-const trello = require('../services/demandSystem/trello');
 const Log4js = require('log4js');
 const Rest = require('restler');
 const Should = require('should');
@@ -17,22 +18,7 @@ logger.setLevel(Config.get('log-level'));
 const RAWTRELLOSTORY = [
   {
 		id: '5988df737343533636ad9b06',
-		labels: [
-			{
-				id: '5852b80f84e677fd36c48751',
-				idBoard: '5852b80f77946e47caa83648',
-				name: 'Story',
-				color: 'green',
-				uses: 180
-			},
-			{
-				id: '5852b80f84e677fd36c48753',
-				idBoard: '5852b80f77946e47caa83648',
-				name: 'Re-feature',
-				color: 'orange',
-				uses: 40
-			}
-		],
+		labels: [],
 		dateLastActivity: '2017-08-08T17:16:42.448Z',
 		shortUrl: 'https://trello.com/c/czfbvP32',
 		actions: [
@@ -306,15 +292,7 @@ const RAWTRELLOSTORY = [
   },
   {
 		id: '5988df9da10fae88aa36ed65',
-		labels: [
-			{
-				id: '5852b80f84e677fd36c48751',
-				idBoard: '5852b80f77946e47caa83648',
-				name: 'Story',
-				color: 'green',
-				uses: 180
-			}
-		],
+		labels: [],
 		dateLastActivity: '2017-08-08T17:38:22.877Z',
 		shortUrl: 'https://trello.com/c/bpdKeknD',
 		actions: []
@@ -322,117 +300,93 @@ const RAWTRELLOSTORY = [
   {
     id: '5852c76ae920023062777a48',
     labels: [],
-    dateLastActivity: '2017-01-20T16:53:49.832Z',
+    dateLastActivity: '2017-08-16T16:53:49.832Z',
     shortUrl: 'https://trello.com/c/ZLITfYS3',
     actions: [
       {
-				id: '5887bdef5ba112ad24ff0f9e',
-				idMemberCreator: '5852bd92b18f2d3a1353b4b0',
+				id: '5988df737343533636ad9b07',
+				idMemberCreator: '5850705288bd8136703f2c3b',
 				data: {
-					listAfter: {
-						name: 'In Progress',
-						id: '5852c5029da1150d4f74a1c4'
-					},
-					listBefore: {
-						name: 'Backlog',
-						id: '5852c4dacd99a6b33721358e'
-					},
 					board: {
 						shortLink: 'gvh3zIcI',
 						name: 'Twig',
 						id: '5852b80f77946e47caa83648'
 					},
-					card: {
-						shortLink: 'czfbvP32',
-						idShort: 28,
-						name: 'Save/Discard Twiglet (In Edit Mode) #L',
-						id: '586d0ac183cd6e72a0216f25',
-						idList: '5852c5029da1150d4f74a1c4'
+					list: {
+						name: 'Backlog',
+						id: '5852c4dacd99a6b33721358e'
 					},
-					old: {
-						idList: '5852c4dacd99a6b33721358e'
+					card: {
+						shortLink: 'bpdKeknD',
+						idShort: 399,
+						name: 'Automate CloudWatch logging for Twig & TwigAPI ELBs (can\'t do via convox)',
+						id: '5988df737343533636ad9b06'
 					}
 				},
-				type: 'updateCard',
-				date: '2017-01-24T20:49:51.607Z',
+				type: 'createCard',
+				date: '2017-08-07T21:45:23.437Z',
 				memberCreator: {
-					id: '5852bd92b18f2d3a1353b4b0',
-					avatarHash: '5ec2cb4ae4096e79ac2e38d5f82f092a',
-					fullName: 'Elizabeth Szoke',
-					initials: 'ES',
-					username: 'elizabethszoke1'
+					id: '5850705288bd8136703f2c3b',
+					avatarHash: 'c88a0753dc245e3e55c4a4e8a39721ea',
+					fullName: 'Andrew Ochsner',
+					initials: 'AO',
+					username: 'andrewochsner1'
 				}
-			},
+			}
     ]
   },
   {
 		id: '5931c9a4df99d4ff0e1b1e29',
-		labels: [
-			{
-				id: '5852b80f84e677fd36c48751',
-				idBoard: '5852b80f77946e47caa83648',
-				name: 'Story',
-				color: 'green',
-				uses: 180
-			},
-		],
+		labels: [],
 		dateLastActivity: '2017-06-01T17:16:42.448Z',
 		shortUrl: 'https://trello.com/c/czfbvP32',
 		actions: [
 			{
-				id: '589e295d220e05ef1547a6dc',
-				idMemberCreator: '5852b9a651809fa23f007abe',
+				id: '5988df9da10fae88aa36ed66',
+				idMemberCreator: '5850705288bd8136703f2c3b',
 				data: {
-					listAfter: {
-						name: 'Done',
-						id: '586b9ac3d34581cba15ee3ee'
-					},
-					listBefore: {
-						name: 'Ready for Demo',
-						id: '5874fa68a07dd0940e7fa8f1'
-					},
 					board: {
 						shortLink: 'gvh3zIcI',
 						name: 'Twig',
 						id: '5852b80f77946e47caa83648'
 					},
-					card: {
-						shortLink: 'czfbvP32',
-						idShort: 28,
-						name: 'Save/Discard Twiglet (In Edit Mode) #L',
-						id: '586d0ac183cd6e72a0216f25',
-						idList: '586b9ac3d34581cba15ee3ee'
+					list: {
+						name: 'Backlog',
+						id: '5852c4dacd99a6b33721358e'
 					},
-					old: {
-						idList: '5874fa68a07dd0940e7fa8f1'
+					card: {
+						shortLink: '7cHc7UXU',
+						idShort: 400,
+						name: 'Add google analytics (or some other usage analytics) to twig front end',
+						id: '5988df9da10fae88aa36ed65'
 					}
 				},
-				type: 'updateCard',
-				date: '2017-02-10T20:58:05.814Z',
+				type: 'createCard',
+				date: '2017-08-07T21:46:05.840Z',
 				memberCreator: {
-					id: '5852b9a651809fa23f007abe',
-					avatarHash: '7c44d73c5dcc0cf9471193967524dde1',
-					fullName: 'Ben Hernandez',
-					initials: 'BH',
-					username: 'benhernandez8'
+					id: '5850705288bd8136703f2c3b',
+					avatarHash: 'c88a0753dc245e3e55c4a4e8a39721ea',
+					fullName: 'Andrew Ochsner',
+					initials: 'AO',
+					username: 'andrewochsner1'
 				}
-      },
-    ]
+			}
+		]
   }
 ];
 
 const DEMANDINFO = {
   project: 'a project',
   url: 'http://some.url',
-  storyLabel: 'Story',
   authPolicy: 'key:token',
   userData: 'token:secretToken',
 };
 
 const EXPECTEDCOMMON = [
-  { _id: '5988df737343533636ad9b06',
+  { 
+		_id: '5988df737343533636ad9b06',
     uri: 'https://trello.com/c/czfbvP32',
-    history:[
+    history: [
       { statusValue: 'Backlog', startDate: '2017-08-07T21:45:23.000Z', changeDate: '2017-01-24T20:49:51.607Z' },
       { statusValue: 'In Progress', startDate: '2017-01-24T20:49:51.607Z', changeDate: '2017-01-25T20:36:52.130Z' },
       { statusValue: 'Ready for Demo', startDate: '2017-01-25T20:36:52.130Z', changeDate: '2017-01-27T20:55:31.731Z' },
@@ -442,7 +396,14 @@ const EXPECTEDCOMMON = [
       { statusValue: 'Ready for Demo', startDate: '2017-02-06T19:03:48.647Z', changeDate: '2017-02-10T20:58:05.814Z' },
       { statusValue: 'Done', startDate: '2017-02-10T20:58:05.814Z', changeDate: null },
     ]
-  }
+	}, 
+	{ 
+		_id: '5852c76ae920023062777a48',
+		uri: 'https://trello.com/c/ZLITfYS3',
+		history: [
+			{ statusValue: 'Backlog', startDate: '2016-12-15T16:40:10.000Z', changeDate: null },
+		]
+	}
 ];
 
 describe('test/testTrelloDemand', () => {
@@ -502,13 +463,6 @@ describe('test/testTrelloDemand', () => {
       });
     });
 
-    it('filters out cards that do not match "storyLabel"', () => {
-      return trello.loadTrelloDemand(DEMANDINFO, '2000-01-01')
-      .then((data) => {
-        Should(data.every(d => d.id !== idKeys.nonStoryWithActions)).be.true();
-      });
-    });
-
     it('filters out cards that happen before the sinceTime variable', () => {
       return trello.loadTrelloDemand(DEMANDINFO, '2017-07-01')
       .then((data) => {
@@ -552,8 +506,27 @@ describe('test/testTrelloDemand', () => {
     });
 
     it('transforms the raw data to common data', () => {
-      const commonData = trello.transformRawToCommon(rawData);
-      Should(commonData).match(EXPECTEDCOMMON);
+			const commonData = trello.transformRawToCommon(rawData);
+      return Should(commonData).deepEqual(convertDemandIntoCommonDemandEntry(EXPECTEDCOMMON));
     });
   });
-})
+});
+
+function convertHistoryToDemandHistoryEntry(historyArray) {
+	return historyArray.map(history => {
+		const returner = new utils.DemandHistoryEntry(history.statusValue, history.startDate);
+		if (history.changeDate) {
+			returner.changeDate = history.changeDate;
+		}
+		return returner;
+	})
+}
+
+function convertDemandIntoCommonDemandEntry(entries) {
+	return entries.map(entry => {
+		const commonDemandEntry = new utils.CommonDemandEntry(entry._id);
+		commonDemandEntry.uri = entry.uri;
+		commonDemandEntry.history = convertHistoryToDemandHistoryEntry(entry.history);
+		return commonDemandEntry;
+	});
+}
