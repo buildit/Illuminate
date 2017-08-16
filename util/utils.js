@@ -51,9 +51,9 @@ exports.createBasicAuthHeader = function(encodedUser) {
 
 exports.dateFormatIWant = function (incomming) {
   if (R.isNil(incomming) || R.isEmpty(incomming)) {
-    return Moment.utc().format('YYYY-MM-DD')
+    return Moment.utc().format(constants.DBDATEFORMAT)
   } else {
-    return Moment.utc(incomming).format('YYYY-MM-DD');
+    return Moment.utc(incomming).format(constants.DBDATEFORMAT);
   }
 };
 
@@ -69,15 +69,15 @@ exports.createDayArray = function (start, end) {
     return daysArray;
   }
 
-  var startDate = Moment.utc(Moment.utc(start).format('YYYY-MM-DD'));
-  var endDate = Moment.utc(Moment.utc(end).format('YYYY-MM-DD'));
+  var startDate = Moment.utc(Moment.utc(start).format(constants.DBDATEFORMAT));
+  var endDate = Moment.utc(Moment.utc(end).format(constants.DBDATEFORMAT));
 
   if (startDate.dayOfYear() === endDate.dayOfYear()) {
     return daysArray;
   }
 
   for (; startDate < endDate; startDate.add(1, 'd')) {
-    daysArray.push(startDate.format('YYYY-MM-DD'));
+    daysArray.push(startDate.format(constants.DBDATEFORMAT));
   }
 
   return daysArray;

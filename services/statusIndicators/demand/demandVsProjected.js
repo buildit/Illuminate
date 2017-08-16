@@ -1,4 +1,3 @@
-const dataStore = require('../../datastore/mongodb');
 const constants = require('../../../util/constants');
 const { CommonProjectStatusResult } = require('../../../util/utils');
 const Log4js = require('log4js');
@@ -12,28 +11,26 @@ logger.setLevel(Config.get('log-level'));
 const name = 'Demand vs Projected';
 
 module.exports = {
-  evaluate(project, projectPath) {
+  evaluate(project, demands) {
     logger.debug(`starting backlogRegressionEndDatePredictor calculation for [${project.name}]`)
-    return dataStore.getAllData(projectPath, constants.SUMMARYDEMAND)
-    .then(demand => {
-      if (demand.length === 0) {
-        return undefined;
-      }
-      const actual = demand
-      .sort((a, b) => a.projectDate < b.projectDate ? -1 : 1)
-      .reduce((finalDone, summary) => summary.status.Done, undefined);
+    if (demands.length === 0) {
+      return undefined;
+    }
 
-      const safeValue = actual ? actual : 0;
+    const actual = demands
+    .sort((a, b) => a.projectDate < b.projectDate ? -1 : 1)
+    .reduce((finalDone, summary) => summary.status.Done, undefined);
 
-      const expected = getTodaysStoryTarget(project);
-      let status = constants.STATUSWARNING;
-      if (safeValue < expected) {
-        status = constants.STATUSERROR;
-      } else if (safeValue > expected) {
-        status = constants.STATUSOK;
-      }
-      return CommonProjectStatusResult(name, actual, expected, status, constants.DEMANDSECTION);
-    });
+    const safeValue = actual ? actual : 0;
+
+    const expected = getTodaysStoryTarget(project);
+    let status = constants.STATUSWARNING;
+    if (safeValue < expected) {
+      status = constants.STATUSERROR;
+    } else if (safeValue > expected) {
+      status = constants.STATUSOK;
+    }
+    return CommonProjectStatusResult(name, actual, expected, status, constants.DEMANDSECTION);
   }
 };
 
@@ -63,7 +60,7 @@ function getTodaysStoryTarget ({ projection }) {
   const totalLength = dailyStartLength + dailyMiddleLength + dailyEndLength;
 
   const today = moment().utc();
-  const momentStartDate = moment(startDate, 'YYYY-MM-DD').utc();
+  const momentStartDate = moment(startDate, constants.DBDATEFORMAT).utc();
   const dayNumber = today.diff(momentStartDate, 'days');
 
   function startPiece(day) {
