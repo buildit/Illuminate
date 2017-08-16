@@ -13,7 +13,13 @@ logger.setLevel(Config.get('log-level'));
 var connectionPool = [];
 
 function getDBConnection(path) {
-  return connectionPool[path];
+  return CO(function* () {
+    if (R.isNil(connectionPool[path])) {
+      const db = yield MongoClient.connect(path);
+      setDBConnection(path, db);
+    }
+    return connectionPool[path];
+  });
 }
 
 function setDBConnection(path, db) {
@@ -56,11 +62,7 @@ exports.upsertData = function (projectPath, collectionName, documentToStore) {
   logger.debug(`UPSERT ${documentToStore.length} documents in [${collectionName}] at URL ${projectPath}`);
 
   return CO(function*() {
-    var db = getDBConnection(projectPath);
-    if (R.isNil(db)) {
-      db = yield MongoClient.connect(projectPath);
-      setDBConnection(projectPath, db);
-    }
+    var db = yield getDBConnection(projectPath);
     var col = db.collection(collectionName);
 
     const upserts = documentToStore.map(anEntry => ({
@@ -85,11 +87,7 @@ exports.insertData = function (projectPath, collectionName, documentToStore) {
   logger.debug(`INSERT ${documentToStore.length} documents in [${collectionName}] at URL [${projectPath}]`);
 
   return CO(function*() {
-    var db = getDBConnection(projectPath);
-    if (R.isNil(db)) {
-      db = yield MongoClient.connect(projectPath);
-      setDBConnection(projectPath, db);
-    }
+    var db = yield getDBConnection(projectPath);
     var col = db.collection(collectionName);
     var response = col.insertMany(documentToStore);
     return response;
@@ -107,7 +105,7 @@ exports.updateDocumentPart = function (projectPath, collectionName, _id, key, va
     const options = { returnOriginal: false };
     const setModifier = { $set: {} };
     setModifier.$set[key] = value;
-    const db = getDBConnection(projectPath);
+    const db = yield getDBConnection(projectPath);
     const col = db.collection(collectionName);
 
     const result = yield col.findOneAndUpdate({ _id }, setModifier, options);
@@ -126,11 +124,7 @@ exports.getAllData = function (projectPath, collectionName) {
   logger.debug(`GET ALL [${collectionName}] Entries at URL ${projectPath}`);
 
   return CO(function*() {
-    var db = getDBConnection(projectPath);
-    if (R.isNil(db)) {
-      db = yield MongoClient.connect(projectPath);
-      setDBConnection(projectPath, db);
-    }
+    var db = yield getDBConnection(projectPath);
     var col = db.collection(collectionName);
     var result = yield col.find().toArray();
     return result;
@@ -144,11 +138,7 @@ exports.getDocumentByName = function (projectPath, collectionName, aName) {
   logger.debug(`GET By Name [${aName}] from [${collectionName}] at URL ${projectPath}`);
 
   return CO(function*() {
-    var db = getDBConnection(projectPath);
-    if (R.isNil(db)) {
-      db = yield MongoClient.connect(projectPath);
-      setDBConnection(projectPath, db);
-    }
+    var db = yield getDBConnection(projectPath);
     var col = db.collection(collectionName);
     var result = yield col.find({name: aName}).toArray();
     return result[0];
@@ -162,11 +152,7 @@ exports.getDocumentByID = function (projectPath, collectionName, anID) {
   logger.debug(`GET By ID [${anID}] from [${collectionName}] at URL ${projectPath}`);
 
   return CO(function*() {
-    var db = getDBConnection(projectPath);
-    if (R.isNil(db)) {
-      db = yield MongoClient.connect(projectPath);
-      setDBConnection(projectPath, db);
-    }
+    var db = yield getDBConnection(projectPath);
     var col = db.collection(collectionName);
     var result = yield col.find({_id: anID}).toArray();
     return result[0];
@@ -180,11 +166,7 @@ exports.clearData = function (projectPath, collectionName) {
   logger.debug(`DELETE [${collectionName}] Entries at URL ${projectPath}`);
 
   return CO(function*() {
-    var db = getDBConnection(projectPath);
-    if (R.isNil(db)) {
-      db = yield MongoClient.connect(projectPath);
-      setDBConnection(projectPath, db);
-    }
+    var db = yield getDBConnection(projectPath);
     var col = db.collection(collectionName);
     var result = yield col.deleteMany();
     return result;

@@ -448,13 +448,9 @@ const EXPECTEDCOMMON = [
 describe('test/testTrelloDemand', () => {
   let sandbox = Sinon.sandbox.create();
 
-  beforeEach(() => {
-    sandbox = Sinon.sandbox.create();
-  });
-
   afterEach(() => {
     sandbox.restore();
-  })
+  });
   
   describe('loadRawData', () => {
     let storageFunction = sandbox.stub();
