@@ -3,13 +3,15 @@
 const trello = require('../services/demandSystem/trello');
 const utils = require('../util/utils');
 const Config = require('config');
+const constants = require('../util/constants');
 const HttpStatus = require('http-status-codes');
 const Log4js = require('log4js');
 const Rest = require('restler');
 const Should = require('should');
 const Sinon = require('sinon');
-const R = require('ramda');
 require('sinon-as-promised');
+const R = require('ramda');
+const CO = require('co');
 
 Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
@@ -509,7 +511,113 @@ describe('test/testTrelloDemand', () => {
 			const commonData = trello.transformRawToCommon(rawData);
       return Should(commonData).deepEqual(convertDemandIntoCommonDemandEntry(EXPECTEDCOMMON));
     });
-  });
+	});
+	
+	describe('testDemand()', () => {
+		const sandbox = Sinon.sandbox.create();
+	
+		const aProject = {
+			name: 'Test Project',
+			demand: {
+				flow: [{ name: 'Backlog' }],
+				source: 'Trello',
+				url: 'http://some.url',
+				project: 'Some Trello Project',
+				authPolicy: 'Basic',
+				userData: 'some secret key',
+			}
+		};
+	
+		afterEach(() => {
+			sandbox.restore();
+		})
+	
+		it('returns an error when the url is invalid.', () => {
+			return CO(function* () {
+				const project = R.mergeDeepRight(aProject, { demand: { url: 'invalid url' } });
+				const result = yield trello.testDemand(project);
+				Should(result.status).equal(constants.STATUSERROR);
+			});
+		});
+	
+		it('returns an error when the trello [project] is an empty string', () => {
+			return CO(function* () {
+				const project = R.mergeDeepRight(aProject, { demand: { project: '' } });
+				const result = yield trello.testDemand(project);
+				Should(result.status).equal(constants.STATUSERROR);
+			});
+		});
+	
+		it('returns an error when the trello [project] is null', () => {
+			return CO(function* () {
+				const demand = R.omit(['project'], aProject.demand);
+				const project = R.mergeDeepRight(R.omit(['demand'], aProject), { demand });
+				const result = yield trello.testDemand(project);
+				Should(result.status).equal(constants.STATUSERROR);
+			});
+		});
+	
+		it('returns an error when [authPolicy] is an empty string', () => {
+			return CO(function* () {
+				const project = R.mergeDeepRight(aProject, { demand: { authPolicy: '' } });
+				const result = yield trello.testDemand(project);
+				Should(result.status).equal(constants.STATUSERROR);
+			});
+		});
+	
+		it('returns an error when [authPolicy] is null', () => {
+			return CO(function* () {
+				const demand = R.omit(['authPolicy'], aProject.demand);
+				const project = R.mergeDeepRight(R.omit(['demand'], aProject), { demand });
+				const result = yield trello.testDemand(project);
+				Should(result.status).equal(constants.STATUSERROR);
+			});
+		});
+	
+		it('returns an error when [userData] is an empty string', () => {
+			return CO(function* () {
+				const project = R.mergeDeepRight(aProject, { demand: { userData: '' } });
+				const result = yield trello.testDemand(project);
+				Should(result.status).equal(constants.STATUSERROR);
+			});
+		});
+	
+		it('returns an error when [userData] is null', () => {
+			return CO(function* () {
+				const demand = R.omit(['userData'], aProject.demand);
+				const project = R.mergeDeepRight(R.omit(['demand'], aProject), { demand });
+				const result = yield trello.testDemand(project);
+				Should(result.status).equal(constants.STATUSERROR);
+			});
+		});
+	
+		it('returns an error when [flow] is an empty array', () => {
+			return CO(function* () {
+				const project = R.mergeDeepRight(aProject, { demand: { flow: '' } });
+				const result = yield trello.testDemand(project);
+				Should(result.status).equal(constants.STATUSERROR);
+			});
+		});
+	
+		it('returns an error when [flow] is null', () => {
+			return CO(function* () {
+				const demand = R.omit(['flow'], aProject.demand);
+				const project = R.mergeDeepRight(R.omit(['demand'], aProject), { demand });
+				const result = yield trello.testDemand(project);
+				Should(result.status).equal(constants.STATUSERROR);
+			});
+		});
+	
+		it('returns green when the request to trello is successful', () => {
+			return CO(function* () {
+				sandbox.stub(Rest, 'get').returns({
+					on: sandbox.stub().yieldsTo()
+				});
+				const result = yield trello.testDemand(aProject);
+				Should(result.status).equal(constants.STATUSOK);
+			});
+		})
+	});
 });
 
 function convertHistoryToDemandHistoryEntry(historyArray) {

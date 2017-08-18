@@ -6,6 +6,7 @@ const moment = require('moment');
 const Log4js = require('log4js');
 const R = require('ramda');
 const Rest = require('restler');
+const ValidUrl = require('valid-url');
 const utils = require('../../util/utils');
 
 Log4js.configure('config/log4js_config.json', {});
@@ -87,6 +88,43 @@ function transformRawToCommon(issueData) {
   return commonDataFormat;
 }
 
+function testDemand(project) {
+  logger.info(`testDemand() for JIRA Project ${project.name}`);  
+
+  return new Promise((resolve) => {
+    if (!ValidUrl.isUri(project.demand.url)) {
+      return resolve({ status: constants.STATUSERROR, data: utils.pingReponseMessageFormat(`invalid demand URL [${project.demand.url}]`) });
+    }
+
+    if (R.isNil(project.demand.project) || R.isEmpty(project.demand.project)) {
+      return resolve({ status: constants.STATUSERROR, data: utils.pingReponseMessageFormat(`[Project] must be a valid Jira project name`) });
+    }
+
+    if (R.isNil(project.demand.authPolicy) || R.isEmpty(project.demand.authPolicy)) {
+      return resolve({ status: constants.STATUSERROR, data: utils.pingReponseMessageFormat(`[Auth Policy] must be filled out`) });
+    }
+
+    if (R.isNil(project.demand.userData) || R.isEmpty(project.demand.userData)) {
+      return resolve({ status: constants.STATUSERROR, data: utils.pingReponseMessageFormat(`[User Data] must be filled out`) });
+    }
+
+    if (R.isNil(project.demand.flow) || R.isEmpty(project.demand.flow)) {
+      return resolve({ status: constants.STATUSERROR, data: utils.pingReponseMessageFormat(`Missing [Flow] information`) });
+    }
+
+    Rest.get(appendAuth(`${project.demand.url}/cards?fields=id&limit=1`, project.demand))
+      .on('complete', () => {
+        resolve({ status: constants.STATUSOK });
+      }).on('fail', function (data, response) {
+        logger.debug("FAIL: " + response.statusCode + " MESSAGE " + response.statusMessage);
+        resolve({ status: constants.STATUSERROR, data});
+      }).on('error', function (data, response) {
+        logger.debug("ERROR: " + data.message + " / " + response);
+        resolve({ status: constants.STATUSERROR, data });
+      });
+  });
+}
+
 function appendAuth(url, demandInfo) {
   const keys = demandInfo.authPolicy.split(':');
   const values = demandInfo.userData.split(':');
@@ -102,4 +140,5 @@ module.exports = {
   loadRawData,
   loadTrelloDemand,
   transformRawToCommon,
+  testDemand,
 }

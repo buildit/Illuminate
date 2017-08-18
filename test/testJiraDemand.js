@@ -8,9 +8,9 @@ const Log4js = require('log4js');
 const Rest = require('restler');
 const Should = require('should');
 const Sinon = require('sinon');
+require('sinon-as-promised');
 const R = require('ramda');
 const CO = require('co');
-require('sinon-as-promised');
 
 Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
