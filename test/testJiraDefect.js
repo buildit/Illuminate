@@ -8,6 +8,9 @@ const Rest = require('restler');
 const Should = require('should');
 const Sinon = require('sinon');
 require('sinon-as-promised');
+const CO = require('co');
+const R = require('ramda');
+const constants = require('../util/constants');
 
 Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
@@ -277,4 +280,110 @@ describe('Jira GetRawData - fail getting defects', function() {
         Should(error).deepEqual(ERRORRESULT);
       });
   });
+});
+
+describe('test/testJiraDefect - Jira testDefect()', () => {
+  const sandbox = Sinon.sandbox.create();
+
+  const aProject = {
+    name: 'Test Project',
+    defect: {
+      severity: [{ name: 'Backlog' }],
+      source: 'Jira',
+      url: 'http://some.url',
+      project: 'Some Jira Project',
+      authPolicy: 'Basic',
+      userData: 'some secret key',
+    }
+  };
+
+  afterEach(() => {
+    sandbox.restore();
+  })
+
+  it('returns an error when the url is invalid.', () => {
+    return CO(function* () {
+      const project = R.mergeDeepRight(aProject, { defect: { url: 'invalid url' } });
+      const result = yield jira.testDefect(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns an error when the jira [project] is an empty string', () => {
+    return CO(function* () {
+      const project = R.mergeDeepRight(aProject, { defect: { project: '' } });
+      const result = yield jira.testDefect(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns an error when the jira [project] is null', () => {
+    return CO(function* () {
+      const defect = R.omit(['project'], aProject.defect);
+      const project = R.mergeDeepRight(R.omit(['defect'], aProject), { defect });
+      const result = yield jira.testDefect(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns an error when [authPolicy] is an empty string', () => {
+    return CO(function* () {
+      const project = R.mergeDeepRight(aProject, { defect: { authPolicy: '' } });
+      const result = yield jira.testDefect(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns an error when [authPolicy] is null', () => {
+    return CO(function* () {
+      const defect = R.omit(['authPolicy'], aProject.defect);
+      const project = R.mergeDeepRight(R.omit(['defect'], aProject), { defect });
+      const result = yield jira.testDefect(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns an error when [userData] is an empty string', () => {
+    return CO(function* () {
+      const project = R.mergeDeepRight(aProject, { defect: { userData: '' } });
+      const result = yield jira.testDefect(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns an error when [userData] is null', () => {
+    return CO(function* () {
+      const defect = R.omit(['userData'], aProject.defect);
+      const project = R.mergeDeepRight(R.omit(['defect'], aProject), { defect });
+      const result = yield jira.testDefect(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns an error when [flow] is an empty array', () => {
+    return CO(function* () {
+      const project = R.mergeDeepRight(aProject, { defect: { flow: '' } });
+      const result = yield jira.testDefect(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns an error when [flow] is null', () => {
+    return CO(function* () {
+      const defect = R.omit(['flow'], aProject.defect);
+      const project = R.mergeDeepRight(R.omit(['defect'], aProject), { defect });
+      const result = yield jira.testDefect(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns green when the request to Jira is successful', () => {
+    return CO(function* () {
+      sandbox.stub(Rest, 'get').returns({
+        on: sandbox.stub().yieldsTo()
+      });
+      const result = yield jira.testDefect(aProject);
+      Should(result.status).equal(constants.STATUSOK);
+    });
+  })
 });

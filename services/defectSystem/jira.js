@@ -9,6 +9,7 @@ const R = require('ramda');
 const Rest = require('restler');
 const utils = require('../../util/utils');
 const ValidUrl = require('valid-url');
+const moment = require('moment');
 
 Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
@@ -345,6 +346,44 @@ exports.loadJiraDefects = function(defectInfo, issuesSoFar, sinceTime) {
         logger.error("ERROR: " + data.message + " / " + response);
         reject(errorHelper.errorBody(response.statusCode, 'Error retrieving stories from Jira'));
       });
+  });
+}
+
+
+exports.testDefect = function(project) {
+  logger.info(`testDefect() for JIRA Project ${project.name}`);
+  return new Promise(function (resolve) {
+    if (!ValidUrl.isUri(project.defect.url)) {
+      return resolve({ status: constants.STATUSERROR, data: `invalid defect URL [${project.defect.url}]` });
+    }
+
+    if (R.isNil(project.defect.project) || R.isEmpty(project.defect.project)) {
+      return resolve({ status: constants.STATUSERROR, data: `[Project] must be a valid Jira project name` });
+    }
+
+    if (R.isNil(project.defect.authPolicy) || R.isEmpty(project.defect.authPolicy)) {
+      return resolve({ status: constants.STATUSERROR, data: `[Auth Policy] must be filled out` });
+    }
+
+    if (R.isNil(project.defect.userData) || R.isEmpty(project.defect.userData)) {
+      return resolve({ status: constants.STATUSERROR, data: `[User Data] must be filled out` });
+    }
+
+    if (R.isNil(project.defect.severity) || R.isEmpty(project.defect.severity)) {
+      return resolve({ status: constants.STATUSERROR, data: `Missing [Servity] information` });
+    }
+
+    Rest.get(project.defect.url + buildJQL(project.defect.project, 0, moment().format(constants.DBDATEFORMAT)),
+      {headers: utils.createBasicAuthHeader(project.defect.userData)}
+    ).on('complete', function() {
+      resolve({ status: constants.STATUSOK });
+    }).on('fail', function (data, response) {
+      logger.debug("FAIL: " + response.statusCode + " MESSAGE " + response.statusMessage);
+      resolve({ status: constants.STATUSERROR, data});
+    }).on('error', function (data, response) {
+      logger.debug("ERROR: " + data.message + " / " + response);
+      resolve({ status: constants.STATUSERROR, data });
+    });
   });
 }
 

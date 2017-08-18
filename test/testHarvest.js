@@ -6,6 +6,9 @@ const Rest = require('restler');
 const Should = require('should');
 const Sinon = require('sinon');
 require('sinon-as-promised');
+const CO = require('co');
+const R = require('ramda');
+const constants = require('../util/constants');
 const utils = require('../util/utils');
 
 const Config = require('config');
@@ -342,4 +345,110 @@ describe('testHarvest - GetRawData - make sure count is returned', function() {
         Should.ok(false);
       });
   });
+});
+
+describe('test/testHarvest - Harvest testEffort()', () => {
+  const sandbox = Sinon.sandbox.create();
+
+  const aProject = {
+    name: 'Test Project',
+    effort: {
+      role: [{ name : `General / Delivery`, groupWith : "" }],
+      source: 'Harvest',
+      url: 'http://some.url',
+      project: 'Some Harvest Project',
+      authPolicy: 'Basic',
+      userData: 'some secret key',
+    }
+  };
+
+  afterEach(() => {
+    sandbox.restore();
+  })
+
+  it('returns an error when the url is invalid.', () => {
+    return CO(function* () {
+      const project = R.mergeDeepRight(aProject, { effort: { url: 'invalid url' } });
+      const result = yield harvest.testEffort(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns an error when the harvest [project] is an empty string', () => {
+    return CO(function* () {
+      const project = R.mergeDeepRight(aProject, { effort: { project: '' } });
+      const result = yield harvest.testEffort(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns an error when the harvest [project] is null', () => {
+    return CO(function* () {
+      const effort = R.omit(['project'], aProject.effort);
+      const project = R.mergeDeepRight(R.omit(['effort'], aProject), { effort });
+      const result = yield harvest.testEffort(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns an error when [authPolicy] is an empty string', () => {
+    return CO(function* () {
+      const project = R.mergeDeepRight(aProject, { effort: { authPolicy: '' } });
+      const result = yield harvest.testEffort(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns an error when [authPolicy] is null', () => {
+    return CO(function* () {
+      const effort = R.omit(['authPolicy'], aProject.effort);
+      const project = R.mergeDeepRight(R.omit(['effort'], aProject), { effort });
+      const result = yield harvest.testEffort(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns an error when [userData] is an empty string', () => {
+    return CO(function* () {
+      const project = R.mergeDeepRight(aProject, { effort: { userData: '' } });
+      const result = yield harvest.testEffort(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns an error when [userData] is null', () => {
+    return CO(function* () {
+      const effort = R.omit(['userData'], aProject.effort);
+      const project = R.mergeDeepRight(R.omit(['effort'], aProject), { effort });
+      const result = yield harvest.testEffort(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns an error when [role] is an empty array', () => {
+    return CO(function* () {
+      const project = R.mergeDeepRight(aProject, { effort: { role: '' } });
+      const result = yield harvest.testEffort(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns an error when [role] is null', () => {
+    return CO(function* () {
+      const effort = R.omit(['role'], aProject.effort);
+      const project = R.mergeDeepRight(R.omit(['effort'], aProject), { effort });
+      const result = yield harvest.testEffort(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns green when the request to harvest is successful', () => {
+    return CO(function* () {
+      sandbox.stub(Rest, 'get').returns({
+        on: sandbox.stub().yieldsTo()
+      });
+      const result = yield harvest.testEffort(aProject);
+      Should(result.status).equal(constants.STATUSOK);
+    });
+  })
 });

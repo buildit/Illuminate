@@ -729,6 +729,6 @@ describe('test/testJiraDemand - Jira testDemand()', () => {
       });
       const result = yield jira.testDemand(aProject);
       Should(result.status).equal(constants.STATUSOK);
-    })
+    });
   })
 });

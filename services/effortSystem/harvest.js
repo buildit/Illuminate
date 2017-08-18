@@ -7,7 +7,9 @@ const HttpStatus = require('http-status-codes');
 const Log4js = require('log4js');
 const R = require('ramda');
 const Rest = require('restler');
+const moment = require('moment');
 const utils = require('../../util/utils');
+const ValidUrl = require('valid-url');
 
 Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
@@ -174,5 +176,45 @@ exports.replaceTaskIdwithName = function(timeData, taskData) {
   timeData.forEach(function(aTimeEntry) {
     aTimeEntry['_id'] = aTimeEntry.day_entry.id;
     aTimeEntry.day_entry['task_name'] = taskData[aTimeEntry.day_entry.task_id];
+  });
+}
+
+exports.testEffort = function(project) {
+  logger.debug(`Jira -> testEffort() for ${project.name}`);
+  return new Promise(function (resolve) {
+    if (!ValidUrl.isUri(project.effort.url)) {
+      logger.debug(`ERROR, invalid url: ${project.effort.url} on project ${project.name}`)
+      return resolve({ status: constants.STATUSERROR, data: `invalid effort URL [${project.effort.url}]` });
+    }
+    
+    if (R.isNil(project.effort.project) || R.isEmpty(project.effort.project)) {
+      return resolve({ status: constants.STATUSERROR, data: `[Project] must be a valid Jira project name` });
+    }
+    
+    if (R.isNil(project.effort.authPolicy) || R.isEmpty(project.effort.authPolicy)) {
+      return resolve({ status: constants.STATUSERROR, data: `[Auth Policy] must be filled out` });
+    }
+    
+    if (R.isNil(project.effort.userData) || R.isEmpty(project.effort.userData)) {
+      return resolve({ status: constants.STATUSERROR, data: `[User Data] must be filled out` });
+    }
+    
+    if (R.isNil(project.effort.role) || R.isEmpty(project.effort.role)) {
+      return resolve({ status: constants.STATUSERROR, data: `Missing [Role] information` });
+    }
+    
+    var harvestURL = `${project.effort.url}/projects/${project.effort.project}/entries?from=${constants.DEFAULTSTARTDATE}&to=${utils.dateFormatIWant()}&updated_since=${moment().toISOString()}`;
+    
+    Rest.get(encodeURI(harvestURL),
+      {headers: utils.createBasicAuthHeader(project.effort.userData)}
+      ).on('complete', function() {
+        resolve({ status: constants.STATUSOK });
+      }).on('fail', function(data, response) {
+        logger.debug("FAIL: " + response.statusCode + " MESSAGE " + response.statusMessage);
+        resolve({ status: constants.STATUSERROR, data});
+      }).on('error', function(data, response) {
+        logger.debug("FAIL: " + response.statusCode + " MESSAGE " + response.statusMessage);
+        resolve({ status: constants.STATUSERROR, data});
+      });
   });
 }
