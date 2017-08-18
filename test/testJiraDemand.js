@@ -3,10 +3,13 @@
 const Config = require('config');
 const HttpStatus = require('http-status-codes');
 const jira = require('../services/demandSystem/jira');
+const constants = require('../util/constants');
 const Log4js = require('log4js');
 const Rest = require('restler');
 const Should = require('should');
 const Sinon = require('sinon');
+const R = require('ramda');
+const CO = require('co');
 require('sinon-as-promised');
 
 Log4js.configure('config/log4js_config.json', {});
@@ -622,4 +625,110 @@ describe('test/testJiraDemand - Jira GetRawData - Test error paths retriving iss
         Should(error).deepEqual(ERRORRESULT);
       });
   });
+});
+
+describe('test/testJiraDemand - Jira testDemand()', () => {
+  const sandbox = Sinon.sandbox.create();
+
+  const aProject = {
+    name: 'Test Project',
+    demand: {
+      flow: [{ name: 'Backlog' }],
+      source: 'Jira',
+      url: 'http://some.url',
+      project: 'Some Jira Project',
+      authPolicy: 'Basic',
+      userData: 'some secret key',
+    }
+  };
+
+  afterEach(() => {
+    sandbox.restore();
+  })
+
+  it('returns an error when the url is invalid.', () => {
+    return CO(function* () {
+      const project = R.mergeDeepRight(aProject, { demand: { url: 'invalid url' } });
+      const result = yield jira.testDemand(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns an error when the jira [project] is an empty string', () => {
+    return CO(function* () {
+      const project = R.mergeDeepRight(aProject, { demand: { project: '' } });
+      const result = yield jira.testDemand(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns an error when the jira [project] is null', () => {
+    return CO(function* () {
+      const demand = R.omit(['project'], aProject.demand);
+      const project = R.mergeDeepRight(R.omit(['demand'], aProject), { demand });
+      const result = yield jira.testDemand(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns an error when [authPolicy] is an empty string', () => {
+    return CO(function* () {
+      const project = R.mergeDeepRight(aProject, { demand: { authPolicy: '' } });
+      const result = yield jira.testDemand(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns an error when [authPolicy] is null', () => {
+    return CO(function* () {
+      const demand = R.omit(['authPolicy'], aProject.demand);
+      const project = R.mergeDeepRight(R.omit(['demand'], aProject), { demand });
+      const result = yield jira.testDemand(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns an error when [userData] is an empty string', () => {
+    return CO(function* () {
+      const project = R.mergeDeepRight(aProject, { demand: { userData: '' } });
+      const result = yield jira.testDemand(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns an error when [userData] is null', () => {
+    return CO(function* () {
+      const demand = R.omit(['userData'], aProject.demand);
+      const project = R.mergeDeepRight(R.omit(['demand'], aProject), { demand });
+      const result = yield jira.testDemand(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns an error when [flow] is an empty array', () => {
+    return CO(function* () {
+      const project = R.mergeDeepRight(aProject, { demand: { flow: '' } });
+      const result = yield jira.testDemand(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns an error when [flow] is null', () => {
+    return CO(function* () {
+      const demand = R.omit(['flow'], aProject.demand);
+      const project = R.mergeDeepRight(R.omit(['demand'], aProject), { demand });
+      const result = yield jira.testDemand(project);
+      Should(result.status).equal(constants.STATUSERROR);
+    });
+  });
+
+  it('returns green when the request to Jira is successful', () => {
+    return CO(function* () {
+      sandbox.stub(Rest, 'get').returns({
+        on: sandbox.stub().yieldsTo()
+      });
+      const result = yield jira.testDemand(aProject);
+      Should(result.status).equal(constants.STATUSOK);
+    })
+  })
 });
