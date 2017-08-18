@@ -180,27 +180,27 @@ exports.replaceTaskIdwithName = function(timeData, taskData) {
 }
 
 exports.testEffort = function(project) {
-  logger.debug(`Jira -> testEffort() for ${project.name}`);
+  logger.debug(`Harvest -> testEffort() for ${project.name}`);
   return new Promise(function (resolve) {
     if (!ValidUrl.isUri(project.effort.url)) {
       logger.debug(`ERROR, invalid url: ${project.effort.url} on project ${project.name}`)
-      return resolve({ status: constants.STATUSERROR, data: `invalid effort URL [${project.effort.url}]` });
+      return resolve({ status: constants.STATUSERROR, data: utils.pingReponseMessageFormat(`invalid effort URL [${project.effort.url}])`) });
     }
     
     if (R.isNil(project.effort.project) || R.isEmpty(project.effort.project)) {
-      return resolve({ status: constants.STATUSERROR, data: `[Project] must be a valid Jira project name` });
+      return resolve({ status: constants.STATUSERROR, data: utils.pingReponseMessageFormat(`[Project] must be a valid Harvest project name`) });
     }
     
     if (R.isNil(project.effort.authPolicy) || R.isEmpty(project.effort.authPolicy)) {
-      return resolve({ status: constants.STATUSERROR, data: `[Auth Policy] must be filled out` });
+      return resolve({ status: constants.STATUSERROR, data: utils.pingReponseMessageFormat(`[Auth Policy] must be filled out`) });
     }
     
     if (R.isNil(project.effort.userData) || R.isEmpty(project.effort.userData)) {
-      return resolve({ status: constants.STATUSERROR, data: `[User Data] must be filled out` });
+      return resolve({ status: constants.STATUSERROR, data: utils.pingReponseMessageFormat(`[User Data] must be filled out`) });
     }
     
     if (R.isNil(project.effort.role) || R.isEmpty(project.effort.role)) {
-      return resolve({ status: constants.STATUSERROR, data: `Missing [Role] information` });
+      return resolve({ status: constants.STATUSERROR, data: utils.pingReponseMessageFormat(`Missing [Role] information`) });
     }
     
     var harvestURL = `${project.effort.url}/projects/${project.effort.project}/entries?from=${constants.DEFAULTSTARTDATE}&to=${utils.dateFormatIWant()}&updated_since=${moment().toISOString()}`;

@@ -354,23 +354,23 @@ exports.testDefect = function(project) {
   logger.info(`testDefect() for JIRA Project ${project.name}`);
   return new Promise(function (resolve) {
     if (!ValidUrl.isUri(project.defect.url)) {
-      return resolve({ status: constants.STATUSERROR, data: `invalid defect URL [${project.defect.url}]` });
+      return resolve({ status: constants.STATUSERROR, data: utils.pingReponseMessageFormat(`invalid defect URL [${project.defect.url}]`) });
     }
 
     if (R.isNil(project.defect.project) || R.isEmpty(project.defect.project)) {
-      return resolve({ status: constants.STATUSERROR, data: `[Project] must be a valid Jira project name` });
+      return resolve({ status: constants.STATUSERROR, data: utils.pingReponseMessageFormat(`[Project] must be a valid Jira project name`) });
     }
 
     if (R.isNil(project.defect.authPolicy) || R.isEmpty(project.defect.authPolicy)) {
-      return resolve({ status: constants.STATUSERROR, data: `[Auth Policy] must be filled out` });
+      return resolve({ status: constants.STATUSERROR, data: utils.pingReponseMessageFormat(`[Auth Policy] must be filled out`) });
     }
 
     if (R.isNil(project.defect.userData) || R.isEmpty(project.defect.userData)) {
-      return resolve({ status: constants.STATUSERROR, data: `[User Data] must be filled out` });
+      return resolve({ status: constants.STATUSERROR, data: utils.pingReponseMessageFormat(`[User Data] must be filled out`) });
     }
 
     if (R.isNil(project.defect.severity) || R.isEmpty(project.defect.severity)) {
-      return resolve({ status: constants.STATUSERROR, data: `Missing [Servity] information` });
+      return resolve({ status: constants.STATUSERROR, data: utils.pingReponseMessageFormat(`Missing [Servity] information`) });
     }
 
     Rest.get(project.defect.url + buildJQL(project.defect.project, 0, moment().format(constants.DBDATEFORMAT)),

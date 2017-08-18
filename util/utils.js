@@ -147,3 +147,9 @@ exports.CommonProjectStatusResult = function (name, actual, projected, status, s
     source,
   }
 }
+
+exports.pingReponseMessageFormat = function(message) {
+  return {
+    message,
+  };
+}

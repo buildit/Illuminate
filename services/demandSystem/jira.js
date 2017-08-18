@@ -414,23 +414,23 @@ exports.testDemand = function(project) {
   logger.info(`testDemand() for JIRA Project ${project.name}`);
   return new Promise(function (resolve) {
     if (!ValidUrl.isUri(project.demand.url)) {
-      return resolve({ status: constants.STATUSERROR, data: `invalid demand URL [${project.demand.url}]` });
+      return resolve({ status: constants.STATUSERROR, data: utils.pingReponseMessageFormat(`invalid demand URL [${project.demand.url}]`) });
     }
 
     if (R.isNil(project.demand.project) || R.isEmpty(project.demand.project)) {
-      return resolve({ status: constants.STATUSERROR, data: `[Project] must be a valid Jira project name` });
+      return resolve({ status: constants.STATUSERROR, data: utils.pingReponseMessageFormat(`[Project] must be a valid Jira project name`) });
     }
 
     if (R.isNil(project.demand.authPolicy) || R.isEmpty(project.demand.authPolicy)) {
-      return resolve({ status: constants.STATUSERROR, data: `[Auth Policy] must be filled out` });
+      return resolve({ status: constants.STATUSERROR, data: utils.pingReponseMessageFormat(`[Auth Policy] must be filled out`) });
     }
 
     if (R.isNil(project.demand.userData) || R.isEmpty(project.demand.userData)) {
-      return resolve({ status: constants.STATUSERROR, data: `[User Data] must be filled out` });
+      return resolve({ status: constants.STATUSERROR, data: utils.pingReponseMessageFormat(`[User Data] must be filled out`) });
     }
 
     if (R.isNil(project.demand.flow) || R.isEmpty(project.demand.flow)) {
-      return resolve({ status: constants.STATUSERROR, data: `Missing [Flow] information` });
+      return resolve({ status: constants.STATUSERROR, data: utils.pingReponseMessageFormat(`Missing [Flow] information`) });
     }
 
     Rest.get(project.demand.url + buildJQL(project.demand.project, 0, moment().format(constants.DBDATEFORMAT)),
