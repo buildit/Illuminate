@@ -28,6 +28,18 @@ exports.ping = function (req, res) {
   });
 }
 
+exports.validateProject = function (req, res) {
+  const project = req.body;
+  module.exports.check(project)
+  .then((pingResults) => {
+    res.send(pingResults);
+  })
+  .catch(() => {
+    res.status(HttpStatus.NOT_FOUND);
+    res.send('Project not found');
+  });
+}
+
 exports.check = function(aProject) {
   const validDemandSystems = ['Jira', 'Trello'];
   const validDefectSystems = ['Jira'];

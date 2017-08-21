@@ -15,6 +15,7 @@ Router.post('/project/:name/event', loadEvent.createNewEvent);
 Router.get('/project/:name/event/', loadEvent.listEvents);
 Router.get('/project/:name/event/:id', loadEvent.listAnEvent);
 
-Router.get('/project/:name/ping', pingProject.ping)
+Router.get('/project/:name/validate', pingProject.ping)
+Router.post('/project/validate', pingProject.validateProject);
 
 module.exports = Router;
