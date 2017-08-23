@@ -2,14 +2,15 @@
 
 const Config = require('config');
 const constants = require('../util/constants');
-const jira = require('./defectSystem/jira');
+const illuminateSystems = require('@buildit/illuminate-systems');
+const jira = illuminateSystems.defect.jira;
 const Log4js = require('log4js');
 const utils = require('../util/utils');
 const R = require('ramda');
 
 Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
-logger.setLevel(Config.get('log-level'));
+logger.level = Config.get('log-level');
 
 // effortInfo = {
 //   source: "Excel",

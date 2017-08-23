@@ -11,7 +11,7 @@ const Log4js = require('log4js');
 
 Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
-logger.setLevel(Config.get('log-level'));
+logger.level = Config.get('log-level');
 
 const GOODPROJECT = 10284278;
 const GOODSOURCE = 'Harvest';

@@ -12,7 +12,7 @@ const R = require('ramda');
 
 Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
-logger.setLevel(Config.get('log-level'));
+logger.level = Config.get('log-level');
 
 const VALIDID = 'f9d6e2df-ca15-4ebb-ac1d-1a6bf1129af9';
 const INVALIDID = 99999999;

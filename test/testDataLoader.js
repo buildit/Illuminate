@@ -5,7 +5,8 @@ const dataLoader = require('../services/dataLoader');
 const demandLoader = require('../services/demand');
 const effortLoader = require('../services/effort');
 const myDatastore = require('../services/datastore/mongodb');
-const testClass = require('../services/effortSystem/harvest');
+const illuminateSystems = require('@buildit/illuminate-systems');
+const testClass = illuminateSystems.effort.harvest;
 const testConstants = require('./testConstants');
 const utils = require('../util/utils');
 const event = require('../services/event');
@@ -18,7 +19,7 @@ const Log4js = require('log4js');
 
 Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
-logger.setLevel(Config.get('log-level'));
+logger.level = Config.get('log-level');
 
 const ANEFFORTSYSTEM = {
   source: 'Harvest',

@@ -9,7 +9,7 @@ const v1Route = require('./routes/v1');
 
 log4js.configure('./config/log4js_config.json', {});
 const logger = log4js.getLogger();
-logger.setLevel(config.get('log-level'));
+logger.level = config.get('log-level');
 
 const app = express();
 

@@ -2,6 +2,7 @@
 
 const Config = require('config');
 const constants = require('../util/constants');
+const errorHandler = require('./errors');
 const dataStore = require('./datastore/mongodb');
 const defectLoader = require('./defect');
 const demandLoader = require('./demand');
@@ -14,7 +15,7 @@ const ValidUrl = require('valid-url');
 
 Log4js.configure('config/log4js_config.json', {});
 const logger = Log4js.getLogger();
-logger.setLevel(Config.get('log-level'));
+logger.level = Config.get('log-level');
 
 const systemDefinitionExists = (aSystemDeffiniton) =>
   (R.not(R.isNil(aSystemDeffiniton)) &&
@@ -84,7 +85,7 @@ function getMeRawData(aProjectSystem, anEvent, processingInstructions) {
   if (anEvent.type === constants.REPROCESSEVENT) {
     return dataStore.getAllData(processingInstructions.dbUrl, processingInstructions.rawLocation)
   } else {
-    return processingInstructions.sourceSystem.loadRawData(aProjectSystem, processingInstructions, anEvent.since)
+    return processingInstructions.sourceSystem.loadRawData(aProjectSystem, processingInstructions, anEvent.since, errorHandler.errorBody)
   }
 }
 
